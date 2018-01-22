@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.components.connected &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.components.connected</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Connected components.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__authors__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Eben Kenah&#39;</span><span class="p">,</span>
+                         <span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span>
+                         <span class="s">&#39;Christopher Ellison&#39;</span><span class="p">])</span>
+<span class="c">#    Copyright (C) 2004-2010 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;number_connected_components&#39;</span><span class="p">,</span> 
+           <span class="s">&#39;connected_components&#39;</span><span class="p">,</span>
+           <span class="s">&#39;connected_component_subgraphs&#39;</span><span class="p">,</span>
+           <span class="s">&#39;is_connected&#39;</span><span class="p">,</span>
+           <span class="s">&#39;node_connected_component&#39;</span><span class="p">,</span>
+           <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<div class="viewcode-block" id="connected_components"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.connected.connected_components.html#networkx.algorithms.components.connected.connected_components">[docs]</a><span class="k">def</span> <span class="nf">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return nodes in connected components of graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">       An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    comp : list of lists</span>
+<span class="sd">       A list of nodes for each component of G.</span>
+
+<span class="sd">    See Also       </span>
+<span class="sd">    --------</span>
+<span class="sd">    strongly_connected_components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The list is ordered from largest connected component to smallest.</span>
+<span class="sd">    For undirected graphs only. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Not allowed for directed graph G.</span>
+<span class="s">              Use UG=G.to_undirected() to create an undirected graph.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">seen</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">components</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>      
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">components</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>            
+    <span class="k">return</span> <span class="n">components</span>            
+
+</div>
+<div class="viewcode-block" id="number_connected_components"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.connected.number_connected_components.html#networkx.algorithms.components.connected.number_connected_components">[docs]</a><span class="k">def</span> <span class="nf">number_connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return number of connected components in graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">       An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    n : integer</span>
+<span class="sd">       Number of connected components</span>
+
+<span class="sd">    See Also       </span>
+<span class="sd">    --------</span>
+<span class="sd">    connected_components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For undirected graphs only. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="is_connected"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.connected.is_connected.html#networkx.algorithms.components.connected.is_connected">[docs]</a><span class="k">def</span> <span class="nf">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test graph connectivity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">       An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    connected : bool</span>
+<span class="sd">      True if the graph is connected, false otherwise.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_connected(G))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    connected_components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For undirected graphs only. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>\
+            <span class="sd">&quot;&quot;&quot;Not allowed for directed graph G.</span>
+<span class="sd">Use UG=G.to_undirected() to create an undirected graph.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span>
+            <span class="sd">&quot;&quot;&quot;Connectivity is undefined for the null graph.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span>
+                                              <span class="nb">next</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">())))</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="connected_component_subgraphs"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.connected.connected_component_subgraphs.html#networkx.algorithms.components.connected.connected_component_subgraphs">[docs]</a><span class="k">def</span> <span class="nf">connected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return connected components as subgraphs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">       An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    glist : list</span>
+<span class="sd">      A list of graphs, one for each connected component of G.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Get largest connected component as subgraph</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(5,6)</span>
+<span class="sd">    &gt;&gt;&gt; H=nx.connected_component_subgraphs(G)[0]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    connected_components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The list is ordered from largest connected component to smallest.</span>
+<span class="sd">    For undirected graphs only. </span>
+
+<span class="sd">    Graph, node, and edge attributes are copied to the subgraphs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cc</span><span class="o">=</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">graph_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">:</span>
+        <span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">graph_list</span>
+
+</div>
+<div class="viewcode-block" id="node_connected_component"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.connected.node_connected_component.html#networkx.algorithms.components.connected.node_connected_component">[docs]</a><span class="k">def</span> <span class="nf">node_connected_component</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return nodes in connected components of graph containing node n.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">       An undirected graph.</span>
+
+<span class="sd">    n : node label       </span>
+<span class="sd">       A node in G</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    comp : lists</span>
+<span class="sd">       A list of nodes in component of G containing node n.</span>
+
+<span class="sd">    See Also       </span>
+<span class="sd">    --------</span>
+<span class="sd">    connected_components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For undirected graphs only. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Not allowed for directed graph G.</span>
+<span class="s">              Use UG=G.to_undirected() to create an undirected graph.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

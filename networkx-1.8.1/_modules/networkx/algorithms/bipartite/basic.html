@@ -1,0 +1,452 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.bipartite.basic &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.bipartite.basic</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">==========================</span>
+<span class="sd">Bipartite Graph Algorithms</span>
+<span class="sd">==========================</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2012 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&#39;is_bipartite&#39;</span><span class="p">,</span>
+            <span class="s">&#39;is_bipartite_node_set&#39;</span><span class="p">,</span>
+            <span class="s">&#39;color&#39;</span><span class="p">,</span>
+            <span class="s">&#39;sets&#39;</span><span class="p">,</span>
+            <span class="s">&#39;density&#39;</span><span class="p">,</span>
+            <span class="s">&#39;degrees&#39;</span><span class="p">,</span>
+            <span class="s">&#39;biadjacency_matrix&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="biadjacency_matrix"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.biadjacency_matrix.html#networkx.algorithms.bipartite.basic.biadjacency_matrix">[docs]</a><span class="k">def</span> <span class="nf">biadjacency_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">row_order</span><span class="p">,</span> <span class="n">column_order</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                            <span class="n">weight</span><span class="o">=</span><span class="s">&#39;weight&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Return the biadjacency matrix of the bipartite graph G.</span>
+
+<span class="sd">    Let `G = (U, V, E)` be a bipartite graph with node sets</span>
+<span class="sd">    `U = u_{1},...,u_{r}` and `V = v_{1},...,v_{s}`. The biadjacency</span>
+<span class="sd">    matrix [1] is the `r` x `s` matrix `B` in which `b_{i,j} = 1`</span>
+<span class="sd">    if, and only if, `(u_i, v_j) \in E`. If the parameter `weight` is</span>
+<span class="sd">    not `None` and matches the name of an edge attribute, its value is</span>
+<span class="sd">    used instead of 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    row_order : list of nodes</span>
+<span class="sd">       The rows of the matrix are ordered according to the list of nodes.</span>
+
+<span class="sd">    column_order : list, optional</span>
+<span class="sd">       The columns of the matrix are ordered according to the list of nodes.</span>
+<span class="sd">       If column_order is None, then the ordering of columns is arbitrary.</span>
+
+<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">       The edge data key used to provide each value in the matrix.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    dtype : NumPy data type, optional</span>
+<span class="sd">        A valid single NumPy data type used to initialize the array.</span>
+<span class="sd">        This must be a simple type such as int or numpy.float64 and</span>
+<span class="sd">        not a compound data type (see to_numpy_recarray)</span>
+<span class="sd">        If None, then the NumPy default is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    B : numpy matrix</span>
+<span class="sd">      Biadjacency matrix representation of the bipartite graph G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    No attempt is made to check that the input graph is bipartite.</span>
+
+<span class="sd">    For directed bipartite graphs only successors are considered as neighbors.</span>
+<span class="sd">    To obtain an adjacency matrix with ones (or weight values) for both</span>
+<span class="sd">    predecessors and successors you have to generate two biadjacency matrices</span>
+<span class="sd">    where the rows of one of them are the columns of the other, and then add</span>
+<span class="sd">    one to the transpose of the other.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    to_numpy_matrix</span>
+<span class="sd">    adjacency_matrix</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] http://en.wikipedia.org/wiki/Adjacency_matrix#Adjacency_matrix_of_a_bipartite_graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;adjacency_matrix() requires numpy &#39;</span><span class="p">,</span>
+                          <span class="s">&#39;http://scipy.org/&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">column_order</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">column_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">row_order</span><span class="p">))</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">row_order</span><span class="p">,</span><span class="n">count</span><span class="p">()))</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">column_order</span><span class="p">,</span><span class="n">count</span><span class="p">()))</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">col</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">row_order</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">u</span><span class="p">],</span><span class="n">col</span><span class="p">[</span><span class="n">v</span><span class="p">]]</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="color"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.color.html#networkx.algorithms.bipartite.basic.color">[docs]</a><span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a two-coloring of the graph.</span>
+
+<span class="sd">    Raises an exception if the graph is not bipartite.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    color : dictionary</span>
+<span class="sd">       A dictionary keyed by node with a 1 or 0 as data for each node color.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError if the graph is not two-colorable.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; c = bipartite.color(G)</span>
+<span class="sd">    &gt;&gt;&gt; print(c)</span>
+<span class="sd">    {0: 1, 1: 0, 2: 1, 3: 0}</span>
+
+<span class="sd">    You can use this to set a node attribute indicating the biparite set:</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.set_node_attributes(G, &#39;bipartite&#39;, c)</span>
+<span class="sd">    &gt;&gt;&gt; print(G.node[0][&#39;bipartite&#39;])</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; print(G.node[1][&#39;bipartite&#39;])</span>
+<span class="sd">    0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="kn">import</span> <span class="nn">itertools</span>
+        <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">G</span><span class="o">.</span><span class="n">predecessors_iter</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+                                                  <span class="n">G</span><span class="o">.</span><span class="n">successors_iter</span><span class="p">(</span><span class="n">v</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neighbors</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors_iter</span>
+
+    <span class="n">color</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span> <span class="c"># handle disconnected graphs</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">color</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">])</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="c"># skip isolates</span>
+            <span class="k">continue</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">color</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c"># nodes seen with color (1 or 0)</span>
+        <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">color</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="c"># opposite color of node v</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">color</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">color</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">==</span> <span class="n">color</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Graph is not bipartite.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">color</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+                    <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="c"># color isolates with 0</span>
+    <span class="n">color</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">isolates</span><span class="p">(</span><span class="n">G</span><span class="p">),</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">color</span>
+</div>
+<div class="viewcode-block" id="is_bipartite"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.is_bipartite.html#networkx.algorithms.bipartite.basic.is_bipartite">[docs]</a><span class="k">def</span> <span class="nf">is_bipartite</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns True if graph G is bipartite, False if not.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; print(bipartite.is_bipartite(G))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    color, is_bipartite_node_set</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">color</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="is_bipartite_node_set"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.is_bipartite_node_set.html#networkx.algorithms.bipartite.basic.is_bipartite_node_set">[docs]</a><span class="k">def</span> <span class="nf">is_bipartite_node_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if nodes and G/nodes are a bipartition of G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodes: list or container</span>
+<span class="sd">      Check if nodes are a one of a bipartite set.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; X = set([1,3])</span>
+<span class="sd">    &gt;&gt;&gt; bipartite.is_bipartite_node_set(G,X)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For connected graphs the bipartite sets are unique.  This function handles</span>
+<span class="sd">    disconnected graphs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">S</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">CC</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="o">=</span><span class="n">sets</span><span class="p">(</span><span class="n">CC</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Y</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span>
+                 <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">S</span><span class="p">)</span> <span class="ow">and</span> <span class="n">X</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="sets"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.sets.html#networkx.algorithms.bipartite.basic.sets">[docs]</a><span class="k">def</span> <span class="nf">sets</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns bipartite node sets of graph G.</span>
+
+<span class="sd">    Raises an exception if the graph is not bipartite.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (X,Y) : two-tuple of sets</span>
+<span class="sd">       One set of nodes for each part of the bipartite graph.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; X, Y = bipartite.sets(G)</span>
+<span class="sd">    &gt;&gt;&gt; list(X)</span>
+<span class="sd">    [0, 2]</span>
+<span class="sd">    &gt;&gt;&gt; list(Y)</span>
+<span class="sd">    [1, 3]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    color</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">color</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">c</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="c"># c[n] == 1</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">c</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="c"># c[n] == 0</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="density"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.density.html#networkx.algorithms.bipartite.basic.density">[docs]</a><span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return density of bipartite graph B.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodes: list or container</span>
+<span class="sd">      Nodes in one set of the bipartite graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    d : float</span>
+<span class="sd">       The bipartite density</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_bipartite_graph(3,2)</span>
+<span class="sd">    &gt;&gt;&gt; X=set([0,1,2])</span>
+<span class="sd">    &gt;&gt;&gt; bipartite.density(G,X)</span>
+<span class="sd">    1.0</span>
+<span class="sd">    &gt;&gt;&gt; Y=set([3,4])</span>
+<span class="sd">    &gt;&gt;&gt; bipartite.density(G,Y)</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    color</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="n">m</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="n">nb</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">nt</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="n">nb</span>
+    <span class="k">if</span> <span class="n">m</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="c"># includes cases n==0 and n==1</span>
+        <span class="n">d</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">d</span><span class="o">=</span><span class="n">m</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="nb">float</span><span class="p">(</span><span class="n">nb</span><span class="o">*</span><span class="n">nt</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">nb</span><span class="o">*</span><span class="n">nt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">d</span>
+</div>
+<div class="viewcode-block" id="degrees"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.basic.degrees.html#networkx.algorithms.bipartite.basic.degrees">[docs]</a><span class="k">def</span> <span class="nf">degrees</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the degrees of the two node sets in the bipartite graph B.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodes: list or container</span>
+<span class="sd">      Nodes in one set of the bipartite graph.</span>
+
+<span class="sd">    weight : string or None, optional (default=None)</span>
+<span class="sd">       The edge attribute that holds the numerical value used as a weight.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+<span class="sd">       The degree is the sum of the edge weights adjacent to the node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (degX,degY) : tuple of dictionaries</span>
+<span class="sd">       The degrees of the two bipartite sets as dictionaries keyed by node.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_bipartite_graph(3,2)</span>
+<span class="sd">    &gt;&gt;&gt; Y=set([3,4])</span>
+<span class="sd">    &gt;&gt;&gt; degX,degY=bipartite.degrees(G,Y)</span>
+<span class="sd">    &gt;&gt;&gt; degX</span>
+<span class="sd">    {0: 2, 1: 2, 2: 2}</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    color, density</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bottom</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">top</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">B</span><span class="p">)</span><span class="o">-</span><span class="n">bottom</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">top</span><span class="p">,</span><span class="n">weight</span><span class="p">),</span><span class="n">B</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">bottom</span><span class="p">,</span><span class="n">weight</span><span class="p">))</span>
+
+
+<span class="c"># fixture for nose tests</span></div>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="kn">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s">&quot;NumPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

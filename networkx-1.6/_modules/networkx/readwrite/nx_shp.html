@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.readwrite.nx_shp &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.readwrite.nx_shp</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*********</span>
+<span class="sd">Shapefile</span>
+<span class="sd">*********</span>
+
+<span class="sd">Generates a networkx.DiGraph from point and line shapefiles.</span>
+
+<span class="sd">Point geometries are translated into nodes, lines into edges. Coordinate tuples</span>
+<span class="sd">are used as keys. Attributes are preserved, line geometries are simplified into</span>
+<span class="sd">start and end coordinates. Accepts a single shapefile or directory of many</span>
+<span class="sd">shapefiles.</span>
+
+<span class="sd">&quot;The Esri Shapefile or simply a shapefile is a popular geospatial vector</span>
+<span class="sd">data format for geographic information systems software. It is developed</span>
+<span class="sd">and regulated by Esri as a (mostly) open specification for data</span>
+<span class="sd">interoperability among Esri and other software products.&quot;</span>
+<span class="sd">See http://en.wikipedia.org/wiki/Shapefile for additional information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2010 by</span>
+<span class="c">#    Ben Reilly &lt;benwreilly@gmail.com&gt;</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Ben Reilly (benwreilly@gmail.com)&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;read_shp&#39;</span><span class="p">,</span> <span class="s">&#39;write_shp&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="read_shp"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.nx_shp.read_shp.html#networkx.readwrite.nx_shp.read_shp">[docs]</a><span class="k">def</span> <span class="nf">read_shp</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates a networkx.DiGraph from shapefiles. Point geometries are</span>
+<span class="sd">    translated into nodes, lines into edges. Coordinate tuples are used as</span>
+<span class="sd">    keys. Attributes are preserved, line geometries are simplified into start</span>
+<span class="sd">    and end coordinates. Accepts a single shapefile or directory of many</span>
+<span class="sd">    shapefiles.</span>
+
+<span class="sd">    &quot;The Esri Shapefile or simply a shapefile is a popular geospatial vector</span>
+<span class="sd">    data format for geographic information systems software [1]_.&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File, directory, or filename to read.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_shp(&#39;test.shp&#39;) # doctest: +SKIP</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Shapefile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">ogr</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;read_shp requires OGR: http://www.gdal.org/&quot;</span><span class="p">)</span>
+
+    <span class="n">net</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">getfieldinfo</span><span class="p">(</span><span class="n">lyr</span><span class="p">,</span> <span class="n">feature</span><span class="p">,</span> <span class="n">flds</span><span class="p">):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">feature</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">GetField</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">GetFieldIndex</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">flds</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">addlyr</span><span class="p">(</span><span class="n">lyr</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">findex</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">lyr</span><span class="o">.</span><span class="n">GetFeatureCount</span><span class="p">()):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">lyr</span><span class="o">.</span><span class="n">GetFeature</span><span class="p">(</span><span class="n">findex</span><span class="p">)</span>
+            <span class="n">flddata</span> <span class="o">=</span> <span class="n">getfieldinfo</span><span class="p">(</span><span class="n">lyr</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">fields</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">flddata</span><span class="p">))</span>
+            <span class="n">attributes</span><span class="p">[</span><span class="s">&quot;ShpName&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lyr</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">GetGeometryType</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c">#point</span>
+                <span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">((</span><span class="n">g</span><span class="o">.</span><span class="n">GetPoint_2D</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">attributes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">GetGeometryType</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> <span class="c">#linestring</span>
+                <span class="n">attributes</span><span class="p">[</span><span class="s">&quot;Wkb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ExportToWkb</span><span class="p">()</span>
+                <span class="n">attributes</span><span class="p">[</span><span class="s">&quot;Wkt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ExportToWkt</span><span class="p">()</span>
+                <span class="n">attributes</span><span class="p">[</span><span class="s">&quot;Json&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">ExportToJson</span><span class="p">()</span>
+                <span class="n">last</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">GetPointCount</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">GetPoint_2D</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">g</span><span class="o">.</span><span class="n">GetPoint_2D</span><span class="p">(</span><span class="n">last</span><span class="p">),</span> <span class="n">attributes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">shp</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">lyrcount</span> <span class="o">=</span> <span class="n">shp</span><span class="o">.</span><span class="n">GetLayerCount</span><span class="p">()</span> <span class="c">#multiple layers indicate a directory</span>
+        <span class="k">for</span> <span class="n">lyrindex</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">lyrcount</span><span class="p">):</span>
+            <span class="n">lyr</span> <span class="o">=</span> <span class="n">shp</span><span class="o">.</span><span class="n">GetLayerByIndex</span><span class="p">(</span><span class="n">lyrindex</span><span class="p">)</span>
+            <span class="n">flds</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">GetName</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lyr</span><span class="o">.</span><span class="n">schema</span><span class="p">]</span>
+            <span class="n">addlyr</span><span class="p">(</span><span class="n">lyr</span><span class="p">,</span> <span class="n">flds</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">net</span>
+</div>
+<div class="viewcode-block" id="write_shp"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.nx_shp.write_shp.html#networkx.readwrite.nx_shp.write_shp">[docs]</a><span class="k">def</span> <span class="nf">write_shp</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">outdir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes a networkx.DiGraph to two shapefiles, edges and nodes.</span>
+<span class="sd">    Nodes and edges are expected to have a Well Known Binary (Wkb) or</span>
+<span class="sd">    Well Known Text (Wkt) key in order to generate geometries. Also</span>
+<span class="sd">    acceptable are nodes with a numeric tuple key (x,y).</span>
+
+<span class="sd">    &quot;The Esri Shapefile or simply a shapefile is a popular geospatial vector</span>
+<span class="sd">    data format for geographic information systems software [1]_.&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    outdir : directory path</span>
+<span class="sd">       Output directory for the two shapefiles.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    nx.write_shp(digraph, &#39;/shapefiles&#39;) # doctest +SKIP</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Shapefile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">ogr</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&quot;write_shp requires OGR: http://www.gdal.org/&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">netgeometry</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;Wkb&#39;</span><span class="p">):</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">CreateGeometryFromWkb</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;Wkb&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;Wkt&#39;</span><span class="p">):</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">CreateGeometryFromWkt</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;Wkt&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="s">&#39;tuple&#39;</span><span class="p">:</span> <span class="c"># edge keys are packed tuples</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">Geometry</span><span class="p">(</span><span class="n">ogr</span><span class="o">.</span><span class="n">wkbLineString</span><span class="p">)</span>
+            <span class="n">_from</span><span class="p">,</span> <span class="n">_to</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">geom</span><span class="o">.</span><span class="n">SetPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">_from</span><span class="p">)</span>
+            <span class="n">geom</span><span class="o">.</span><span class="n">SetPoint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">_to</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">geom</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">Geometry</span><span class="p">(</span><span class="n">ogr</span><span class="o">.</span><span class="n">wkbPoint</span><span class="p">)</span>
+            <span class="n">geom</span><span class="o">.</span><span class="n">SetPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">geom</span>
+
+    <span class="k">def</span> <span class="nf">create_feature</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">lyr</span><span class="p">):</span>
+        <span class="n">feature</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">Feature</span><span class="p">(</span><span class="n">lyr</span><span class="o">.</span><span class="n">GetLayerDefn</span><span class="p">())</span>
+        <span class="n">feature</span><span class="o">.</span><span class="n">SetGeometry</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="n">lyr</span><span class="o">.</span><span class="n">CreateFeature</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+        <span class="n">feature</span><span class="o">.</span><span class="n">Destroy</span><span class="p">()</span>
+
+    <span class="n">drv</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="s">&quot;ESRI Shapefile&quot;</span><span class="p">)</span>
+    <span class="n">shpdir</span> <span class="o">=</span> <span class="n">drv</span><span class="o">.</span><span class="n">CreateDataSource</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">shpdir</span><span class="o">.</span><span class="n">CreateLayer</span><span class="p">(</span><span class="s">&quot;nodes&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">ogr</span><span class="o">.</span><span class="n">wkbPoint</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="ow">or</span> <span class="p">[{}]</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">netgeometry</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">create_feature</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">shpdir</span><span class="o">.</span><span class="n">CreateLayer</span><span class="p">(</span><span class="s">&quot;edges&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">ogr</span><span class="o">.</span><span class="n">wkbLineString</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">netgeometry</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">create_feature</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+
+    <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+<span class="c"># fixture for nose tests</span></div>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="kn">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">ogr</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s">&quot;OGR not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

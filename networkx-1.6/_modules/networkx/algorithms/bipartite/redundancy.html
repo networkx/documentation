@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.bipartite.redundancy &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.bipartite.redundancy</h1><div class="highlight"><pre>
+<span class="c">#-*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Node redundancy for bipartite graphs.&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2011 by </span>
+<span class="c">#    Jordi Torrents &lt;jtorrents@milnou.net&gt;</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;node_redundancy&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="node_redundancy"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.bipartite.redundancy.node_redundancy.html#networkx.algorithms.bipartite.redundancy.node_redundancy">[docs]</a><span class="k">def</span> <span class="nf">node_redundancy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Compute bipartite node redundancy coefficient.</span>
+
+<span class="s">    The redundancy coefficient of a node `v` is the fraction of pairs of </span>
+<span class="s">    neighbors of `v` that are both linked to other nodes. In a one-mode</span>
+<span class="s">    projection these nodes would be linked together even if `v`  were </span>
+<span class="s">    not there.</span>
+<span class="s">    </span>
+<span class="s">    .. math::</span>
+
+<span class="s">        rc(v) = \frac{|\{\{u,w\} \subseteq N(v),</span>
+<span class="s">        \: \exists v&#39; \neq  v,\: (v&#39;,u) \in E\: </span>
+<span class="s">        \mathrm{and}\: (v&#39;,w) \in E\}|}{ \frac{|N(v)|(|N(v)|-1)}{2}}</span>
+
+<span class="s">    where `N(v)` are the neighbors of `v` in `G`.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    G : graph</span>
+<span class="s">        A bipartite graph</span>
+
+<span class="s">    nodes : list or iterable (optional)</span>
+<span class="s">        Compute redundancy for these nodes. The default is all nodes in G.</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    redundancy : dictionary</span>
+<span class="s">        A dictionary keyed by node with the node redundancy value.</span>
+
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; from networkx.algorithms import bipartite</span>
+<span class="s">    &gt;&gt;&gt; G = nx.cycle_graph(4)</span>
+<span class="s">    &gt;&gt;&gt; rc = bipartite.node_redundancy(G)</span>
+<span class="s">    &gt;&gt;&gt; rc[0]</span>
+<span class="s">    1.0</span>
+
+<span class="s">    Compute the average redundancy for the graph:</span>
+
+<span class="s">    &gt;&gt;&gt; sum(rc.values())/len(G)</span>
+<span class="s">    1.0</span>
+
+<span class="s">    Compute the average redundancy for a set of nodes:</span>
+
+<span class="s">    &gt;&gt;&gt; nodes = [0, 2]</span>
+<span class="s">    &gt;&gt;&gt; sum(rc[n] for n in nodes)/len(nodes)</span>
+<span class="s">    1.0</span>
+
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] Latapy, Matthieu, Clémence Magnien, and Nathalie Del Vecchio (2008).</span>
+<span class="s">       Basic notions for the analysis of large two-mode networks. </span>
+<span class="s">       Social Networks 30(1), 31--48.</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="n">rc</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">((</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">w</span><span class="p">]))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">overlap</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">overlap</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">rc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">overlap</span><span class="o">*</span><span class="n">norm</span>
+    <span class="k">return</span> <span class="n">rc</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

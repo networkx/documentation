@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.swap &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.swap</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Swap edges in a graph.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Dan Schult (dschult@colgate.edu)&#39;</span>
+                        <span class="s">&#39;Joel Miller (joel.c.miller.research@gmail.com)&#39;</span>
+                        <span class="s">&#39;Ben Edwards&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;double_edge_swap&#39;</span><span class="p">,</span>
+           <span class="s">&#39;connected_double_edge_swap&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="double_edge_swap"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.swap.double_edge_swap.html#networkx.algorithms.swap.double_edge_swap">[docs]</a><span class="k">def</span> <span class="nf">double_edge_swap</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nswap</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_tries</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Swap two edges in the graph while keeping the node degrees fixed.</span>
+
+<span class="sd">    A double-edge swap removes two randomly chosen edges u-v and x-y</span>
+<span class="sd">    and creates the new edges u-x and v-y::</span>
+
+<span class="sd">     u--v            u  v</span>
+<span class="sd">            becomes  |  |</span>
+<span class="sd">     x--y            x  y</span>
+
+<span class="sd">    If either the edge u-x or v-y already exist no swap is performed </span>
+<span class="sd">    and another attempt is made to find a suitable edge pair.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX (undirected) Graph.</span>
+
+<span class="sd">    nswap : integer (optional)</span>
+<span class="sd">       Number of double-edge swaps to perform </span>
+
+<span class="sd">    max_tries : integer (optional)</span>
+<span class="sd">       Maximum number of attempts to swap nswap edges.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       The graph after nswap double edge swaps.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Does not enforce any connectivity constraints.</span>
+
+<span class="sd">    The graph G is modified in place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>\
+            <span class="s">&quot;double_edge_swap() not defined for directed graphs.&quot;</span><span class="p">)</span>
+    <span class="c"># Instead of choosing uniformly at random from a generated edge list, </span>
+    <span class="c"># this algorithm chooses nonuniformly from the set of nodes with</span>
+    <span class="c"># probability weighted by degree.</span>
+    <span class="n">n</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">swapcount</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">keys</span><span class="p">,</span><span class="n">degrees</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="c"># keys, degree</span>
+    <span class="n">cdf</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">cumulative_distribution</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span>  <span class="c"># cdf of degree</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cdf</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Graph has less than four nodes.&quot;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">swapcount</span> <span class="o">&lt;</span> <span class="n">nswap</span><span class="p">:</span>
+<span class="c">#        if random.random() &lt; 0.5: continue # trick to avoid periodicities?</span>
+        <span class="c"># pick two randon edges without creating edge list</span>
+        <span class="c"># choose source node indices from discrete distribution</span>
+        <span class="p">(</span><span class="n">ui</span><span class="p">,</span><span class="n">xi</span><span class="p">)</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">discrete_sequence</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">cdistribution</span><span class="o">=</span><span class="n">cdf</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">ui</span><span class="o">==</span><span class="n">xi</span><span class="p">:</span> 
+            <span class="k">continue</span> <span class="c"># same source, skip</span>
+        <span class="n">u</span><span class="o">=</span><span class="n">keys</span><span class="p">[</span><span class="n">ui</span><span class="p">]</span> <span class="c"># convert index to label</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">keys</span><span class="p">[</span><span class="n">xi</span><span class="p">]</span> 
+        <span class="c"># choose target uniformly from neighbors</span>
+        <span class="n">v</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]))</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">==</span><span class="n">y</span><span class="p">:</span> 
+            <span class="k">continue</span> <span class="c"># same target, skip</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">]):</span> <span class="c"># don&#39;t create parallel edges</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">swapcount</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">max_tries</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;Maximum number of swap attempts (</span><span class="si">%s</span><span class="s">) exceeded &#39;</span><span class="o">%</span><span class="n">n</span> <span class="o">+</span>
+            <span class="s">&#39;before desired swaps achieved (</span><span class="si">%s</span><span class="s">).&#39;</span><span class="o">%</span><span class="n">nswap</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXAlgorithmError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<div class="viewcode-block" id="connected_double_edge_swap"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.swap.connected_double_edge_swap.html#networkx.algorithms.swap.connected_double_edge_swap">[docs]</a><span class="k">def</span> <span class="nf">connected_double_edge_swap</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nswap</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Attempt nswap double-edge swaps on the graph G.</span>
+
+<span class="sd">    Returns the count of successful swaps.  Enforces connectivity.</span>
+<span class="sd">    The graph G is modified in place.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    A double-edge swap removes two randomly choseen edges u-v and x-y</span>
+<span class="sd">    and creates the new edges u-x and v-y::</span>
+
+<span class="sd">     u--v            u  v</span>
+<span class="sd">            becomes  |  |</span>
+<span class="sd">     x--y            x  y</span>
+
+
+<span class="sd">    If either the edge u-x or v-y already exist no swap is performed so</span>
+<span class="sd">    the actual count of swapped edges is always &lt;= nswap</span>
+
+<span class="sd">    The initial graph G must be connected and the resulting graph is connected.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] C. Gkantsidis and M. Mihail and E. Zegura,</span>
+<span class="sd">           The Markov chain simulation method for generating connected</span>
+<span class="sd">           power law random graphs, 2003.</span>
+<span class="sd">           http://citeseer.ist.psu.edu/gkantsidis03markov.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">math</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+       <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s">&quot;Graph not connected&quot;</span><span class="p">)</span>
+
+    <span class="n">n</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">swapcount</span><span class="o">=</span><span class="mi">0</span>
+    <span class="n">deg</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="n">dk</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">deg</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="c"># Label key for nodes</span>
+    <span class="n">cdf</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">cumulative_distribution</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> 
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cdf</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Graph has less than four nodes.&quot;</span><span class="p">)</span>
+    <span class="n">window</span><span class="o">=</span><span class="mi">1</span>
+    <span class="k">while</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">nswap</span><span class="p">:</span>
+        <span class="n">wcount</span><span class="o">=</span><span class="mi">0</span>
+        <span class="n">swapped</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">while</span> <span class="n">wcount</span> <span class="o">&lt;</span> <span class="n">window</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">nswap</span><span class="p">:</span>
+            <span class="c"># Pick two random edges without creating edge list</span>
+            <span class="c"># Choose source nodes from discrete degree distribution</span>
+            <span class="p">(</span><span class="n">ui</span><span class="p">,</span><span class="n">xi</span><span class="p">)</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">discrete_sequence</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">cdistribution</span><span class="o">=</span><span class="n">cdf</span><span class="p">)</span> 
+            <span class="k">if</span> <span class="n">ui</span><span class="o">==</span><span class="n">xi</span><span class="p">:</span> <span class="k">continue</span> <span class="c"># same source, skip</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">dk</span><span class="p">[</span><span class="n">ui</span><span class="p">]</span> <span class="c"># convert index to label</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">dk</span><span class="p">[</span><span class="n">xi</span><span class="p">]</span> 
+            <span class="c"># Choose targets uniformly from neighbors</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">u</span><span class="p">))</span> 
+            <span class="n">y</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="c">#</span>
+            <span class="k">if</span> <span class="n">v</span><span class="o">==</span><span class="n">y</span><span class="p">:</span> <span class="k">continue</span> <span class="c"># same target, skip</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">)):</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">swapped</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span>
+                <span class="n">swapcount</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="n">wcount</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="n">window</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># not connected, undo changes from previous window, decrease window</span>
+            <span class="k">while</span> <span class="n">swapped</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">=</span><span class="n">swapped</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+                <span class="n">swapcount</span><span class="o">-=</span><span class="mi">1</span>
+            <span class="n">window</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">window</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">swapcount</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

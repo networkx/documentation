@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.traversal.depth_first_search &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.traversal.depth_first_search</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">==================</span>
+<span class="sd">Depth-first search </span>
+<span class="sd">==================</span>
+
+<span class="sd">Basic algorithms for depth-first searching.</span>
+
+<span class="sd">Based on http://www.ics.uci.edu/~eppstein/PADS/DFS.py</span>
+<span class="sd">by D. Eppstein, July 2004.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg &lt;hagberg@lanl.gov&gt;&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;dfs_edges&#39;</span><span class="p">,</span> <span class="s">&#39;dfs_tree&#39;</span><span class="p">,</span>
+           <span class="s">&#39;dfs_predecessors&#39;</span><span class="p">,</span> <span class="s">&#39;dfs_successors&#39;</span><span class="p">,</span>
+           <span class="s">&#39;dfs_preorder_nodes&#39;</span><span class="p">,</span><span class="s">&#39;dfs_postorder_nodes&#39;</span><span class="p">,</span>
+           <span class="s">&#39;dfs_labeled_edges&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<div class="viewcode-block" id="dfs_edges"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_edges.html#networkx.algorithms.traversal.depth_first_search.dfs_edges">[docs]</a><span class="k">def</span> <span class="nf">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produce edges in a depth-first-search starting at source.&quot;&quot;&quot;</span>
+    <span class="c"># Based on http://www.ics.uci.edu/~eppstein/PADS/DFS.py</span>
+    <span class="c"># by D. Eppstein, July 2004.</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># produce edges for all components</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># produce edges for components with source</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">visited</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">start</span><span class="p">,</span><span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">start</span><span class="p">]))]</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">,</span><span class="n">children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span><span class="n">child</span>
+                    <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">child</span><span class="p">,</span><span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">child</span><span class="p">])))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="dfs_tree"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_tree.html#networkx.algorithms.traversal.depth_first_search.dfs_tree">[docs]</a><span class="k">def</span> <span class="nf">dfs_tree</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return directed tree of depth-first-search from source.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="dfs_predecessors"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_predecessors.html#networkx.algorithms.traversal.depth_first_search.dfs_predecessors">[docs]</a><span class="k">def</span> <span class="nf">dfs_predecessors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return dictionary of predecessors in depth-first-search from source.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">t</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="dfs_successors"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_successors.html#networkx.algorithms.traversal.depth_first_search.dfs_successors">[docs]</a><span class="k">def</span> <span class="nf">dfs_successors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return dictionary of successors in depth-first-search from source.&quot;&quot;&quot;</span>
+    <span class="n">d</span><span class="o">=</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">):</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dfs_postorder_nodes"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_postorder_nodes.html#networkx.algorithms.traversal.depth_first_search.dfs_postorder_nodes">[docs]</a><span class="k">def</span> <span class="nf">dfs_postorder_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produce nodes in a depth-first-search post-ordering starting </span>
+<span class="sd">    from source.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">post</span><span class="o">=</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">dfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s">&#39;dir&#39;</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;reverse&#39;</span><span class="p">)</span>
+    <span class="c"># chain source to end of pre-ordering</span>
+<span class="c">#    return chain(post,[source])</span>
+    <span class="k">return</span> <span class="n">post</span>
+
+</div>
+<div class="viewcode-block" id="dfs_preorder_nodes"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_preorder_nodes.html#networkx.algorithms.traversal.depth_first_search.dfs_preorder_nodes">[docs]</a><span class="k">def</span> <span class="nf">dfs_preorder_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produce nodes in a depth-first-search pre-ordering starting at source.&quot;&quot;&quot;</span>
+    <span class="n">pre</span><span class="o">=</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">dfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">)</span> 
+         <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s">&#39;dir&#39;</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;forward&#39;</span><span class="p">)</span>
+    <span class="c"># chain source to beginning of pre-ordering</span>
+<span class="c">#    return chain([source],pre)</span>
+    <span class="k">return</span> <span class="n">pre</span>
+
+</div>
+<div class="viewcode-block" id="dfs_labeled_edges"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.traversal.depth_first_search.dfs_labeled_edges.html#networkx.algorithms.traversal.depth_first_search.dfs_labeled_edges">[docs]</a><span class="k">def</span> <span class="nf">dfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produce edges in a depth-first-search starting at source and</span>
+<span class="sd">    labeled by direction type (forward, reverse, nontree).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Based on http://www.ics.uci.edu/~eppstein/PADS/DFS.py</span>
+    <span class="c"># by D. Eppstein, July 2004.</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># produce edges for all components</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># produce edges for components with source</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">visited</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">start</span><span class="p">,</span><span class="n">start</span><span class="p">,{</span><span class="s">&#39;dir&#39;</span><span class="p">:</span><span class="s">&#39;forward&#39;</span><span class="p">}</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">start</span><span class="p">,</span><span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">start</span><span class="p">]))]</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">,</span><span class="n">children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span><span class="n">child</span><span class="p">,{</span><span class="s">&#39;dir&#39;</span><span class="p">:</span><span class="s">&#39;nontree&#39;</span><span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span><span class="n">child</span><span class="p">,{</span><span class="s">&#39;dir&#39;</span><span class="p">:</span><span class="s">&#39;forward&#39;</span><span class="p">}</span>
+                    <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">child</span><span class="p">,</span><span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">child</span><span class="p">])))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">stack</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">parent</span><span class="p">,{</span><span class="s">&#39;dir&#39;</span><span class="p">:</span><span class="s">&#39;reverse&#39;</span><span class="p">}</span>
+        <span class="k">yield</span> <span class="n">start</span><span class="p">,</span><span class="n">start</span><span class="p">,{</span><span class="s">&#39;dir&#39;</span><span class="p">:</span><span class="s">&#39;reverse&#39;</span><span class="p">}</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

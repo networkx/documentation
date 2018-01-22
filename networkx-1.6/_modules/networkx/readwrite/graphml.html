@@ -1,0 +1,633 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.readwrite.graphml &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.readwrite.graphml</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*******</span>
+<span class="sd">GraphML</span>
+<span class="sd">*******</span>
+<span class="sd">Read and write graphs in GraphML format.</span>
+
+<span class="sd">This implementation does not support mixed graphs (directed and unidirected </span>
+<span class="sd">edges together), hyperedges, nested graphs, or ports. </span>
+
+<span class="sd">&quot;GraphML is a comprehensive and easy-to-use file format for graphs. It</span>
+<span class="sd">consists of a language core to describe the structural properties of a</span>
+<span class="sd">graph and a flexible extension mechanism to add application-specific</span>
+<span class="sd">data. Its main features include support of</span>
+
+<span class="sd">    * directed, undirected, and mixed graphs,</span>
+<span class="sd">    * hypergraphs,</span>
+<span class="sd">    * hierarchical graphs,</span>
+<span class="sd">    * graphical representations,</span>
+<span class="sd">    * references to external data,</span>
+<span class="sd">    * application-specific attribute data, and</span>
+<span class="sd">    * light-weight parsers.</span>
+
+<span class="sd">Unlike many other file formats for graphs, GraphML does not use a</span>
+<span class="sd">custom syntax. Instead, it is based on XML and hence ideally suited as</span>
+<span class="sd">a common denominator for all kinds of services generating, archiving,</span>
+<span class="sd">or processing graphs.&quot;</span>
+
+<span class="sd">http://graphml.graphdrawing.org/</span>
+
+<span class="sd">Format</span>
+<span class="sd">------</span>
+<span class="sd">GraphML is an XML format.  See </span>
+<span class="sd">http://graphml.graphdrawing.org/specification.html for the specification and </span>
+<span class="sd">http://graphml.graphdrawing.org/primer/graphml-primer.html</span>
+<span class="sd">for examples.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Salim Fadhley&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span>
+                            <span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;write_graphml&#39;</span><span class="p">,</span> <span class="s">&#39;read_graphml&#39;</span><span class="p">,</span> <span class="s">&#39;generate_graphml&#39;</span><span class="p">,</span>
+           <span class="s">&#39;GraphMLWriter&#39;</span><span class="p">,</span> <span class="s">&#39;GraphMLReader&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">open_file</span><span class="p">,</span> <span class="n">make_str</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">xml.etree.cElementTree</span> <span class="kn">import</span> <span class="n">Element</span><span class="p">,</span> <span class="n">ElementTree</span><span class="p">,</span> <span class="n">tostring</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">xml.etree.ElementTree</span> <span class="kn">import</span> <span class="n">Element</span><span class="p">,</span> <span class="n">ElementTree</span><span class="p">,</span> <span class="n">tostring</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;wb&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="write_graphml"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.graphml.write_graphml.html#networkx.readwrite.graphml.write_graphml">[docs]</a><span class="k">def</span> <span class="nf">write_graphml</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span><span class="n">prettyprint</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write G in GraphML XML format to path</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A networkx graph</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write.  </span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be compressed.</span>
+<span class="sd">    encoding : string (optional)</span>
+<span class="sd">       Encoding for text data.</span>
+<span class="sd">    prettyprint : bool (optional)</span>
+<span class="sd">       If True use line breaks and indenting in output XML.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_graphml(G, &quot;test.graphml&quot;)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation does not support mixed graphs (directed and unidirected </span>
+<span class="sd">    edges together) hyperedges, nested graphs, or ports. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">GraphMLWriter</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span><span class="n">prettyprint</span><span class="o">=</span><span class="n">prettyprint</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">add_graph_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">generate_graphml</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span><span class="n">prettyprint</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate GraphML lines for G</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A networkx graph</span>
+<span class="sd">    encoding : string (optional)</span>
+<span class="sd">       Encoding for text data.</span>
+<span class="sd">    prettyprint : bool (optional)</span>
+<span class="sd">       If True use line breaks and indenting in output XML.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; linefeed=chr(10) # linefeed=\n</span>
+<span class="sd">    &gt;&gt;&gt; s=linefeed.join(nx.generate_graphml(G))  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; for line in nx.generate_graphml(G):  # doctest: +SKIP</span>
+<span class="sd">    ...    print(line)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation does not support mixed graphs (directed and unidirected </span>
+<span class="sd">    edges together) hyperedges, nested graphs, or ports. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">GraphMLWriter</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span><span class="n">prettyprint</span><span class="o">=</span><span class="n">prettyprint</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">add_graph_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">writer</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="k">yield</span> <span class="n">line</span>
+
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;rb&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="read_graphml"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.graphml.read_graphml.html#networkx.readwrite.graphml.read_graphml">[docs]</a><span class="k">def</span> <span class="nf">read_graphml</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">node_type</span><span class="o">=</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read graph in GraphML format from path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write.  </span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be compressed.</span>
+
+<span class="sd">    node_type: Python type (default: str)</span>
+<span class="sd">       Convert node ids to this type </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    graph: NetworkX graph</span>
+<span class="sd">        If no parallel edges are found a Graph or DiGraph is returned.</span>
+<span class="sd">        Otherwise a MultiGraph or MultiDiGraph is returned.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation does not support mixed graphs (directed and unidirected </span>
+<span class="sd">    edges together), hypergraphs, nested graphs, or ports. </span>
+<span class="sd">    </span>
+<span class="sd">    For multigraphs the GraphML edge &quot;id&quot; will be used as the edge</span>
+<span class="sd">    key.  If not specified then they &quot;key&quot; attribute will be used.  If</span>
+<span class="sd">    there is no &quot;key&quot; attribute a default NetworkX multigraph edge key</span>
+<span class="sd">    will be provided.</span>
+
+<span class="sd">    Files with the yEd &quot;yfiles&quot; extension will can be read but the graphics</span>
+<span class="sd">    information is discarded.</span>
+
+<span class="sd">    yEd compressed files (&quot;file.graphmlz&quot; extension) can be read by renaming</span>
+<span class="sd">    the file to &quot;file.graphml.gz&quot;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">GraphMLReader</span><span class="p">(</span><span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">)</span>
+    <span class="c"># need to check for multiple graphs</span>
+    <span class="n">glist</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">glist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+</div>
+<span class="k">class</span> <span class="nc">GraphML</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">NS_GRAPHML</span> <span class="o">=</span> <span class="s">&quot;http://graphml.graphdrawing.org/xmlns&quot;</span>
+    <span class="n">NS_XSI</span> <span class="o">=</span> <span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+    <span class="c">#xmlns:y=&quot;http://www.yworks.com/xml/graphml&quot;</span>
+    <span class="n">NS_Y</span> <span class="o">=</span> <span class="s">&quot;http://www.yworks.com/xml/graphml&quot;</span>
+    <span class="n">SCHEMALOCATION</span> <span class="o">=</span> \
+        <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;http://graphml.graphdrawing.org/xmlns&#39;</span><span class="p">,</span>
+                  <span class="s">&#39;http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd&#39;</span><span class="p">])</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">chr</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>     <span class="c"># Fails on Py!=3.</span>
+        <span class="nb">unicode</span> <span class="o">=</span> <span class="nb">str</span>  <span class="c"># Py3k&#39;s str is our unicode type</span>
+        <span class="nb">long</span> <span class="o">=</span> <span class="nb">int</span>     <span class="c"># Py3K&#39;s int is our long type</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c"># Python 2.x</span>
+        <span class="k">pass</span>
+
+    <span class="n">types</span><span class="o">=</span><span class="p">[(</span><span class="nb">int</span><span class="p">,</span><span class="s">&quot;integer&quot;</span><span class="p">),</span> <span class="c"># for Gephi GraphML bug</span>
+           <span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="s">&quot;yfiles&quot;</span><span class="p">),(</span><span class="nb">str</span><span class="p">,</span><span class="s">&quot;string&quot;</span><span class="p">),</span> <span class="p">(</span><span class="nb">unicode</span><span class="p">,</span><span class="s">&quot;string&quot;</span><span class="p">),</span>
+           <span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="s">&quot;int&quot;</span><span class="p">),</span> <span class="p">(</span><span class="nb">long</span><span class="p">,</span><span class="s">&quot;long&quot;</span><span class="p">),</span>
+           <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="s">&quot;float&quot;</span><span class="p">),</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="s">&quot;double&quot;</span><span class="p">),</span>
+           <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="s">&quot;boolean&quot;</span><span class="p">)]</span>
+    
+    <span class="n">xml_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
+    <span class="n">python_type</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">types</span><span class="p">)</span>
+    <span class="n">convert_bool</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;true&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">,</span><span class="s">&#39;false&#39;</span><span class="p">:</span><span class="bp">False</span><span class="p">,</span> 
+                  <span class="s">&#39;True&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;False&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}</span>
+
+
+    
+<span class="k">class</span> <span class="nc">GraphMLWriter</span><span class="p">(</span><span class="n">GraphML</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&quot;utf-8&quot;</span><span class="p">,</span><span class="n">prettyprint</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;GraphML writer requires &#39;</span>
+                               <span class="s">&#39;xml.elementtree.ElementTree&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prettyprint</span><span class="o">=</span><span class="n">prettyprint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xml</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;graphml&quot;</span><span class="p">,</span>
+                           <span class="p">{</span><span class="s">&#39;xmlns&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">,</span>
+                            <span class="s">&#39;xmlns:xsi&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_XSI</span><span class="p">,</span>
+                            <span class="s">&#39;xsi:schemaLocation&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">SCHEMALOCATION</span><span class="p">}</span>
+                           <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="o">=</span><span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_graph_element</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+    
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">=</span><span class="n">tostring</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">get_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_type</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+        <span class="n">keys_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">attr_type</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">keys_key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">new_id</span> <span class="o">=</span> <span class="s">&quot;d</span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">keys_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_id</span>
+            <span class="n">key_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">:</span><span class="n">new_id</span><span class="p">,</span>
+                          <span class="s">&quot;for&quot;</span><span class="p">:</span><span class="n">scope</span><span class="p">,</span>
+                          <span class="s">&quot;attr.name&quot;</span><span class="p">:</span><span class="n">name</span><span class="p">,</span> 
+                          <span class="s">&quot;attr.type&quot;</span><span class="p">:</span><span class="n">attr_type</span><span class="p">}</span>
+            <span class="n">key_element</span><span class="o">=</span><span class="n">Element</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="o">**</span><span class="n">key_kwargs</span><span class="p">)</span>
+            <span class="c"># add subelement for data default value if present</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">default_element</span><span class="o">=</span><span class="n">Element</span><span class="p">(</span><span class="s">&quot;default&quot;</span><span class="p">)</span>
+                <span class="n">default_element</span><span class="o">.</span><span class="n">text</span><span class="o">=</span><span class="n">make_str</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+                <span class="n">key_element</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">default_element</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">key_element</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_id</span>
+    
+
+    <span class="k">def</span> <span class="nf">add_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">element_type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+                 <span class="n">scope</span><span class="o">=</span><span class="s">&quot;all&quot;</span><span class="p">,</span>
+                 <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a data element for an edge or a node. Keep a log of the</span>
+<span class="sd">        type in the keys table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">element_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;GraphML writer does not support &#39;</span>
+                                   <span class="s">&#39;dict types as data values.&#39;</span><span class="p">)</span>
+        <span class="n">key_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml_type</span><span class="p">[</span><span class="n">element_type</span><span class="p">],</span> <span class="n">scope</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+        <span class="n">data_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;data&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key_id</span><span class="p">)</span>
+        <span class="n">data_element</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">make_str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data_element</span>
+    
+    <span class="k">def</span> <span class="nf">add_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scope</span><span class="p">,</span> <span class="n">xml_obj</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Appends attributes to edges or nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">default_value</span><span class="o">=</span><span class="n">default</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">obj</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">add_data</span><span class="p">(</span><span class="n">make_str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">make_str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> 
+                              <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default_value</span><span class="p">)</span>
+            <span class="n">xml_obj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">graph_element</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span><span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">node_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;node&quot;</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="n">make_str</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;node_default&#39;</span><span class="p">,{})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span><span class="s">&quot;node&quot;</span><span class="p">,</span> <span class="n">node_element</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+            <span class="n">graph_element</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_element</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">graph_element</span><span class="p">):</span>        
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>            
+                <span class="n">edge_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;edge&quot;</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">make_str</span><span class="p">(</span><span class="n">u</span><span class="p">),</span>
+                                       <span class="n">target</span><span class="o">=</span><span class="n">make_str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> 
+                <span class="n">default</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;edge_default&#39;</span><span class="p">,{})</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span><span class="s">&quot;edge&quot;</span><span class="p">,</span> <span class="n">edge_element</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span><span class="s">&quot;edge&quot;</span><span class="p">,</span> <span class="n">edge_element</span><span class="p">,</span> 
+                                    <span class="p">{</span><span class="s">&#39;key&#39;</span><span class="p">:</span><span class="n">key</span><span class="p">},</span> <span class="n">default</span><span class="p">)</span>
+                <span class="n">graph_element</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_element</span><span class="p">)</span>                
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="n">edge_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;edge&quot;</span><span class="p">,</span><span class="n">source</span><span class="o">=</span><span class="n">make_str</span><span class="p">(</span><span class="n">u</span><span class="p">),</span>
+                                       <span class="n">target</span><span class="o">=</span><span class="n">make_str</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="n">default</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;edge_default&#39;</span><span class="p">,{})</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span><span class="s">&quot;edge&quot;</span><span class="p">,</span> <span class="n">edge_element</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+                <span class="n">graph_element</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_element</span><span class="p">)</span>                
+
+    <span class="k">def</span> <span class="nf">add_graph_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serialize graph G in GraphML to the stream.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">default_edge_type</span><span class="o">=</span><span class="s">&#39;directed&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">default_edge_type</span><span class="o">=</span><span class="s">&#39;undirected&#39;</span>
+        
+        <span class="n">graphid</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">graphid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">graph_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;graph&quot;</span><span class="p">,</span>
+                                <span class="n">edgedefault</span> <span class="o">=</span> <span class="n">default_edge_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">graph_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s">&quot;graph&quot;</span><span class="p">,</span>
+                                <span class="n">edgedefault</span> <span class="o">=</span> <span class="n">default_edge_type</span><span class="p">,</span> 
+                                <span class="nb">id</span><span class="o">=</span><span class="n">graphid</span><span class="p">)</span>
+
+        <span class="n">default</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">data</span><span class="o">=</span><span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="ow">in</span>  <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
+                  <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;node_default&#39;</span><span class="p">,</span><span class="s">&#39;edge_default&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_attributes</span><span class="p">(</span><span class="s">&quot;graph&quot;</span><span class="p">,</span> <span class="n">graph_element</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">graph_element</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">graph_element</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph_element</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_graphs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add many graphs to this GraphML document.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">G</span> <span class="ow">in</span> <span class="n">graph_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_graph_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prettyprint</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span>
+        <span class="n">document</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span>
+        <span class="n">header</span><span class="o">=</span><span class="s">&#39;&lt;?xml version=&quot;1.0&quot; encoding=&quot;</span><span class="si">%s</span><span class="s">&quot;?&gt;&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">))</span>
+        <span class="n">document</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">indent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="c"># in-place prettyprint formatter</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">level</span><span class="o">*</span><span class="s">&quot;  &quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elem</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="s">&quot;  &quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">tail</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">tail</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">elem</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">elem</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">tail</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">tail</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">elem</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">level</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">tail</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">elem</span><span class="o">.</span><span class="n">tail</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+                <span class="n">elem</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="n">i</span>
+
+
+<span class="k">class</span> <span class="nc">GraphMLReader</span><span class="p">(</span><span class="n">GraphML</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a GraphML document.  Produces NetworkX graph objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+             <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;GraphML reader requires &#39;</span>
+                               <span class="s">&#39;xml.elementtree.ElementTree&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multigraph</span><span class="o">=</span><span class="bp">False</span> <span class="c"># assume multigraph and test for parallel edges</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xml</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">keys</span><span class="p">,</span><span class="n">defaults</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_graphml_keys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}graph&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_graph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">defaults</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">make_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_xml</span><span class="p">,</span> <span class="n">graphml_keys</span><span class="p">,</span> <span class="n">defaults</span><span class="p">):</span>
+        <span class="c"># set default graph type</span>
+        <span class="n">edgedefault</span> <span class="o">=</span> <span class="n">graph_xml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;edgedefault&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edgedefault</span><span class="o">==</span><span class="s">&#39;directed&#39;</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
+        <span class="c"># set defaults for graph attributes</span>
+        <span class="k">for</span> <span class="n">key_id</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">key_for</span><span class="o">=</span><span class="n">graphml_keys</span><span class="p">[</span><span class="n">key_id</span><span class="p">][</span><span class="s">&#39;for&#39;</span><span class="p">]</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">graphml_keys</span><span class="p">[</span><span class="n">key_id</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+            <span class="n">python_type</span><span class="o">=</span><span class="n">graphml_keys</span><span class="p">[</span><span class="n">key_id</span><span class="p">][</span><span class="s">&#39;type&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key_for</span><span class="o">==</span><span class="s">&#39;node&#39;</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;node_default&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="n">python_type</span><span class="p">(</span><span class="n">value</span><span class="p">)}</span>
+            <span class="k">if</span> <span class="n">key_for</span><span class="o">==</span><span class="s">&#39;edge&#39;</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s">&#39;edge_default&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="n">python_type</span><span class="p">(</span><span class="n">value</span><span class="p">)}</span>
+        <span class="c"># hyperedges are not supported</span>
+        <span class="n">hyperedge</span><span class="o">=</span><span class="n">graph_xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}hyperedge&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">)</span>        
+        <span class="k">if</span> <span class="n">hyperedge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;GraphML reader does not support hyperedges&quot;</span><span class="p">)</span>
+        <span class="c"># add nodes</span>
+        <span class="k">for</span> <span class="n">node_xml</span> <span class="ow">in</span> <span class="n">graph_xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}node&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">):</span>        
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_xml</span><span class="p">,</span> <span class="n">graphml_keys</span><span class="p">)</span>                            
+        <span class="c"># add edges</span>
+        <span class="k">for</span> <span class="n">edge_xml</span> <span class="ow">in</span> <span class="n">graph_xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}edge&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">):</span>        
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_xml</span><span class="p">,</span> <span class="n">graphml_keys</span><span class="p">)</span>                            
+        <span class="c"># add graph data            </span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_data_elements</span><span class="p">(</span><span class="n">graphml_keys</span><span class="p">,</span> <span class="n">graph_xml</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c"># switch to Graph or DiGraph if no parallel edges were found.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">multigraph</span><span class="p">:</span> 
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">G</span>
+            
+    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">node_xml</span><span class="p">,</span> <span class="n">graphml_keys</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a node to the graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># warn on finding unsupported ports tag</span>
+        <span class="n">ports</span><span class="o">=</span><span class="n">node_xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}port&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ports</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;GraphML port tag not supported.&quot;</span><span class="p">)</span>
+        <span class="c"># find the node by id and cast it to the appropriate type</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">(</span><span class="n">node_xml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">))</span>
+        <span class="c"># get data/attributes for node</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_data_elements</span><span class="p">(</span><span class="n">graphml_keys</span><span class="p">,</span> <span class="n">node_xml</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">edge_element</span><span class="p">,</span> <span class="n">graphml_keys</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an edge to the graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># warn on finding unsupported ports tag</span>
+        <span class="n">ports</span><span class="o">=</span><span class="n">edge_element</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}port&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ports</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;GraphML port tag not supported.&quot;</span><span class="p">)</span>
+
+        <span class="c"># raise error if we find mixed directed and undirected edges</span>
+        <span class="n">directed</span> <span class="o">=</span> <span class="n">edge_element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;directed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="ow">and</span> <span class="n">directed</span><span class="o">==</span><span class="s">&#39;false&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>\
+                <span class="s">&quot;directed=false edge found in directed graph.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">())</span> <span class="ow">and</span> <span class="n">directed</span><span class="o">==</span><span class="s">&#39;true&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>\
+                <span class="s">&quot;directed=true edge found in undirected graph.&quot;</span><span class="p">)</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">(</span><span class="n">edge_element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;source&quot;</span><span class="p">))</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">(</span><span class="n">edge_element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;target&quot;</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_data_elements</span><span class="p">(</span><span class="n">graphml_keys</span><span class="p">,</span> <span class="n">edge_element</span><span class="p">)</span>
+        <span class="c"># GraphML stores edge ids as an attribute</span>
+        <span class="c"># NetworkX uses them as keys in multigraphs too if no key</span>
+        <span class="c"># attribute is specified</span>
+        <span class="n">edge_id</span> <span class="o">=</span> <span class="n">edge_element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_id</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_id</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">):</span>
+            <span class="c"># mark this as a multigraph</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">multigraph</span><span class="o">=</span><span class="bp">True</span>
+        <span class="k">if</span> <span class="n">edge_id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># no id specified, try using &#39;key&#39; attribute as id</span>
+            <span class="n">edge_id</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;key&#39;</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">edge_id</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">decode_data_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphml_keys</span><span class="p">,</span> <span class="n">obj_xml</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Use the key information to decode the data XML if present.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">data_element</span> <span class="ow">in</span> <span class="n">obj_xml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}data&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">):</span> 
+            <span class="n">key</span> <span class="o">=</span> <span class="n">data_element</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data_name</span><span class="o">=</span><span class="n">graphml_keys</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+                <span class="n">data_type</span><span class="o">=</span><span class="n">graphml_keys</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s">&#39;type&#39;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Bad GraphML data: no key </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">text</span><span class="o">=</span><span class="n">data_element</span><span class="o">.</span><span class="n">text</span>
+            <span class="c"># assume anything with subelements is a yfiles extension</span>
+            <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data_element</span><span class="p">))</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">data_type</span><span class="o">==</span><span class="nb">bool</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">data_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_bool</span><span class="p">[</span><span class="n">text</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">data_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data_element</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c"># Assume yfiles as subelements, try to extract node_label</span>
+                <span class="n">node_label</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">for</span> <span class="n">node_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;ShapeNode&#39;</span><span class="p">,</span> <span class="s">&#39;SVGNode&#39;</span><span class="p">,</span> <span class="s">&#39;ImageNode&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">node_label</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">node_label</span> <span class="o">=</span> <span class="n">data_element</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}</span><span class="si">%s</span><span class="s">/{</span><span class="si">%s</span><span class="s">}NodeLabel&quot;</span> <span class="o">%</span> 
+                                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_Y</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_Y</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">node_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_label</span><span class="o">.</span><span class="n">text</span>
+                <span class="n">edge_label</span> <span class="o">=</span> <span class="n">data_element</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}PolyLineEdge/{</span><span class="si">%s</span><span class="s">}EdgeLabel&quot;</span><span class="o">%</span>
+                                               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_Y</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_Y</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="n">edge_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_label</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">return</span> <span class="n">data</span>
+            
+    <span class="k">def</span> <span class="nf">find_graphml_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_element</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extracts all the keys and key defaults from the xml.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">graphml_keys</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">graphml_key_defaults</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">graph_element</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}key&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">):</span>
+            <span class="n">attr_id</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+            <span class="n">attr_type</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;attr.type&#39;</span><span class="p">)</span>
+            <span class="n">attr_name</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;attr.name&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">attr_type</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">attr_name</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;yfiles.type&#39;</span><span class="p">)</span>
+                <span class="n">attr_type</span><span class="o">=</span><span class="s">&#39;yfiles&#39;</span>
+            <span class="k">if</span> <span class="n">attr_name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Unknown key type in file.&quot;</span><span class="p">)</span>
+            <span class="n">graphml_keys</span><span class="p">[</span><span class="n">attr_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&quot;name&quot;</span><span class="p">:</span><span class="n">attr_name</span><span class="p">,</span>
+                <span class="s">&quot;type&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">python_type</span><span class="p">[</span><span class="n">attr_type</span><span class="p">],</span>
+                <span class="s">&quot;for&quot;</span><span class="p">:</span><span class="n">k</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;for&quot;</span><span class="p">)}</span>
+            <span class="c"># check for &quot;default&quot; subelement of key element</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;{</span><span class="si">%s</span><span class="s">}default&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_GRAPHML</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">graphml_key_defaults</span><span class="p">[</span><span class="n">attr_id</span><span class="p">]</span><span class="o">=</span><span class="n">default</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">return</span> <span class="n">graphml_keys</span><span class="p">,</span><span class="n">graphml_key_defaults</span>
+
+<span class="c"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="kn">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s">&quot;xml.etree.ElementTree not available&quot;</span><span class="p">)</span>
+
+<span class="c"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">teardown_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s">&#39;test.graphml&#39;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

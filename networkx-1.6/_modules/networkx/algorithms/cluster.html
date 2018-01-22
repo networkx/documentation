@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.cluster &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.cluster</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Algorithms to characterize the number of triangles in a graph.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Dan Schult (dschult@colgate.edu)&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">])</span>
+<span class="c">#    Copyright (C) 2004-2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="n">__all__</span><span class="o">=</span> <span class="p">[</span><span class="s">&#39;triangles&#39;</span><span class="p">,</span> <span class="s">&#39;average_clustering&#39;</span><span class="p">,</span> <span class="s">&#39;clustering&#39;</span><span class="p">,</span> <span class="s">&#39;transitivity&#39;</span><span class="p">,</span>
+          <span class="s">&#39;square_clustering&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="triangles"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.cluster.triangles.html#networkx.algorithms.cluster.triangles">[docs]</a><span class="k">def</span> <span class="nf">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the number of triangles.</span>
+
+<span class="sd">    Finds the number of triangles that include a node as one vertex.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A networkx graph</span>
+<span class="sd">    nodes : container of nodes, optional (default= all nodes in G)</span>
+<span class="sd">       Compute triangles for nodes in this container. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out : dictionary</span>
+<span class="sd">       Number of triangles keyed by node label.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.complete_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.triangles(G,0))</span>
+<span class="sd">    6</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.triangles(G))</span>
+<span class="sd">    {0: 6, 1: 6, 2: 6, 3: 6, 4: 6}</span>
+<span class="sd">    &gt;&gt;&gt; print(list(nx.triangles(G,(0,1)).values()))</span>
+<span class="sd">    [6, 6]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When computing triangles for the entire graph each triangle is counted </span>
+<span class="sd">    three times, once at each node.  Self loops are ignored.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;triangles() is not defined for directed graphs.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span> 
+        <span class="c"># return single value</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">))[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">t</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">))</span>
+</div>
+<span class="k">def</span> <span class="nf">_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return an iterator of (node, degree, triangles).  </span>
+
+<span class="sd">    This double counts triangles so you may want to divide by 2.</span>
+<span class="sd">    See degree() and triangles() for definitions and details.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Not defined for multigraphs.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodes_nbrs</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nodes_nbrs</span><span class="o">=</span> <span class="p">(</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">v_nbrs</span> <span class="ow">in</span> <span class="n">nodes_nbrs</span><span class="p">:</span>
+        <span class="n">vs</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">v_nbrs</span><span class="p">)</span><span class="o">-</span><span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="p">])</span>
+        <span class="n">ntriangles</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
+            <span class="n">ws</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">w</span><span class="p">])</span><span class="o">-</span><span class="nb">set</span><span class="p">([</span><span class="n">w</span><span class="p">])</span>
+            <span class="n">ntriangles</span><span class="o">+=</span><span class="nb">len</span><span class="p">(</span><span class="n">vs</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">ws</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">vs</span><span class="p">),</span><span class="n">ntriangles</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_weighted_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return an iterator of (node, degree, weighted_triangles).  </span>
+<span class="sd">    </span>
+<span class="sd">    Used for weighted clustering.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Not defined for multigraphs.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span><span class="o">==</span><span class="p">[]:</span>
+        <span class="n">max_weight</span><span class="o">=</span><span class="mf">1.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">max_weight</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span> 
+                             <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodes_nbrs</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nodes_nbrs</span><span class="o">=</span> <span class="p">(</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">nbrs</span> <span class="ow">in</span> <span class="n">nodes_nbrs</span><span class="p">:</span>
+        <span class="n">inbrs</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span><span class="o">-</span><span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">weighted_triangles</span><span class="o">=</span><span class="mf">0.0</span>
+        <span class="n">seen</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inbrs</span><span class="p">:</span>
+            <span class="n">wij</span><span class="o">=</span><span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">max_weight</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">jnbrs</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">-</span><span class="n">seen</span> <span class="c"># this keeps from double counting</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inbrs</span><span class="o">&amp;</span><span class="n">jnbrs</span><span class="p">:</span>
+                <span class="n">wjk</span><span class="o">=</span><span class="n">G</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">max_weight</span>
+                <span class="n">wki</span><span class="o">=</span><span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">max_weight</span>
+                <span class="n">weighted_triangles</span><span class="o">+=</span><span class="p">(</span><span class="n">wij</span><span class="o">*</span><span class="n">wjk</span><span class="o">*</span><span class="n">wki</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">inbrs</span><span class="p">),</span><span class="n">weighted_triangles</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="average_clustering"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.cluster.average_clustering.html#networkx.algorithms.cluster.average_clustering">[docs]</a><span class="k">def</span> <span class="nf">average_clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">count_zeros</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Compute the average clustering coefficient for the graph G.</span>
+
+<span class="s">    The clustering coefficient for the graph is the average, </span>
+
+<span class="s">    .. math::</span>
+
+<span class="s">       C = \frac{1}{n}\sum_{v \in G} c_v,</span>
+<span class="s">       </span>
+<span class="s">    where `n` is the number of nodes in `G`.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    G : graph</span>
+
+<span class="s">    nodes : container of nodes, optional (default=all nodes in G)</span>
+<span class="s">       Compute average clustering for nodes in this container. </span>
+
+<span class="s">    weight : string or None, optional (default=None)</span>
+<span class="s">       The edge attribute that holds the numerical value used as a weight.</span>
+<span class="s">       If None, then each edge has weight 1.</span>
+
+<span class="s">    count_zeros : bool (default=False)       </span>
+<span class="s">       If False include only the nodes with nonzero clustering in the average.</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    avg : float</span>
+<span class="s">       Average clustering</span>
+<span class="s">    </span>
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; G=nx.complete_graph(5)</span>
+<span class="s">    &gt;&gt;&gt; print(nx.average_clustering(G))</span>
+<span class="s">    1.0</span>
+
+<span class="s">    Notes</span>
+<span class="s">    -----</span>
+<span class="s">    This is a space saving routine; it might be faster</span>
+<span class="s">    to use the clustering function to get a list and then take the average.</span>
+
+<span class="s">    Self loops are ignored.</span>
+
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] Generalizations of the clustering coefficient to weighted </span>
+<span class="s">       complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela, </span>
+<span class="s">       K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).  </span>
+<span class="s">       http://jponnela.com/web_documents/a9.pdf</span>
+<span class="s">    .. [2] Marcus Kaiser,  Mean clustering coefficients: the role of isolated </span>
+<span class="s">       nodes and leafs on clustering measures for small-world networks.</span>
+<span class="s">       http://arxiv.org/abs/0802.2512</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="n">c</span><span class="o">=</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">count_zeros</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span> <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="clustering"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.cluster.clustering.html#networkx.algorithms.cluster.clustering">[docs]</a><span class="k">def</span> <span class="nf">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Compute the clustering coefficient for nodes.</span>
+
+<span class="s">    For unweighted graphs the clustering of each node `u`</span>
+<span class="s">    is the fraction of possible triangles that exist,</span>
+<span class="s">    For each node find the fraction of possible triangles that exist,</span>
+
+<span class="s">    .. math::</span>
+
+<span class="s">      c_u = \frac{2 T(u)}{deg(u)(deg(u)-1)},</span>
+
+<span class="s">    where `T(u)` is the number of triangles through node `u` and</span>
+<span class="s">    `deg(u)` is the degree of `u`.</span>
+
+<span class="s">    For weighted graphs the clustering is defined</span>
+<span class="s">    as the geometric average of the subgraph edge weights [1]_,</span>
+
+<span class="s">    .. math::</span>
+
+<span class="s">       c_u = \frac{1}{deg(u)(deg(u)-1))}</span>
+<span class="s">            \sum_{uv} (\hat{w}_{uv} \hat{w}_{uw} \hat{w}_{vw})^{1/3}.</span>
+<span class="s">      </span>
+<span class="s">    The edge weights `\hat{w}_{uv}` are normalized by the maximum weight in the</span>
+<span class="s">    network `\hat{w}_{uv} = w_{uv}/\max(w)`.</span>
+
+<span class="s">    The value of `c_u` is assigned to 0 if `deg(u) &lt; 2`.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    G : graph</span>
+
+<span class="s">    nodes : container of nodes, optional (default=all nodes in G)</span>
+<span class="s">       Compute clustering for nodes in this container. </span>
+
+<span class="s">    weight : string or None, optional (default=None)</span>
+<span class="s">       The edge attribute that holds the numerical value used as a weight.</span>
+<span class="s">       If None, then each edge has weight 1.</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    out : float, or dictionary</span>
+<span class="s">       Clustering coefficient at specified nodes</span>
+
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; G=nx.complete_graph(5)</span>
+<span class="s">    &gt;&gt;&gt; print(nx.clustering(G,0))</span>
+<span class="s">    1.0</span>
+<span class="s">    &gt;&gt;&gt; print(nx.clustering(G))</span>
+<span class="s">    {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}</span>
+
+<span class="s">    Notes</span>
+<span class="s">    -----</span>
+<span class="s">    Self loops are ignored.</span>
+
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] Generalizations of the clustering coefficient to weighted </span>
+<span class="s">       complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela, </span>
+<span class="s">       K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).  </span>
+<span class="s">       http://jponnela.com/web_documents/a9.pdf</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;Clustering algorithms are not defined &#39;</span><span class="p">,</span>
+                            <span class="s">&#39;for directed graphs.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">td_iter</span><span class="o">=</span><span class="n">_weighted_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">td_iter</span><span class="o">=</span><span class="n">_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="n">clusterc</span><span class="o">=</span><span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">td_iter</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">clusterc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clusterc</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="n">t</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span> 
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">clusterc</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="c"># return single value</span>
+    <span class="k">return</span> <span class="n">clusterc</span>
+</div>
+<div class="viewcode-block" id="transitivity"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.cluster.transitivity.html#networkx.algorithms.cluster.transitivity">[docs]</a><span class="k">def</span> <span class="nf">transitivity</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Compute graph transitivity, the fraction of all possible triangles </span>
+<span class="s">    present in G.</span>
+
+<span class="s">    Possible triangles are identified by the number of &quot;triads&quot; </span>
+<span class="s">    (two edges with a shared vertex).</span>
+
+<span class="s">    The transitivity is</span>
+
+<span class="s">    .. math::</span>
+
+<span class="s">        T = 3\frac{\#triangles}{\#triads}.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    G : graph</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    out : float</span>
+<span class="s">       Transitivity</span>
+
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; G = nx.complete_graph(5)</span>
+<span class="s">    &gt;&gt;&gt; print(nx.transitivity(G))</span>
+<span class="s">    1.0</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="n">triangles</span><span class="o">=</span><span class="mi">0</span> <span class="c"># 6 times number of triangles</span>
+    <span class="n">contri</span><span class="o">=</span><span class="mi">0</span>  <span class="c"># 2 times number of connected triples</span>
+    <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">t</span> <span class="ow">in</span> <span class="n">_triangles_and_degree_iter</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="n">contri</span> <span class="o">+=</span> <span class="n">d</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">triangles</span> <span class="o">+=</span> <span class="n">t</span>
+    <span class="k">if</span> <span class="n">triangles</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="c"># we had no triangles or possible triangles</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">triangles</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">contri</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="square_clustering"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.cluster.square_clustering.html#networkx.algorithms.cluster.square_clustering">[docs]</a><span class="k">def</span> <span class="nf">square_clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot; Compute the squares clustering coefficient for nodes.</span>
+
+<span class="s">    For each node return the fraction of possible squares that exist at</span>
+<span class="s">    the node [1]_</span>
+
+<span class="s">    .. math::</span>
+<span class="s">       C_4(v) = \frac{ \sum_{u=1}^{k_v} </span>
+<span class="s">       \sum_{w=u+1}^{k_v} q_v(u,w) }{ \sum_{u=1}^{k_v} </span>
+<span class="s">       \sum_{w=u+1}^{k_v} [a_v(u,w) + q_v(u,w)]},</span>
+<span class="s">    </span>
+<span class="s">    where `q_v(u,w)` are the number of common neighbors of `u` and `w` </span>
+<span class="s">    other than `v` (ie squares), and </span>
+<span class="s">    `a_v(u,w) = (k_u - (1+q_v(u,w)+\theta_{uv}))(k_w - (1+q_v(u,w)+\theta_{uw}))`,</span>
+<span class="s">    where `\theta_{uw} = 1` if `u` and `w` are connected and 0 otherwise.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    G : graph</span>
+
+<span class="s">    nodes : container of nodes, optional (default=all nodes in G)</span>
+<span class="s">       Compute clustering for nodes in this container. </span>
+<span class="s">        </span>
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    c4 : dictionary</span>
+<span class="s">       A dictionary keyed by node with the square clustering coefficient value. </span>
+
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; G=nx.complete_graph(5)</span>
+<span class="s">    &gt;&gt;&gt; print(nx.square_clustering(G,0))</span>
+<span class="s">    1.0</span>
+<span class="s">    &gt;&gt;&gt; print(nx.square_clustering(G))</span>
+<span class="s">    {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}</span>
+
+<span class="s">    Notes</span>
+<span class="s">    -----</span>
+<span class="s">    While `C_3(v)` (triangle clustering) gives the probability that</span>
+<span class="s">    two neighbors of node v are connected with each other, `C_4(v)` is</span>
+<span class="s">    the probability that two neighbors of node v share a common</span>
+<span class="s">    neighbor different from v. This algorithm can be applied to both</span>
+<span class="s">    bipartite and unipartite networks.</span>
+<span class="s"> </span>
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] Pedro G. Lind, Marta C. González, and Hans J. Herrmann. 2005</span>
+<span class="s">        Cycles and clustering in bipartite networks.</span>
+<span class="s">        Physical Review E (72) 056127.</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span>  <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> 
+    <span class="n">clustering</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node_iter</span><span class="p">:</span>
+        <span class="n">clustering</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">potential</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">w</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">squares</span> <span class="o">=</span> <span class="nb">len</span><span class="p">((</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">w</span><span class="p">]))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="p">]))</span>
+            <span class="n">clustering</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+=</span> <span class="n">squares</span>
+            <span class="n">degm</span> <span class="o">=</span> <span class="n">squares</span> <span class="o">+</span> <span class="mf">1.0</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
+                <span class="n">degm</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">potential</span> <span class="o">+=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="o">-</span> <span class="n">degm</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">w</span><span class="p">])</span> <span class="o">-</span> <span class="n">degm</span><span class="p">)</span> <span class="o">+</span> <span class="n">squares</span>
+        <span class="k">if</span> <span class="n">potential</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">clustering</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">/=</span> <span class="n">potential</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span> 
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="c"># return single value</span>
+    <span class="k">return</span> <span class="n">clustering</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

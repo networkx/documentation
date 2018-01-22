@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Unix Email &mdash; NetworkX v1.3 documentation</title>
+    <link rel="stylesheet" href="../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.3',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX v1.3 documentation"
+          href="../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX v1.3 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="unix-email">
+<span id="graph-unix-email"></span><h1>Unix Email<a class="headerlink" href="#unix-email" title="Permalink to this headline">¶</a></h1>
+<img alt="../../_images/unix_email.png" src="../../_images/unix_email.png" />
+<p>[<a class="reference external" href="../../_static/examples/unix_email.py">source code</a>]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Create a directed graph, allowing multiple edges and self loops, from</span>
+<span class="sd">a unix mailbox.  The nodes are email addresses with links</span>
+<span class="sd">that point from the sender to the recievers.  The edge data</span>
+<span class="sd">is a Python email.Message object which contains all of</span>
+<span class="sd">the email message data.</span>
+
+<span class="sd">This example shows the power of XDiGraph to hold edge data</span>
+<span class="sd">of arbitrary Python objects (in this case a list of email messages).</span>
+
+<span class="sd">By default, load the sample unix email mailbox called &quot;unix_email.mbox&quot;.</span>
+<span class="sd">You can load your own mailbox by naming it on the command line, eg</span>
+
+<span class="sd">python unixemail.py /var/spool/mail/username</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2005 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="kn">import</span> <span class="nn">email</span>
+<span class="kn">from</span> <span class="nn">email.utils</span> <span class="kn">import</span> <span class="n">getaddresses</span><span class="p">,</span><span class="n">parseaddr</span>
+<span class="kn">import</span> <span class="nn">mailbox</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c"># unix mailbox recipe</span>
+<span class="c"># see http://www.python.org/doc/current/lib/module-mailbox.html</span>
+<span class="k">def</span> <span class="nf">msgfactory</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">email</span><span class="o">.</span><span class="n">message_from_file</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">email</span><span class="o">.</span><span class="n">Errors</span><span class="o">.</span><span class="n">MessageParseError</span><span class="p">:</span>
+        <span class="c"># Don&#39;t return None since that will stop the mailbox iterator</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span><span class="o">==</span><span class="mf">1</span><span class="p">:</span>
+        <span class="n">filePath</span> <span class="o">=</span> <span class="s">&quot;unix_email.mbox&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">filePath</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span>
+
+    <span class="n">mbox</span> <span class="o">=</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">mbox</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">msgfactory</span><span class="p">)</span> <span class="c"># parse unix mailbox</span>
+
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span> <span class="c"># create empty graph</span>
+
+    <span class="c"># parse each messages and build graph</span>
+    <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">mbox</span><span class="p">:</span> <span class="c"># msg is python email.Message.Message object</span>
+        <span class="p">(</span><span class="n">source_name</span><span class="p">,</span><span class="n">source_addr</span><span class="p">)</span> <span class="o">=</span> <span class="n">parseaddr</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="s">&#39;From&#39;</span><span class="p">])</span> <span class="c"># sender</span>
+        <span class="c"># get all recipients</span>
+        <span class="c"># see http://www.python.org/doc/current/lib/module-email.Utils.html</span>
+        <span class="n">tos</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="s">&#39;to&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">ccs</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="s">&#39;cc&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">resent_tos</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="s">&#39;resent-to&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">resent_ccs</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get_all</span><span class="p">(</span><span class="s">&#39;resent-cc&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">all_recipients</span> <span class="o">=</span> <span class="n">getaddresses</span><span class="p">(</span><span class="n">tos</span> <span class="o">+</span> <span class="n">ccs</span> <span class="o">+</span> <span class="n">resent_tos</span> <span class="o">+</span> <span class="n">resent_ccs</span><span class="p">)</span>
+        <span class="c"># now add the edges for this mail message</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">target_name</span><span class="p">,</span><span class="n">target_addr</span><span class="p">)</span> <span class="ow">in</span> <span class="n">all_recipients</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source_addr</span><span class="p">,</span><span class="n">target_addr</span><span class="p">,</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c"># print edges with message subject</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;From: </span><span class="si">%s</span><span class="s"> To: </span><span class="si">%s</span><span class="s"> Subject: </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span><span class="p">[</span><span class="s">&#39;message&#39;</span><span class="p">][</span><span class="s">&quot;Subject&quot;</span><span class="p">]))</span>
+
+
+    <span class="k">try</span><span class="p">:</span> <span class="c"># draw</span>
+        <span class="n">pos</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">iterations</span><span class="o">=</span><span class="mf">10</span><span class="p">)</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">pos</span><span class="p">,</span><span class="n">node_size</span><span class="o">=</span><span class="mf">0</span><span class="p">,</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span><span class="n">edge_color</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span><span class="n">font_size</span><span class="o">=</span><span class="mf">16</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;unix_email.png&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span> <span class="c"># matplotlib not available</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Aug 28, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.
+    </div>
+  </body>
+</html>

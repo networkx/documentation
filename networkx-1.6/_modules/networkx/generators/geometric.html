@@ -1,0 +1,470 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.generators.geometric &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.generators.geometric</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generators for geometric graphs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Dan Schult (dschult@colgate.edu)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Ben Edwards (BJEdwards@gmail.com)&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;random_geometric_graph&#39;</span><span class="p">,</span>
+           <span class="s">&#39;waxman_graph&#39;</span><span class="p">,</span>
+           <span class="s">&#39;geographical_threshold_graph&#39;</span><span class="p">,</span>
+           <span class="s">&#39;navigable_small_world_graph&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect_left</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">import</span> <span class="nn">math</span><span class="o">,</span> <span class="nn">random</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<span class="c">#---------------------------------------------------------------------------</span>
+<span class="c">#  Random Geometric Graphs</span>
+<span class="c">#---------------------------------------------------------------------------</span>
+        
+<div class="viewcode-block" id="random_geometric_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.geometric.random_geometric_graph.html#networkx.generators.geometric.random_geometric_graph">[docs]</a><span class="k">def</span> <span class="nf">random_geometric_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Return the random geometric graph in the unit cube.</span>
+
+<span class="s">    The random geometric graph model places n nodes uniformly at random </span>
+<span class="s">    in the unit cube  Two nodes `u,v` are connected with an edge if</span>
+<span class="s">    `d(u,v)&lt;=r` where `d` is the Euclidean distance and `r` is a radius </span>
+<span class="s">    threshold.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    n : int</span>
+<span class="s">        Number of nodes</span>
+<span class="s">    radius: float</span>
+<span class="s">        Distance threshold value  </span>
+<span class="s">    dim : int, optional</span>
+<span class="s">        Dimension of graph</span>
+<span class="s">    pos : dict, optional</span>
+<span class="s">        A dictionary keyed by node with node positions as values.</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    Graph</span>
+<span class="s">      </span>
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; G = nx.random_geometric_graph(20,0.1)</span>
+
+<span class="s">    Notes</span>
+<span class="s">    -----</span>
+<span class="s">    This uses an `n^2` algorithm to build the graph.  A faster algorithm</span>
+<span class="s">    is possible using k-d trees.</span>
+
+<span class="s">    The pos keyword can be used to specify node positions so you can create</span>
+<span class="s">    an arbitrary distribution and domain for positions.  If you need a distance</span>
+<span class="s">    function other than Euclidean you&#39;ll have to hack the algorithm.</span>
+
+<span class="s">    E.g to use a 2d Gaussian distribution of node positions with mean (0,0)</span>
+<span class="s">    and std. dev. 2</span>
+
+<span class="s">    &gt;&gt;&gt; import random</span>
+<span class="s">    &gt;&gt;&gt; n=20</span>
+<span class="s">    &gt;&gt;&gt; p=dict((i,(random.gauss(0,2),random.gauss(0,2))) for i in range(n))</span>
+<span class="s">    &gt;&gt;&gt; G = nx.random_geometric_graph(n,0.2,pos=p)</span>
+
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] Penrose, Mathew, Random Geometric Graphs, </span>
+<span class="s">       Oxford Studies in Probability, 5, 2003.</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Random Geometric Graph&quot;</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> 
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># random positions </span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s">&#39;pos&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dim</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="s">&#39;pos&#39;</span><span class="p">,</span><span class="n">pos</span><span class="p">)</span>
+    <span class="c"># connect nodes within &quot;radius&quot; of each other</span>
+    <span class="c"># n^2 algorithm, could use a k-d tree implementation</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">u</span><span class="p">,</span><span class="n">du</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">pu</span> <span class="o">=</span> <span class="n">du</span><span class="p">[</span><span class="s">&#39;pos&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">dv</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">pv</span> <span class="o">=</span> <span class="n">dv</span><span class="p">[</span><span class="s">&#39;pos&#39;</span><span class="p">]</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(((</span><span class="n">a</span><span class="o">-</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pu</span><span class="p">,</span><span class="n">pv</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">radius</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<div class="viewcode-block" id="geographical_threshold_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.geometric.geographical_threshold_graph.html#networkx.generators.geometric.geographical_threshold_graph">[docs]</a><span class="k">def</span> <span class="nf">geographical_threshold_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
+                                 <span class="n">pos</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Return a geographical threshold graph.</span>
+
+<span class="s">    The geographical threshold graph model places n nodes uniformly at random</span>
+<span class="s">    in a rectangular domain.  Each node `u` is assigned a weight `w_u`. </span>
+<span class="s">    Two nodes `u,v` are connected with an edge if</span>
+
+<span class="s">    .. math::</span>
+
+<span class="s">       w_u + w_v \ge \theta r^{\alpha}</span>
+
+<span class="s">    where `r` is the Euclidean distance between `u` and `v`, </span>
+<span class="s">    and `\theta`, `\alpha` are parameters.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    n : int</span>
+<span class="s">        Number of nodes</span>
+<span class="s">    theta: float</span>
+<span class="s">        Threshold value</span>
+<span class="s">    alpha: float, optional</span>
+<span class="s">        Exponent of distance function</span>
+<span class="s">    dim : int, optional</span>
+<span class="s">        Dimension of graph</span>
+<span class="s">    pos : dict</span>
+<span class="s">        Node positions as a dictionary of tuples keyed by node.</span>
+<span class="s">    weight : dict</span>
+<span class="s">        Node weights as a dictionary of numbers keyed by node.</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    Graph</span>
+<span class="s">      </span>
+<span class="s">    Examples</span>
+<span class="s">    --------</span>
+<span class="s">    &gt;&gt;&gt; G = nx.geographical_threshold_graph(20,50)</span>
+
+<span class="s">    Notes</span>
+<span class="s">    -----</span>
+<span class="s">    If weights are not specified they are assigned to nodes by drawing randomly</span>
+<span class="s">    from an the exponential distribution with rate parameter `\lambda=1`.</span>
+<span class="s">    To specify a weights from a different distribution assign them to a </span>
+<span class="s">    dictionary and pass it as the weight= keyword</span>
+
+<span class="s">    &gt;&gt;&gt; import random</span>
+<span class="s">    &gt;&gt;&gt; n = 20</span>
+<span class="s">    &gt;&gt;&gt; w=dict((i,random.expovariate(5.0)) for i in range(n))</span>
+<span class="s">    &gt;&gt;&gt; G = nx.geographical_threshold_graph(20,50,weight=w)</span>
+<span class="s">    </span>
+<span class="s">    If node positions are not specified they are randomly assigned from the</span>
+<span class="s">    uniform distribution.</span>
+
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] Masuda, N., Miwa, H., Konno, N.: </span>
+<span class="s">       Geographical threshold graphs with small-world and scale-free properties.</span>
+<span class="s">       Physical Review E 71, 036108 (2005)</span>
+<span class="s">    .. [2]  Milan Bradonjić, Aric Hagberg and Allon G. Percus, </span>
+<span class="s">       Giant component and connectivity in geographical threshold graphs, </span>
+<span class="s">       in Algorithms and Models for the Web-Graph (WAW 2007), </span>
+<span class="s">       Antony Bonato and Fan Chung (Eds), pp. 209--216, 2007</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="c"># add n nodes</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>  
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># choose weights from exponential distribution </span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">expovariate</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="s">&#39;weight&#39;</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># random positions </span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s">&#39;pos&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">dim</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="s">&#39;pos&#39;</span><span class="p">,</span><span class="n">pos</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">geographical_threshold_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<span class="k">def</span> <span class="nf">geographical_threshold_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="c"># generate edges for a geographical threshold graph given a graph </span>
+    <span class="c"># with positions and weights assigned as node attributes &#39;pos&#39; and &#39;weight&#39;.</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">u</span><span class="p">,</span><span class="n">du</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">wu</span> <span class="o">=</span> <span class="n">du</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+        <span class="n">pu</span> <span class="o">=</span> <span class="n">du</span><span class="p">[</span><span class="s">&#39;pos&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">dv</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">wv</span> <span class="o">=</span> <span class="n">dv</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+            <span class="n">pv</span> <span class="o">=</span> <span class="n">dv</span><span class="p">[</span><span class="s">&#39;pos&#39;</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(((</span><span class="n">a</span><span class="o">-</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pu</span><span class="p">,</span><span class="n">pv</span><span class="p">))))</span>
+            <span class="k">if</span> <span class="n">wu</span><span class="o">+</span><span class="n">wv</span> <span class="o">&gt;=</span> <span class="n">theta</span><span class="o">*</span><span class="n">r</span><span class="o">**</span><span class="n">alpha</span><span class="p">:</span>
+                <span class="k">yield</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+
+<div class="viewcode-block" id="waxman_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.geometric.waxman_graph.html#networkx.generators.geometric.waxman_graph">[docs]</a><span class="k">def</span> <span class="nf">waxman_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)):</span>
+    <span class="s">r&quot;&quot;&quot;Return a Waxman random graph.</span>
+
+<span class="s">    The Waxman random graph models place n nodes uniformly at random</span>
+<span class="s">    in a rectangular domain. Two nodes u,v are connected with an edge</span>
+<span class="s">    with probability</span>
+
+<span class="s">    .. math::</span>
+<span class="s">            p = \alpha*exp(d/(\beta*L)).</span>
+
+<span class="s">    This function implements both Waxman models.            </span>
+
+<span class="s">    Waxman-1:  `L` not specified</span>
+<span class="s">       The distance `d` is the Euclidean distance between the nodes u and v.</span>
+<span class="s">       `L` is the maximum distance between all nodes in the graph.</span>
+
+<span class="s">    Waxman-2: `L` specified</span>
+<span class="s">       The distance `d` is chosen randomly in `[0,L]`.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    n : int</span>
+<span class="s">        Number of nodes</span>
+<span class="s">    alpha: float</span>
+<span class="s">        Model parameter</span>
+<span class="s">    beta: float</span>
+<span class="s">        Model parameter</span>
+<span class="s">    L : float, optional</span>
+<span class="s">        Maximum distance between nodes.  If not specified the actual distance</span>
+<span class="s">        is calculated.</span>
+<span class="s">    domain : tuple of numbers, optional</span>
+<span class="s">         Domain size (xmin, ymin, xmax, ymax)</span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    G: Graph</span>
+
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1]  B. M. Waxman, Routing of multipoint connections. </span>
+<span class="s">       IEEE J. Select. Areas Commun. 6(9),(1988) 1617-1622. </span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="c"># build graph of n nodes with random positions in the unit square</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="p">(</span><span class="n">xmin</span><span class="p">,</span><span class="n">ymin</span><span class="p">,</span><span class="n">xmax</span><span class="p">,</span><span class="n">ymax</span><span class="p">)</span><span class="o">=</span><span class="n">domain</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s">&#39;pos&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">((</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xmax</span><span class="o">-</span><span class="n">xmin</span><span class="p">))</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(),</span>
+                          <span class="p">(</span><span class="n">ymin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ymax</span><span class="o">-</span><span class="n">ymin</span><span class="p">))</span><span class="o">*</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">L</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># find maximum distance L between two nodes</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">get_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="s">&#39;pos&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">while</span> <span class="n">pos</span><span class="p">:</span>
+            <span class="n">x1</span><span class="p">,</span><span class="n">y1</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">x2</span><span class="p">,</span><span class="n">y2</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">:</span>
+                <span class="n">r2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x1</span><span class="o">-</span><span class="n">x2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y1</span><span class="o">-</span><span class="n">y2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                <span class="k">if</span> <span class="n">r2</span> <span class="o">&gt;</span> <span class="n">l</span><span class="p">:</span>
+                    <span class="n">l</span> <span class="o">=</span> <span class="n">r2</span>
+        <span class="n">l</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="c"># user specified maximum distance</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">L</span>
+
+    <span class="n">nodes</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">L</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># Waxman-1 model</span>
+        <span class="c"># try all pairs, connect randomly based on euclidean distance</span>
+        <span class="k">while</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">x1</span><span class="p">,</span><span class="n">y1</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s">&#39;pos&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="n">x2</span><span class="p">,</span><span class="n">y2</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s">&#39;pos&#39;</span><span class="p">]</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x1</span><span class="o">-</span><span class="n">x2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y1</span><span class="o">-</span><span class="n">y2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="o">/</span><span class="p">(</span><span class="n">beta</span><span class="o">*</span><span class="n">l</span><span class="p">)):</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># Waxman-2 model</span>
+        <span class="c"># try all pairs, connect randomly based on randomly chosen l</span>
+        <span class="k">while</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span><span class="o">*</span><span class="n">l</span>
+                <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">r</span><span class="o">/</span><span class="p">(</span><span class="n">beta</span><span class="o">*</span><span class="n">l</span><span class="p">)):</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<div class="viewcode-block" id="navigable_small_world_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.geometric.navigable_small_world_graph.html#networkx.generators.geometric.navigable_small_world_graph">[docs]</a><span class="k">def</span> <span class="nf">navigable_small_world_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Return a navigable small-world graph.</span>
+
+<span class="s">    A navigable small-world graph is a directed grid with additional</span>
+<span class="s">    long-range connections that are chosen randomly.  From [1]_:</span>
+
+<span class="s">    Begin with a set of nodes that are identified with the set of lattice</span>
+<span class="s">    points in an `n \times n` square, `{(i,j): i\in {1,2,\ldots,n}, j\in {1,2,\ldots,n}}`</span>
+<span class="s">    and define the lattice distance between two nodes `(i,j)` and `(k,l)` </span>
+<span class="s">    to be the number of &quot;lattice steps&quot; separating them: `d((i,j),(k,l)) = |k-i|+|l-j|`.  </span>
+
+<span class="s">    For a universal constant `p`, the node `u` has a directed edge to every other </span>
+<span class="s">    node within lattice distance `p` (local contacts) .</span>
+
+<span class="s">    For universal constants `q\ge 0` and `r\ge 0` construct directed edges from `u` to `q`</span>
+<span class="s">    other nodes (long-range contacts) using independent random trials;  the i&#39;th </span>
+<span class="s">    directed edge from `u` has endpoint `v` with probability proportional to `d(u,v)^{-r}`.</span>
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    n : int</span>
+<span class="s">        The number of nodes.</span>
+<span class="s">    p : int</span>
+<span class="s">        The diameter of short range connections. Each node is connected</span>
+<span class="s">        to every other node within lattice distance p.</span>
+<span class="s">    q : int</span>
+<span class="s">        The number of long-range connections for each node.</span>
+<span class="s">    r : float</span>
+<span class="s">        Exponent for decaying probability of connections.  The probability of </span>
+<span class="s">        connecting to a node at lattice distance d is 1/d^r.</span>
+<span class="s">    dim : int</span>
+<span class="s">        Dimension of grid</span>
+<span class="s">    seed : int, optional</span>
+<span class="s">        Seed for random number generator (default=None). </span>
+<span class="s">      </span>
+<span class="s">    References</span>
+<span class="s">    ----------</span>
+<span class="s">    .. [1] J. Kleinberg. The small-world phenomenon: An algorithmic </span>
+<span class="s">       perspective. Proc. 32nd ACM Symposium on Theory of Computing, 2000. </span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s">&quot;p must be &gt;= 1&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">q</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s">&quot;q must be &gt;= 0&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s">&quot;r must be &gt;= 1&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">seed</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span><span class="n">repeat</span><span class="o">=</span><span class="n">dim</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">p1</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p1</span><span class="o">==</span><span class="n">p2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="nb">abs</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">)</span>
+            <span class="n">probs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="o">**-</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">cumulative_sum</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">bisect_left</span><span class="p">(</span><span class="n">cdf</span><span class="p">,</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cdf</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))]</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span><span class="n">target</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+  </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

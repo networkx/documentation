@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VF2 Algorithm &mdash; NetworkX v1.4 documentation</title>
+    <link rel="stylesheet" href="../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX v1.4 documentation"
+          href="../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX v1.4 documentation" href="../index.html" />
+    <link rel="up" title="Isomorphism" href="algorithms.isomorphism.html" />
+    <link rel="next" title="networkx.GraphMatcher.__init__" href="generated/networkx.GraphMatcher.__init__.html" />
+    <link rel="prev" title="networkx.algorithms.isomorphism.faster_could_be_isomorphic" href="generated/networkx.algorithms.isomorphism.faster_could_be_isomorphic.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="generated/networkx.GraphMatcher.__init__.html" title="networkx.GraphMatcher.__init__"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="generated/networkx.algorithms.isomorphism.faster_could_be_isomorphic.html" title="networkx.algorithms.isomorphism.faster_could_be_isomorphic"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="index.html" >Reference</a> &raquo;</li>
+          <li><a href="algorithms.html" >Algorithms</a> &raquo;</li>
+          <li><a href="algorithms.isomorphism.html" accesskey="U">Isomorphism</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">VF2 Algorithm</a><ul>
+<li><a class="reference internal" href="#graph-matcher">Graph Matcher</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#digraph-matcher">DiGraph Matcher</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#weighted-graph-matcher">Weighted Graph Matcher</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#weighted-digraph-matcher">Weighted DiGraph Matcher</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#weighted-multigraph-matcher">Weighted MultiGraph Matcher</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#weighted-multidigraph-matcher">Weighted MultiDiGraph Matcher</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="generated/networkx.algorithms.isomorphism.faster_could_be_isomorphic.html"
+                        title="previous chapter">networkx.algorithms.isomorphism.faster_could_be_isomorphic</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="generated/networkx.GraphMatcher.__init__.html"
+                        title="next chapter">networkx.GraphMatcher.__init__</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="vf2-algorithm">
+<span id="vf2"></span><h1>VF2 Algorithm<a class="headerlink" href="#vf2-algorithm" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="graph-matcher">
+<h2>Graph Matcher<a class="headerlink" href="#graph-matcher" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.__init__.html#networkx.GraphMatcher.__init__" title="networkx.GraphMatcher.__init__"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.__init__</span></tt></a>(G1,&nbsp;G2)</td>
+<td>Initialize GraphMatcher.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.initialize.html#networkx.GraphMatcher.initialize" title="networkx.GraphMatcher.initialize"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.initialize</span></tt></a>()</td>
+<td>Reinitializes the state of the algorithm.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.is_isomorphic.html#networkx.GraphMatcher.is_isomorphic" title="networkx.GraphMatcher.is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.is_isomorphic</span></tt></a>()</td>
+<td>Returns True if G1 and G2 are isomorphic graphs.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.subgraph_is_isomorphic.html#networkx.GraphMatcher.subgraph_is_isomorphic" title="networkx.GraphMatcher.subgraph_is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.subgraph_is_isomorphic</span></tt></a>()</td>
+<td>Returns True if a subgraph of G1 is isomorphic to G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.isomorphisms_iter.html#networkx.GraphMatcher.isomorphisms_iter" title="networkx.GraphMatcher.isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.subgraph_isomorphisms_iter.html#networkx.GraphMatcher.subgraph_isomorphisms_iter" title="networkx.GraphMatcher.subgraph_isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.subgraph_isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between a subgraph of G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.candidate_pairs_iter.html#networkx.GraphMatcher.candidate_pairs_iter" title="networkx.GraphMatcher.candidate_pairs_iter"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.candidate_pairs_iter</span></tt></a>()</td>
+<td>Iterator over candidate pairs of nodes in G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.match.html#networkx.GraphMatcher.match" title="networkx.GraphMatcher.match"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.match</span></tt></a>()</td>
+<td>Extends the isomorphism mapping.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.semantic_feasibility.html#networkx.GraphMatcher.semantic_feasibility" title="networkx.GraphMatcher.semantic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.semantic_feasibility</span></tt></a>(G1_node,&nbsp;...)</td>
+<td>Returns True if adding (G1_node, G2_node) is symantically feasible.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.GraphMatcher.syntactic_feasibility.html#networkx.GraphMatcher.syntactic_feasibility" title="networkx.GraphMatcher.syntactic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">GraphMatcher.syntactic_feasibility</span></tt></a>(G1_node,&nbsp;...)</td>
+<td>Returns True if adding (G1_node, G2_node) is syntactically feasible.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="digraph-matcher">
+<h2>DiGraph Matcher<a class="headerlink" href="#digraph-matcher" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.__init__.html#networkx.DiGraphMatcher.__init__" title="networkx.DiGraphMatcher.__init__"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.__init__</span></tt></a>(G1,&nbsp;G2)</td>
+<td>Initialize DiGraphMatcher.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.initialize.html#networkx.DiGraphMatcher.initialize" title="networkx.DiGraphMatcher.initialize"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.initialize</span></tt></a>()</td>
+<td>Reinitializes the state of the algorithm.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.is_isomorphic.html#networkx.DiGraphMatcher.is_isomorphic" title="networkx.DiGraphMatcher.is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.is_isomorphic</span></tt></a>()</td>
+<td>Returns True if G1 and G2 are isomorphic graphs.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.subgraph_is_isomorphic.html#networkx.DiGraphMatcher.subgraph_is_isomorphic" title="networkx.DiGraphMatcher.subgraph_is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.subgraph_is_isomorphic</span></tt></a>()</td>
+<td>Returns True if a subgraph of G1 is isomorphic to G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.isomorphisms_iter.html#networkx.DiGraphMatcher.isomorphisms_iter" title="networkx.DiGraphMatcher.isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.subgraph_isomorphisms_iter.html#networkx.DiGraphMatcher.subgraph_isomorphisms_iter" title="networkx.DiGraphMatcher.subgraph_isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.subgraph_isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between a subgraph of G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.candidate_pairs_iter.html#networkx.DiGraphMatcher.candidate_pairs_iter" title="networkx.DiGraphMatcher.candidate_pairs_iter"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.candidate_pairs_iter</span></tt></a>()</td>
+<td>Iterator over candidate pairs of nodes in G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.match.html#networkx.DiGraphMatcher.match" title="networkx.DiGraphMatcher.match"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.match</span></tt></a>()</td>
+<td>Extends the isomorphism mapping.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.semantic_feasibility.html#networkx.DiGraphMatcher.semantic_feasibility" title="networkx.DiGraphMatcher.semantic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.semantic_feasibility</span></tt></a>(G1_node,&nbsp;...)</td>
+<td>Returns True if adding (G1_node, G2_node) is symantically feasible.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.DiGraphMatcher.syntactic_feasibility.html#networkx.DiGraphMatcher.syntactic_feasibility" title="networkx.DiGraphMatcher.syntactic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">DiGraphMatcher.syntactic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if adding (G1_node, G2_node) is syntactically feasible.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="weighted-graph-matcher">
+<h2>Weighted Graph Matcher<a class="headerlink" href="#weighted-graph-matcher" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.__init__.html#networkx.WeightedGraphMatcher.__init__" title="networkx.WeightedGraphMatcher.__init__"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.__init__</span></tt></a>(G1,&nbsp;G2[,&nbsp;...])</td>
+<td>Initialize WeightedGraphMatcher.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.initialize.html#networkx.WeightedGraphMatcher.initialize" title="networkx.WeightedGraphMatcher.initialize"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.initialize</span></tt></a>()</td>
+<td>Reinitializes the state of the algorithm.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.is_isomorphic.html#networkx.WeightedGraphMatcher.is_isomorphic" title="networkx.WeightedGraphMatcher.is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.is_isomorphic</span></tt></a>()</td>
+<td>Returns True if G1 and G2 are isomorphic graphs.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.subgraph_is_isomorphic.html#networkx.WeightedGraphMatcher.subgraph_is_isomorphic" title="networkx.WeightedGraphMatcher.subgraph_is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.subgraph_is_isomorphic</span></tt></a>()</td>
+<td>Returns True if a subgraph of G1 is isomorphic to G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.isomorphisms_iter.html#networkx.WeightedGraphMatcher.isomorphisms_iter" title="networkx.WeightedGraphMatcher.isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.subgraph_isomorphisms_iter.html#networkx.WeightedGraphMatcher.subgraph_isomorphisms_iter" title="networkx.WeightedGraphMatcher.subgraph_isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.subgraph_isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between a subgraph of G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.candidate_pairs_iter.html#networkx.WeightedGraphMatcher.candidate_pairs_iter" title="networkx.WeightedGraphMatcher.candidate_pairs_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.candidate_pairs_iter</span></tt></a>()</td>
+<td>Iterator over candidate pairs of nodes in G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.match.html#networkx.WeightedGraphMatcher.match" title="networkx.WeightedGraphMatcher.match"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.match</span></tt></a>()</td>
+<td>Extends the isomorphism mapping.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.semantic_feasibility.html#networkx.WeightedGraphMatcher.semantic_feasibility" title="networkx.WeightedGraphMatcher.semantic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.semantic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if mapping G1_node to G2_node is semantically feasible.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedGraphMatcher.syntactic_feasibility.html#networkx.WeightedGraphMatcher.syntactic_feasibility" title="networkx.WeightedGraphMatcher.syntactic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedGraphMatcher.syntactic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if adding (G1_node, G2_node) is syntactically feasible.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="weighted-digraph-matcher">
+<h2>Weighted DiGraph Matcher<a class="headerlink" href="#weighted-digraph-matcher" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.__init__.html#networkx.WeightedDiGraphMatcher.__init__" title="networkx.WeightedDiGraphMatcher.__init__"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.__init__</span></tt></a>(G1,&nbsp;G2[,&nbsp;...])</td>
+<td>Initialize WeightedGraphMatcher.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.initialize.html#networkx.WeightedDiGraphMatcher.initialize" title="networkx.WeightedDiGraphMatcher.initialize"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.initialize</span></tt></a>()</td>
+<td>Reinitializes the state of the algorithm.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.is_isomorphic.html#networkx.WeightedDiGraphMatcher.is_isomorphic" title="networkx.WeightedDiGraphMatcher.is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.is_isomorphic</span></tt></a>()</td>
+<td>Returns True if G1 and G2 are isomorphic graphs.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.subgraph_is_isomorphic.html#networkx.WeightedDiGraphMatcher.subgraph_is_isomorphic" title="networkx.WeightedDiGraphMatcher.subgraph_is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.subgraph_is_isomorphic</span></tt></a>()</td>
+<td>Returns True if a subgraph of G1 is isomorphic to G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.isomorphisms_iter.html#networkx.WeightedDiGraphMatcher.isomorphisms_iter" title="networkx.WeightedDiGraphMatcher.isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.subgraph_isomorphisms_iter.html#networkx.WeightedDiGraphMatcher.subgraph_isomorphisms_iter" title="networkx.WeightedDiGraphMatcher.subgraph_isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.subgraph_isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between a subgraph of G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.candidate_pairs_iter.html#networkx.WeightedDiGraphMatcher.candidate_pairs_iter" title="networkx.WeightedDiGraphMatcher.candidate_pairs_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.candidate_pairs_iter</span></tt></a>()</td>
+<td>Iterator over candidate pairs of nodes in G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.match.html#networkx.WeightedDiGraphMatcher.match" title="networkx.WeightedDiGraphMatcher.match"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.match</span></tt></a>()</td>
+<td>Extends the isomorphism mapping.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.semantic_feasibility.html#networkx.WeightedDiGraphMatcher.semantic_feasibility" title="networkx.WeightedDiGraphMatcher.semantic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.semantic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if mapping G1_node to G2_node is semantically feasible.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedDiGraphMatcher.syntactic_feasibility.html#networkx.WeightedDiGraphMatcher.syntactic_feasibility" title="networkx.WeightedDiGraphMatcher.syntactic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedDiGraphMatcher.syntactic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if adding (G1_node, G2_node) is syntactically feasible.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="weighted-multigraph-matcher">
+<h2>Weighted MultiGraph Matcher<a class="headerlink" href="#weighted-multigraph-matcher" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.__init__.html#networkx.WeightedMultiGraphMatcher.__init__" title="networkx.WeightedMultiGraphMatcher.__init__"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.__init__</span></tt></a>(G1,&nbsp;G2[,&nbsp;...])</td>
+<td>Initialize WeightedGraphMatcher.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.initialize.html#networkx.WeightedMultiGraphMatcher.initialize" title="networkx.WeightedMultiGraphMatcher.initialize"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.initialize</span></tt></a>()</td>
+<td>Reinitializes the state of the algorithm.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.is_isomorphic.html#networkx.WeightedMultiGraphMatcher.is_isomorphic" title="networkx.WeightedMultiGraphMatcher.is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.is_isomorphic</span></tt></a>()</td>
+<td>Returns True if G1 and G2 are isomorphic graphs.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.subgraph_is_isomorphic.html#networkx.WeightedMultiGraphMatcher.subgraph_is_isomorphic" title="networkx.WeightedMultiGraphMatcher.subgraph_is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.subgraph_is_isomorphic</span></tt></a>()</td>
+<td>Returns True if a subgraph of G1 is isomorphic to G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.isomorphisms_iter.html#networkx.WeightedMultiGraphMatcher.isomorphisms_iter" title="networkx.WeightedMultiGraphMatcher.isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.subgraph_isomorphisms_iter.html#networkx.WeightedMultiGraphMatcher.subgraph_isomorphisms_iter" title="networkx.WeightedMultiGraphMatcher.subgraph_isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.subgraph_isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between a subgraph of G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.candidate_pairs_iter.html#networkx.WeightedMultiGraphMatcher.candidate_pairs_iter" title="networkx.WeightedMultiGraphMatcher.candidate_pairs_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.candidate_pairs_iter</span></tt></a>()</td>
+<td>Iterator over candidate pairs of nodes in G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.match.html#networkx.WeightedMultiGraphMatcher.match" title="networkx.WeightedMultiGraphMatcher.match"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.match</span></tt></a>()</td>
+<td>Extends the isomorphism mapping.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.semantic_feasibility.html#networkx.WeightedMultiGraphMatcher.semantic_feasibility" title="networkx.WeightedMultiGraphMatcher.semantic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.semantic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if mapping G1_node to G2_node is semantically feasible.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiGraphMatcher.syntactic_feasibility.html#networkx.WeightedMultiGraphMatcher.syntactic_feasibility" title="networkx.WeightedMultiGraphMatcher.syntactic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiGraphMatcher.syntactic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if adding (G1_node, G2_node) is syntactically feasible.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="weighted-multidigraph-matcher">
+<h2>Weighted MultiDiGraph Matcher<a class="headerlink" href="#weighted-multidigraph-matcher" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.__init__.html#networkx.WeightedMultiDiGraphMatcher.__init__" title="networkx.WeightedMultiDiGraphMatcher.__init__"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.__init__</span></tt></a>(G1,&nbsp;G2)</td>
+<td>Initialize WeightedGraphMatcher.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.initialize.html#networkx.WeightedMultiDiGraphMatcher.initialize" title="networkx.WeightedMultiDiGraphMatcher.initialize"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.initialize</span></tt></a>()</td>
+<td>Reinitializes the state of the algorithm.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.is_isomorphic.html#networkx.WeightedMultiDiGraphMatcher.is_isomorphic" title="networkx.WeightedMultiDiGraphMatcher.is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.is_isomorphic</span></tt></a>()</td>
+<td>Returns True if G1 and G2 are isomorphic graphs.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.subgraph_is_isomorphic.html#networkx.WeightedMultiDiGraphMatcher.subgraph_is_isomorphic" title="networkx.WeightedMultiDiGraphMatcher.subgraph_is_isomorphic"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.subgraph_is_isomorphic</span></tt></a>()</td>
+<td>Returns True if a subgraph of G1 is isomorphic to G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.isomorphisms_iter.html#networkx.WeightedMultiDiGraphMatcher.isomorphisms_iter" title="networkx.WeightedMultiDiGraphMatcher.isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.subgraph_isomorphisms_iter.html#networkx.WeightedMultiDiGraphMatcher.subgraph_isomorphisms_iter" title="networkx.WeightedMultiDiGraphMatcher.subgraph_isomorphisms_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.subgraph_isomorphisms_iter</span></tt></a>()</td>
+<td>Generator over isomorphisms between a subgraph of G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.candidate_pairs_iter.html#networkx.WeightedMultiDiGraphMatcher.candidate_pairs_iter" title="networkx.WeightedMultiDiGraphMatcher.candidate_pairs_iter"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.candidate_pairs_iter</span></tt></a>()</td>
+<td>Iterator over candidate pairs of nodes in G1 and G2.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.match.html#networkx.WeightedMultiDiGraphMatcher.match" title="networkx.WeightedMultiDiGraphMatcher.match"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.match</span></tt></a>()</td>
+<td>Extends the isomorphism mapping.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.semantic_feasibility.html#networkx.WeightedMultiDiGraphMatcher.semantic_feasibility" title="networkx.WeightedMultiDiGraphMatcher.semantic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.semantic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if mapping G1_node to G2_node is semantically feasible.</td>
+</tr>
+<tr><td><a class="reference internal" href="generated/networkx.WeightedMultiDiGraphMatcher.syntactic_feasibility.html#networkx.WeightedMultiDiGraphMatcher.syntactic_feasibility" title="networkx.WeightedMultiDiGraphMatcher.syntactic_feasibility"><tt class="xref py py-obj docutils literal"><span class="pre">WeightedMultiDiGraphMatcher.syntactic_feasibility</span></tt></a>(...)</td>
+<td>Returns True if adding (G1_node, G2_node) is syntactically feasible.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="generated/networkx.GraphMatcher.__init__.html" title="networkx.GraphMatcher.__init__"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="generated/networkx.algorithms.isomorphism.faster_could_be_isomorphic.html" title="networkx.algorithms.isomorphism.faster_could_be_isomorphic"
+             >previous</a> |</li>
+        <li><a href="../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="index.html" >Reference</a> &raquo;</li>
+          <li><a href="algorithms.html" >Algorithms</a> &raquo;</li>
+          <li><a href="algorithms.isomorphism.html" >Isomorphism</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jan 23, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

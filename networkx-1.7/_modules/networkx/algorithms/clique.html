@@ -1,0 +1,634 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.clique &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.clique</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=======</span>
+<span class="sd">Cliques</span>
+<span class="sd">=======</span>
+
+<span class="sd">Find and manipulate cliques of graphs.</span>
+
+<span class="sd">Note that finding the largest clique of a graph has been</span>
+<span class="sd">shown to be an NP-complete problem; the algorithms here</span>
+<span class="sd">could take a long time to run.</span>
+
+<span class="sd">http://en.wikipedia.org/wiki/Clique_problem</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2008 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils.decorators</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Dan Schult (dschult@colgate.edu)&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;find_cliques&#39;</span><span class="p">,</span> <span class="s">&#39;find_cliques_recursive&#39;</span><span class="p">,</span> <span class="s">&#39;make_max_clique_graph&#39;</span><span class="p">,</span>
+           <span class="s">&#39;make_clique_bipartite&#39;</span> <span class="p">,</span><span class="s">&#39;graph_clique_number&#39;</span><span class="p">,</span>
+           <span class="s">&#39;graph_number_of_cliques&#39;</span><span class="p">,</span> <span class="s">&#39;node_clique_number&#39;</span><span class="p">,</span>
+           <span class="s">&#39;number_of_cliques&#39;</span><span class="p">,</span> <span class="s">&#39;cliques_containing_node&#39;</span><span class="p">,</span>
+           <span class="s">&#39;project_down&#39;</span><span class="p">,</span> <span class="s">&#39;project_up&#39;</span><span class="p">]</span>
+
+
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s">&#39;directed&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="find_cliques"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.find_cliques.html#networkx.algorithms.clique.find_cliques">[docs]</a><span class="k">def</span> <span class="nf">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Search for all maximal cliques in a graph.</span>
+
+<span class="sd">    Maximal cliques are the largest complete subgraph containing</span>
+<span class="sd">    a given node.  The largest maximal clique is sometimes called</span>
+<span class="sd">    the maximum clique.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    generator of lists: genetor of member list for each maximal clique</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    find_cliques_recursive :</span>
+<span class="sd">    A recursive version of the same algorithm</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To obtain a list of cliques, use list(find_cliques(G)).</span>
+
+<span class="sd">    Based on the algorithm published by Bron &amp; Kerbosch (1973) [1]_</span>
+<span class="sd">    as adapated by Tomita, Tanaka and Takahashi (2006) [2]_</span>
+<span class="sd">    and discussed in Cazals and Karande (2008) [3]_.</span>
+<span class="sd">    The method essentially unrolls the recursion used in</span>
+<span class="sd">    the references to avoid issues of recursion stack depth.</span>
+
+<span class="sd">    This algorithm is not suitable for directed graphs.</span>
+
+<span class="sd">    This algorithm ignores self-loops and parallel edges as</span>
+<span class="sd">    clique is not conventionally defined with such edges.</span>
+
+<span class="sd">    There are often many cliques in graphs.  This algorithm can</span>
+<span class="sd">    run out of memory for large graphs.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Bron, C. and Kerbosch, J. 1973.</span>
+<span class="sd">       Algorithm 457: finding all cliques of an undirected graph.</span>
+<span class="sd">       Commun. ACM 16, 9 (Sep. 1973), 575-577.</span>
+<span class="sd">       http://portal.acm.org/citation.cfm?doid=362342.362367</span>
+
+<span class="sd">    .. [2] Etsuji Tomita, Akira Tanaka, Haruhisa Takahashi,</span>
+<span class="sd">       The worst-case time complexity for generating all maximal</span>
+<span class="sd">       cliques and computational experiments,</span>
+<span class="sd">       Theoretical Computer Science, Volume 363, Issue 1,</span>
+<span class="sd">       Computing and Combinatorics,</span>
+<span class="sd">       10th Annual International Conference on</span>
+<span class="sd">       Computing and Combinatorics (COCOON 2004), 25 October 2006, Pages 28-42</span>
+<span class="sd">       http://dx.doi.org/10.1016/j.tcs.2006.06.015</span>
+
+<span class="sd">    .. [3] F. Cazals, C. Karande,</span>
+<span class="sd">       A note on the problem of reporting maximal cliques,</span>
+<span class="sd">       Theoretical Computer Science,</span>
+<span class="sd">       Volume 407, Issues 1-3, 6 November 2008, Pages 564-568,</span>
+<span class="sd">       http://dx.doi.org/10.1016/j.tcs.2008.05.010</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Cache nbrs and find first pivot (highest degree)</span>
+    <span class="n">maxconn</span><span class="o">=-</span><span class="mi">1</span>
+    <span class="n">nnbrs</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">pivotnbrs</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span> <span class="c"># handle empty graph</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency_iter</span><span class="p">():</span>
+        <span class="n">nbrs</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span>
+        <span class="n">nbrs</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">conn</span> <span class="o">&gt;</span> <span class="n">maxconn</span><span class="p">:</span>
+            <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">pivotnbrs</span> <span class="o">=</span> <span class="n">nbrs</span>
+            <span class="n">maxconn</span> <span class="o">=</span> <span class="n">conn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">nbrs</span>
+    <span class="c"># Initial setup</span>
+    <span class="n">cand</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nnbrs</span><span class="p">)</span>
+    <span class="n">smallcand</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cand</span> <span class="o">-</span> <span class="n">pivotnbrs</span><span class="p">)</span>
+    <span class="n">done</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+    <span class="n">stack</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">clique_so_far</span><span class="o">=</span><span class="p">[]</span>
+    <span class="c"># Start main loop</span>
+    <span class="k">while</span> <span class="n">smallcand</span> <span class="ow">or</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># Any nodes left to check?</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">smallcand</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c"># back out clique_so_far</span>
+            <span class="n">cand</span><span class="p">,</span><span class="n">done</span><span class="p">,</span><span class="n">smallcand</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">clique_so_far</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="c"># Add next node to clique</span>
+        <span class="n">clique_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">cand</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">done</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">nn</span><span class="o">=</span><span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">new_cand</span> <span class="o">=</span> <span class="n">cand</span> <span class="o">&amp;</span> <span class="n">nn</span>
+        <span class="n">new_done</span> <span class="o">=</span> <span class="n">done</span> <span class="o">&amp;</span> <span class="n">nn</span>
+        <span class="c"># check if we have more to search</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">new_cand</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">new_done</span><span class="p">:</span>
+                <span class="c"># Found a clique!</span>
+                <span class="k">yield</span> <span class="n">clique_so_far</span><span class="p">[:]</span>
+            <span class="n">clique_so_far</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="c"># Shortcut--only one node left!</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">new_done</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_cand</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">clique_so_far</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">new_cand</span><span class="p">)</span>
+            <span class="n">clique_so_far</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="c"># find pivot node (max connected in cand)</span>
+        <span class="c"># look in done nodes first</span>
+        <span class="n">numb_cand</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">new_cand</span><span class="p">)</span>
+        <span class="n">maxconndone</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">new_done</span><span class="p">:</span>
+            <span class="n">cn</span> <span class="o">=</span> <span class="n">new_cand</span> <span class="o">&amp;</span> <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="n">conn</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">conn</span> <span class="o">&gt;</span> <span class="n">maxconndone</span><span class="p">:</span>
+                <span class="n">pivotdonenbrs</span><span class="o">=</span><span class="n">cn</span>
+                <span class="n">maxconndone</span><span class="o">=</span><span class="n">conn</span>
+                <span class="k">if</span> <span class="n">maxconndone</span><span class="o">==</span><span class="n">numb_cand</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="c"># Shortcut--this part of tree already searched</span>
+        <span class="k">if</span> <span class="n">maxconndone</span> <span class="o">==</span> <span class="n">numb_cand</span><span class="p">:</span>
+            <span class="n">clique_so_far</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="c"># still finding pivot node</span>
+        <span class="c"># look in cand nodes second</span>
+        <span class="n">maxconn</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">new_cand</span><span class="p">:</span>
+            <span class="n">cn</span> <span class="o">=</span> <span class="n">new_cand</span> <span class="o">&amp;</span> <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="n">conn</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">conn</span> <span class="o">&gt;</span> <span class="n">maxconn</span><span class="p">:</span>
+                <span class="n">pivotnbrs</span><span class="o">=</span><span class="n">cn</span>
+                <span class="n">maxconn</span><span class="o">=</span><span class="n">conn</span>
+                <span class="k">if</span> <span class="n">maxconn</span> <span class="o">==</span> <span class="n">numb_cand</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="c"># pivot node is max connected in cand from done or cand</span>
+        <span class="k">if</span> <span class="n">maxconndone</span> <span class="o">&gt;</span> <span class="n">maxconn</span><span class="p">:</span>
+            <span class="n">pivotnbrs</span> <span class="o">=</span> <span class="n">pivotdonenbrs</span>
+        <span class="c"># save search status for later backout</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="p">(</span><span class="n">cand</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">smallcand</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">cand</span><span class="o">=</span><span class="n">new_cand</span>
+        <span class="n">done</span><span class="o">=</span><span class="n">new_done</span>
+        <span class="n">smallcand</span> <span class="o">=</span> <span class="n">cand</span> <span class="o">-</span> <span class="n">pivotnbrs</span>
+
+</div>
+<span class="k">def</span> <span class="nf">find_cliques_recursive</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive search for all maximal cliques in a graph.</span>
+
+<span class="sd">    Maximal cliques are the largest complete subgraph containing</span>
+<span class="sd">    a given point.  The largest maximal clique is sometimes called</span>
+<span class="sd">    the maximum clique.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of lists: list of members in each maximal clique</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    find_cliques : An nonrecursive version of the same algorithm</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Based on the algorithm published by Bron &amp; Kerbosch (1973) [1]_</span>
+<span class="sd">    as adapated by Tomita, Tanaka and Takahashi (2006) [2]_</span>
+<span class="sd">    and discussed in Cazals and Karande (2008) [3]_.</span>
+
+<span class="sd">    This implementation returns a list of lists each of</span>
+<span class="sd">    which contains the members of a maximal clique.</span>
+
+<span class="sd">    This algorithm ignores self-loops and parallel edges as</span>
+<span class="sd">    clique is not conventionally defined with such edges.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Bron, C. and Kerbosch, J. 1973.</span>
+<span class="sd">       Algorithm 457: finding all cliques of an undirected graph.</span>
+<span class="sd">       Commun. ACM 16, 9 (Sep. 1973), 575-577.</span>
+<span class="sd">       http://portal.acm.org/citation.cfm?doid=362342.362367</span>
+
+<span class="sd">    .. [2] Etsuji Tomita, Akira Tanaka, Haruhisa Takahashi,</span>
+<span class="sd">       The worst-case time complexity for generating all maximal</span>
+<span class="sd">       cliques and computational experiments,</span>
+<span class="sd">       Theoretical Computer Science, Volume 363, Issue 1,</span>
+<span class="sd">       Computing and Combinatorics,</span>
+<span class="sd">       10th Annual International Conference on</span>
+<span class="sd">       Computing and Combinatorics (COCOON 2004), 25 October 2006, Pages 28-42</span>
+<span class="sd">       http://dx.doi.org/10.1016/j.tcs.2006.06.015</span>
+
+<span class="sd">    .. [3] F. Cazals, C. Karande,</span>
+<span class="sd">       A note on the problem of reporting maximal cliques,</span>
+<span class="sd">       Theoretical Computer Science,</span>
+<span class="sd">       Volume 407, Issues 1-3, 6 November 2008, Pages 564-568,</span>
+<span class="sd">       http://dx.doi.org/10.1016/j.tcs.2008.05.010</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nnbrs</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency_iter</span><span class="p">():</span>
+        <span class="n">nbrs</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span>
+        <span class="n">nbrs</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">nbrs</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nnbrs</span><span class="p">:</span> <span class="k">return</span> <span class="p">[]</span> <span class="c"># empty graph</span>
+    <span class="n">cand</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nnbrs</span><span class="p">)</span>
+    <span class="n">done</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+    <span class="n">clique_so_far</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">cliques</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">_extend</span><span class="p">(</span><span class="n">nnbrs</span><span class="p">,</span><span class="n">cand</span><span class="p">,</span><span class="n">done</span><span class="p">,</span><span class="n">clique_so_far</span><span class="p">,</span><span class="n">cliques</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cliques</span>
+
+<span class="k">def</span> <span class="nf">_extend</span><span class="p">(</span><span class="n">nnbrs</span><span class="p">,</span><span class="n">cand</span><span class="p">,</span><span class="n">done</span><span class="p">,</span><span class="n">so_far</span><span class="p">,</span><span class="n">cliques</span><span class="p">):</span>
+    <span class="c"># find pivot node (max connections in cand)</span>
+    <span class="n">maxconn</span><span class="o">=-</span><span class="mi">1</span>
+    <span class="n">numb_cand</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">done</span><span class="p">:</span>
+        <span class="n">cn</span> <span class="o">=</span> <span class="n">cand</span> <span class="o">&amp;</span> <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">conn</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">conn</span> <span class="o">&gt;</span> <span class="n">maxconn</span><span class="p">:</span>
+            <span class="n">pivotnbrs</span><span class="o">=</span><span class="n">cn</span>
+            <span class="n">maxconn</span><span class="o">=</span><span class="n">conn</span>
+            <span class="k">if</span> <span class="n">conn</span><span class="o">==</span><span class="n">numb_cand</span><span class="p">:</span>
+                <span class="c"># All possible cliques already found</span>
+                <span class="k">return</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cand</span><span class="p">:</span>
+        <span class="n">cn</span> <span class="o">=</span> <span class="n">cand</span> <span class="o">&amp;</span> <span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">conn</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">conn</span> <span class="o">&gt;</span> <span class="n">maxconn</span><span class="p">:</span>
+            <span class="n">pivotnbrs</span><span class="o">=</span><span class="n">cn</span>
+            <span class="n">maxconn</span><span class="o">=</span><span class="n">conn</span>
+    <span class="c"># Use pivot to reduce number of nodes to examine</span>
+    <span class="n">smallercand</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cand</span> <span class="o">-</span> <span class="n">pivotnbrs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">smallercand</span><span class="p">:</span>
+        <span class="n">cand</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">so_far</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">nn</span><span class="o">=</span><span class="n">nnbrs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">new_cand</span><span class="o">=</span><span class="n">cand</span> <span class="o">&amp;</span> <span class="n">nn</span>
+        <span class="n">new_done</span><span class="o">=</span><span class="n">done</span> <span class="o">&amp;</span> <span class="n">nn</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">new_cand</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">new_done</span><span class="p">:</span>
+            <span class="c"># Found the clique</span>
+            <span class="n">cliques</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">so_far</span><span class="p">[:])</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">new_done</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_cand</span><span class="p">)</span> <span class="ow">is</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># shortcut if only one node left</span>
+            <span class="n">cliques</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">so_far</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">new_cand</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_extend</span><span class="p">(</span><span class="n">nnbrs</span><span class="p">,</span> <span class="n">new_cand</span><span class="p">,</span> <span class="n">new_done</span><span class="p">,</span> <span class="n">so_far</span><span class="p">,</span> <span class="n">cliques</span><span class="p">)</span>
+        <span class="n">done</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">so_far</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="make_max_clique_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.make_max_clique_graph.html#networkx.algorithms.clique.make_max_clique_graph">[docs]</a><span class="k">def</span> <span class="nf">make_max_clique_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Create the maximal clique graph of a graph.</span>
+
+<span class="sd">    Finds the maximal cliques and treats these as nodes.</span>
+<span class="sd">    The nodes are connected if they have common members in</span>
+<span class="sd">    the original graph.  Theory has done a lot with clique</span>
+<span class="sd">    graphs, but I haven&#39;t seen much on maximal clique graphs.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This should be the same as make_clique_bipartite followed</span>
+<span class="sd">    by project_up, but it saves all the intermediate steps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cliq</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">set</span><span class="p">,</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">create_using</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">=</span><span class="n">create_using</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">cl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cliq</span><span class="p">):</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">other_cl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cliq</span><span class="p">[:</span><span class="n">i</span><span class="p">]):</span>
+            <span class="c"># if not cl.isdisjoint(other_cl): #Requires 2.6</span>
+            <span class="n">intersect</span><span class="o">=</span><span class="n">cl</span> <span class="o">&amp;</span> <span class="n">other_cl</span>
+            <span class="k">if</span> <span class="n">intersect</span><span class="p">:</span>     <span class="c"># Not empty</span>
+                <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">B</span>
+</div>
+<div class="viewcode-block" id="make_clique_bipartite"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.make_clique_bipartite.html#networkx.algorithms.clique.make_clique_bipartite">[docs]</a><span class="k">def</span> <span class="nf">make_clique_bipartite</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">fpos</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a bipartite clique graph from a graph G.</span>
+
+<span class="sd">    Nodes of G are retained as the &quot;bottom nodes&quot; of B and</span>
+<span class="sd">    cliques of G become &quot;top nodes&quot; of B.</span>
+<span class="sd">    Edges are present if a bottom node belongs to the clique</span>
+<span class="sd">    represented by the top node.</span>
+
+<span class="sd">    Returns a Graph with additional attribute dict B.node_type</span>
+<span class="sd">    which is keyed by nodes to &quot;Bottom&quot; or &quot;Top&quot; appropriately.</span>
+
+<span class="sd">    if fpos is not None, a second additional attribute dict B.pos</span>
+<span class="sd">    is created to hold the position tuple of each node for viewing</span>
+<span class="sd">    the bipartite graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cliq</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">create_using</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">=</span><span class="n">create_using</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+
+    <span class="n">B</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">B</span><span class="o">.</span><span class="n">node_type</span><span class="o">=</span><span class="p">{}</span>   <span class="c"># New Attribute for B</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">B</span><span class="p">:</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">node_type</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="s">&quot;Bottom&quot;</span>
+
+    <span class="k">if</span> <span class="n">fpos</span><span class="p">:</span>
+       <span class="n">B</span><span class="o">.</span><span class="n">pos</span><span class="o">=</span><span class="p">{}</span>     <span class="c"># New Attribute for B</span>
+       <span class="n">delta_cpos</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">cliq</span><span class="p">)</span>
+       <span class="n">delta_ppos</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+       <span class="n">cpos</span><span class="o">=</span><span class="mf">0.</span>
+       <span class="n">ppos</span><span class="o">=</span><span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">cl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cliq</span><span class="p">):</span>
+       <span class="n">name</span><span class="o">=</span> <span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span>   <span class="c"># Top nodes get negative names</span>
+       <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+       <span class="n">B</span><span class="o">.</span><span class="n">node_type</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="s">&quot;Top&quot;</span>
+       <span class="k">if</span> <span class="n">fpos</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">pos</span><span class="p">:</span>
+             <span class="n">B</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span><span class="n">cpos</span><span class="p">)</span>
+             <span class="n">cpos</span> <span class="o">+=</span><span class="n">delta_cpos</span>
+       <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cl</span><span class="p">:</span>
+          <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">fpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+             <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">pos</span><span class="p">:</span>
+                <span class="n">B</span><span class="o">.</span><span class="n">pos</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span><span class="n">ppos</span><span class="p">)</span>
+                <span class="n">ppos</span> <span class="o">+=</span><span class="n">delta_ppos</span>
+    <span class="k">return</span> <span class="n">B</span>
+</div>
+<span class="k">def</span> <span class="nf">project_down</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Project a bipartite graph B down onto its &quot;bottom nodes&quot;.</span>
+
+<span class="sd">    The nodes retain their names and are connected if they</span>
+<span class="sd">    share a common top node in the bipartite graph.</span>
+
+<span class="sd">    Returns a Graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">create_using</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">create_using</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+
+    <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">Bvnbrs</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">adjacency_iter</span><span class="p">():</span>
+       <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">node_type</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">==</span><span class="s">&quot;Bottom&quot;</span><span class="p">:</span>
+          <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+          <span class="k">for</span> <span class="n">cv</span> <span class="ow">in</span> <span class="n">Bvnbrs</span><span class="p">:</span>
+             <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">v</span><span class="p">,</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">B</span><span class="p">[</span><span class="n">cv</span><span class="p">]</span> <span class="k">if</span> <span class="n">u</span><span class="o">!=</span><span class="n">v</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="k">def</span> <span class="nf">project_up</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Project a bipartite graph B down onto its &quot;bottom nodes&quot;.</span>
+
+<span class="sd">    The nodes retain their names and are connected if they</span>
+<span class="sd">    share a common Bottom Node in the Bipartite Graph.</span>
+
+<span class="sd">    Returns a Graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">create_using</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">create_using</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+
+    <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">Bvnbrs</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">adjacency_iter</span><span class="p">():</span>
+       <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">node_type</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">==</span><span class="s">&quot;Top&quot;</span><span class="p">:</span>
+          <span class="n">vname</span><span class="o">=</span> <span class="o">-</span><span class="n">v</span>   <span class="c">#Change sign of name for Top Nodes</span>
+          <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">vname</span><span class="p">)</span>
+          <span class="k">for</span> <span class="n">cv</span> <span class="ow">in</span> <span class="n">Bvnbrs</span><span class="p">:</span>
+             <span class="c"># Note: -u changes the name (not Top node anymore)</span>
+             <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">vname</span><span class="p">,</span><span class="o">-</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">B</span><span class="p">[</span><span class="n">cv</span><span class="p">]</span> <span class="k">if</span> <span class="n">u</span><span class="o">!=</span><span class="n">v</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+<div class="viewcode-block" id="graph_clique_number"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.graph_clique_number.html#networkx.algorithms.clique.graph_clique_number">[docs]</a><span class="k">def</span> <span class="nf">graph_clique_number</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">cliques</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the clique number (size of the largest clique) for G.</span>
+
+<span class="sd">    An optional list of cliques can be input if already computed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cliques</span><span class="o">=</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span>   <span class="nb">max</span><span class="p">(</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span><span class="p">]</span> <span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="graph_number_of_cliques"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.graph_number_of_cliques.html#networkx.algorithms.clique.graph_number_of_cliques">[docs]</a><span class="k">def</span> <span class="nf">graph_number_of_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">cliques</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the number of maximal cliques in G.</span>
+
+<span class="sd">    An optional list of cliques can be input if already computed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cliques</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="k">return</span>   <span class="nb">len</span><span class="p">(</span><span class="n">cliques</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="node_clique_number"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.node_clique_number.html#networkx.algorithms.clique.node_clique_number">[docs]</a><span class="k">def</span> <span class="nf">node_clique_number</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">cliques</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns the size of the largest maximal clique containing</span>
+<span class="sd">    each given node.</span>
+
+<span class="sd">    Returns a single or list depending on input nodes.</span>
+<span class="sd">    Optional list of cliques can be input if already computed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Use ego_graph to decrease size of graph</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+                <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                    <span class="n">H</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">ego_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+                    <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">find_cliques</span><span class="p">(</span><span class="n">H</span><span class="p">))</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">H</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">ego_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="p">)</span>
+                <span class="n">d</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">find_cliques</span><span class="p">(</span><span class="n">H</span><span class="p">))</span> <span class="p">)</span>
+            <span class="k">return</span> <span class="n">d</span>
+        <span class="c"># nodes is None--find all cliques</span>
+        <span class="n">cliques</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>   <span class="c"># none, get entire graph</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>   <span class="c"># check for a list</span>
+        <span class="n">v</span><span class="o">=</span><span class="n">nodes</span>
+        <span class="c"># assume it is a single value</span>
+        <span class="n">d</span><span class="o">=</span><span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+    <span class="c"># if nodes is None:                 # none, use entire graph</span>
+    <span class="c">#     nodes=G.nodes()</span>
+    <span class="c"># elif  not isinstance(nodes, list):    # check for a list</span>
+    <span class="c">#     nodes=[nodes]             # assume it is a single value</span>
+
+    <span class="c"># if cliques is None:</span>
+    <span class="c">#     cliques=list(find_cliques(G))</span>
+    <span class="c"># d={}</span>
+    <span class="c"># for v in nodes:</span>
+    <span class="c">#     d[v]=max([len(c) for c in cliques if v in c])</span>
+
+    <span class="c"># if nodes in G:</span>
+    <span class="c">#     return d[v] #return single value</span>
+    <span class="c"># return d</span>
+
+</div>
+<div class="viewcode-block" id="number_of_cliques"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.number_of_cliques.html#networkx.algorithms.clique.number_of_cliques">[docs]</a><span class="k">def</span> <span class="nf">number_of_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">cliques</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the number of maximal cliques for each node.</span>
+
+<span class="sd">    Returns a single or list depending on input nodes.</span>
+<span class="sd">    Optional list of cliques can be input if already computed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cliques</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>   <span class="c"># none, get entire graph</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>   <span class="c"># check for a list</span>
+        <span class="n">v</span><span class="o">=</span><span class="n">nodes</span>
+        <span class="c"># assume it is a single value</span>
+        <span class="n">numcliq</span><span class="o">=</span><span class="nb">len</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">numcliq</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">numcliq</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="nb">len</span><span class="p">([</span><span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">numcliq</span>
+
+</div>
+<div class="viewcode-block" id="cliques_containing_node"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.clique.cliques_containing_node.html#networkx.algorithms.clique.cliques_containing_node">[docs]</a><span class="k">def</span> <span class="nf">cliques_containing_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">cliques</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of cliques containing the given node.</span>
+
+<span class="sd">    Returns a single list or list of lists depending on input nodes.</span>
+<span class="sd">    Optional list of cliques can be input if already computed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cliques</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>   <span class="c"># none, get entire graph</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>   <span class="c"># check for a list</span>
+        <span class="n">v</span><span class="o">=</span><span class="n">nodes</span>
+        <span class="c"># assume it is a single value</span>
+        <span class="n">vcliques</span><span class="o">=</span><span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">vcliques</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">vcliques</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">c</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">vcliques</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

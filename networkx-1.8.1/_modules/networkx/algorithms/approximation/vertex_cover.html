@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.approximation.vertex_cover &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.approximation.vertex_cover</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">************</span>
+<span class="sd">Vertex Cover</span>
+<span class="sd">************</span>
+
+<span class="sd">Given an undirected graph `G = (V, E)` and a function w assigning nonnegative</span>
+<span class="sd">weights to its vertices, find a minimum weight subset of V such that each edge</span>
+<span class="sd">in E is incident to at least one vertex in the subset.</span>
+
+<span class="sd">http://en.wikipedia.org/wiki/Vertex_cover</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#   Copyright (C) 2011-2012 by</span>
+<span class="c">#   Nicholas Mancuso &lt;nick.mancuso@gmail.com&gt;</span>
+<span class="c">#   All rights reserved.</span>
+<span class="c">#   BSD license.</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;min_weighted_vertex_cover&quot;</span><span class="p">]</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Nicholas Mancuso (nick.mancuso@gmail.com)&quot;&quot;&quot;</span>
+
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s">&#39;directed&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="min_weighted_vertex_cover"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.approximation.vertex_cover.min_weighted_vertex_cover.html#networkx.algorithms.approximation.vertex_cover.min_weighted_vertex_cover">[docs]</a><span class="k">def</span> <span class="nf">min_weighted_vertex_cover</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;2-OPT Local Ratio for Minimum Weighted Vertex Cover</span>
+
+<span class="sd">    Find an approximate minimum weighted vertex cover of a graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">      Undirected graph</span>
+
+<span class="sd">    weight : None or string, optional (default = None)</span>
+<span class="sd">        If None, every edge has weight/distance/cost 1. If a string, use this</span>
+<span class="sd">        edge attribute as the edge weight. Any edge attribute not present</span>
+<span class="sd">        defaults to 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    min_weighted_cover : set</span>
+<span class="sd">      Returns a set of vertices whose weight sum is no more than 2 * OPT.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Local-Ratio algorithm for computing an approximate vertex cover.</span>
+<span class="sd">    Algorithm greedily reduces the costs over edges and iteratively</span>
+<span class="sd">    builds a cover. Worst-case runtime is `O(|E|)`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Bar-Yehuda, R., &amp; Even, S. (1985). A local-ratio theorem for</span>
+<span class="sd">       approximating the weighted vertex cover problem.</span>
+<span class="sd">       Annals of Discrete Mathematics, 25, 27–46</span>
+<span class="sd">       http://www.cs.technion.ac.il/~reuven/PDF/vc_lr.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weight_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">nd</span><span class="p">:</span> <span class="n">nd</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">weight_func</span><span class="p">(</span><span class="n">nd</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nd</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+
+    <span class="c"># while there are edges uncovered, continue</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">():</span>
+        <span class="c"># select some uncovered edge</span>
+        <span class="n">min_cost</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">cost</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">cost</span><span class="p">[</span><span class="n">v</span><span class="p">]])</span>
+        <span class="n">cost</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">-=</span> <span class="n">min_cost</span>
+        <span class="n">cost</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">-=</span> <span class="n">min_cost</span>
+
+    <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">cost</span> <span class="k">if</span> <span class="n">cost</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

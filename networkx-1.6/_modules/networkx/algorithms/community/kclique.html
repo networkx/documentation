@@ -1,0 +1,197 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.community.kclique &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.community.kclique</h1><div class="highlight"><pre>
+<span class="c">#-*- coding: utf-8 -*-</span>
+<span class="c">#    Copyright (C) 2011 by </span>
+<span class="c">#    Conrad Lee &lt;conradlee@gmail.com&gt;</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Conrad Lee &lt;conradlee@gmail.com&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;k_clique_communities&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="k_clique_communities"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.community.kclique.k_clique_communities.html#networkx.algorithms.community.kclique.k_clique_communities">[docs]</a><span class="k">def</span> <span class="nf">k_clique_communities</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">cliques</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find k-clique communities in graph using percolation method.</span>
+
+<span class="sd">    A k-clique community is the union of all cliques of size k that</span>
+<span class="sd">    can be reached through adjacent (sharing k-1 nodes) k-cliques.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    k : int</span>
+<span class="sd">       Size of smallest clique</span>
+
+<span class="sd">    cliques: list or generator       </span>
+<span class="sd">       Precomputed cliques (use networkx.find_cliques(G))</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Yields sets of nodes, one for each k-clique community.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; K5 = nx.convert_node_labels_to_integers(G,first_label=2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from(K5.edges())</span>
+<span class="sd">    &gt;&gt;&gt; c = list(nx.k_clique_communities(G, 4))</span>
+<span class="sd">    &gt;&gt;&gt; list(c[0])</span>
+<span class="sd">    [0, 1, 2, 3, 4, 5, 6]</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.k_clique_communities(G, 5))</span>
+<span class="sd">    []</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Gergely Palla, Imre Derényi, Illés Farkas1, and Tamás Vicsek,</span>
+<span class="sd">       Uncovering the overlapping community structure of complex networks </span>
+<span class="sd">       in nature and society Nature 435, 814-818, 2005,</span>
+<span class="sd">       doi:10.1038/nature03607</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cliques</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">cliques</span> <span class="o">=</span> <span class="p">[</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cliques</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">]</span>
+
+    <span class="c"># First index which nodes are in which cliques</span>
+    <span class="n">membership_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">cliques</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">clique</span><span class="p">:</span>
+            <span class="n">membership_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clique</span><span class="p">)</span>
+
+    <span class="c"># For each clique, see which adjacent cliques percolate</span>
+    <span class="n">perc_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">cliques</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">adj_clique</span> <span class="ow">in</span> <span class="n">_get_adjacent_cliques</span><span class="p">(</span><span class="n">clique</span><span class="p">,</span> <span class="n">membership_dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">clique</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">adj_clique</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">perc_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">clique</span><span class="p">,</span> <span class="n">adj_clique</span><span class="p">)</span>
+
+    <span class="c"># Connected components of clique graph with perc edges</span>
+    <span class="c"># are the percolated cliques</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">perc_graph</span><span class="p">):</span>
+        <span class="k">yield</span><span class="p">(</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">component</span><span class="p">))</span>
+</div>
+<span class="k">def</span> <span class="nf">_get_adjacent_cliques</span><span class="p">(</span><span class="n">clique</span><span class="p">,</span> <span class="n">membership_dict</span><span class="p">):</span>
+    <span class="n">adjacent_cliques</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">clique</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">adj_clique</span> <span class="ow">in</span> <span class="n">membership_dict</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">clique</span> <span class="o">!=</span> <span class="n">adj_clique</span><span class="p">:</span>
+                <span class="n">adjacent_cliques</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">adj_clique</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">adjacent_cliques</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.distance_measures &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.distance_measures</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Graph diameter, radius, eccentricity and other properties.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Dan Schult(dschult@colgate.edu)&#39;</span><span class="p">])</span>
+<span class="c">#    Copyright (C) 2004-2010 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;eccentricity&#39;</span><span class="p">,</span> <span class="s">&#39;diameter&#39;</span><span class="p">,</span> <span class="s">&#39;radius&#39;</span><span class="p">,</span> <span class="s">&#39;periphery&#39;</span><span class="p">,</span> <span class="s">&#39;center&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span>
+
+<div class="viewcode-block" id="eccentricity"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.distance_measures.eccentricity.html#networkx.algorithms.distance_measures.eccentricity">[docs]</a><span class="k">def</span> <span class="nf">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sp</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the eccentricity of nodes in G.</span>
+
+<span class="sd">    The eccentricity of a node v is the maximum distance from v to</span>
+<span class="sd">    all other nodes in G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    v : node, optional</span>
+<span class="sd">       Return value of specified node       </span>
+
+<span class="sd">    sp : dict of dicts, optional       </span>
+<span class="sd">       All pairs shortest path lengths as a dictionary of dictionaries</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ecc : dictionary</span>
+<span class="sd">       A dictionary of eccentricity values keyed by node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c">#    nodes=</span>
+<span class="c">#    nodes=[]</span>
+<span class="c">#    if v is None:                # none, use entire graph </span>
+<span class="c">#        nodes=G.nodes()</span>
+<span class="c">#    elif v in G:               # is v a single node</span>
+<span class="c">#        nodes=[v]</span>
+<span class="c">#    else:                      # assume v is a container of nodes</span>
+<span class="c">#        nodes=v</span>
+    <span class="n">order</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+
+    <span class="n">e</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">length</span><span class="o">=</span><span class="n">networkx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">length</span><span class="o">=</span><span class="n">sp</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">networkx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;Format of &quot;sp&quot; is invalid.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">L</span> <span class="o">!=</span> <span class="n">order</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Graph not connected: infinite path length&quot;</span>
+            <span class="k">raise</span> <span class="n">networkx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            
+        <span class="n">e</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">length</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>  <span class="c"># return single value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+</div>
+<div class="viewcode-block" id="diameter"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.distance_measures.diameter.html#networkx.algorithms.distance_measures.diameter">[docs]</a><span class="k">def</span> <span class="nf">diameter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the diameter of the graph G.</span>
+
+<span class="sd">    The diameter is the maximum eccentricity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    d : integer</span>
+<span class="sd">       Diameter of graph</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    eccentricity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">=</span><span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="periphery"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.distance_measures.periphery.html#networkx.algorithms.distance_measures.periphery">[docs]</a><span class="k">def</span> <span class="nf">periphery</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the periphery of the graph G. </span>
+
+<span class="sd">    The periphery is the set of nodes with eccentricity equal to the diameter. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    p : list</span>
+<span class="sd">       List of nodes in periphery</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">=</span><span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">diameter</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">e</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">==</span><span class="n">diameter</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">p</span>
+
+</div>
+<div class="viewcode-block" id="radius"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.distance_measures.radius.html#networkx.algorithms.distance_measures.radius">[docs]</a><span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the radius of the graph G.</span>
+
+<span class="sd">    The radius is the minimum eccentricity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : integer</span>
+<span class="sd">       Radius of graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">=</span><span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="center"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.distance_measures.center.html#networkx.algorithms.distance_measures.center">[docs]</a><span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the center of the graph G. </span>
+
+<span class="sd">    The center is the set of nodes with eccentricity equal to radius. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    c : list</span>
+<span class="sd">       List of nodes in center</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">=</span><span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="c"># order the nodes by path length</span>
+    <span class="n">radius</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">e</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">==</span><span class="n">radius</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">p</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,447 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.operators.binary &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.operators.binary</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Operations on graphs including union, intersection, difference.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2012 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">is_string_like</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                           <span class="s">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                           <span class="s">&#39;Dan Schult(dschult@colgate.edu)&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;union&#39;</span><span class="p">,</span> <span class="s">&#39;compose&#39;</span><span class="p">,</span> <span class="s">&#39;disjoint_union&#39;</span><span class="p">,</span> <span class="s">&#39;intersection&#39;</span><span class="p">,</span>
+           <span class="s">&#39;difference&#39;</span><span class="p">,</span> <span class="s">&#39;symmetric_difference&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="union"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.binary.union.html#networkx.algorithms.operators.binary.union">[docs]</a><span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the union of graphs G and H.</span>
+
+<span class="sd">    Graphs G and H must be disjoint, otherwise an exception is raised.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G,H : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    create_using : NetworkX graph</span>
+<span class="sd">       Use specified graph for result.  Otherwise</span>
+
+<span class="sd">    rename : bool , default=(None, None)</span>
+<span class="sd">       Node names of G and H can be changed by specifying the tuple</span>
+<span class="sd">       rename=(&#39;G-&#39;,&#39;H-&#39;) (for example).  Node &quot;u&quot; in G is then renamed</span>
+<span class="sd">       &quot;G-u&quot; and &quot;v&quot; in H is renamed &quot;H-v&quot;.</span>
+
+<span class="sd">    name : string</span>
+<span class="sd">       Specify the name for the union graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U : A union graph with the same type as G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To force a disjoint union with node relabeling, use</span>
+<span class="sd">    disjoint_union(G,H) or convert_node_labels_to integers().</span>
+
+<span class="sd">    Graph, edge, and node attributes are propagated from G and H</span>
+<span class="sd">    to the union graph.  If a graph attribute is present in both</span>
+<span class="sd">    G and H the value from H is used.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    disjoint_union</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Union is the same type as G</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">__class__</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;union( </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s"> )&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="c"># rename graph to obtain disjoint node labels</span>
+    <span class="k">def</span> <span class="nf">add_prefix</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">graph</span>
+        <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_string_like</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">prefix</span><span class="o">+</span><span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">prefix</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">add_prefix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">rename</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">add_prefix</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="n">rename</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;The node sets of G and H are not disjoint.&#39;</span><span class="p">,</span>
+                               <span class="s">&#39;Use appropriate rename=(Gprefix,Hprefix)&#39;</span>
+                               <span class="s">&#39;or use disjoint_union(G,H).&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">G_edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G_edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">H_edges</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">H_edges</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># add nodes</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">G_edges</span><span class="p">)</span>
+    <span class="c"># add edges</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">H_edges</span><span class="p">)</span>
+    <span class="c"># add node attributes</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
+    <span class="c"># add graph attributes, H attributes take precedent over G attributes</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">R</span>
+</div>
+<div class="viewcode-block" id="disjoint_union"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.binary.disjoint_union.html#networkx.algorithms.operators.binary.disjoint_union">[docs]</a><span class="k">def</span> <span class="nf">disjoint_union</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the disjoint union of graphs G and H.</span>
+
+<span class="sd">    This algorithm forces distinct integer node labels.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G,H : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U : A union graph with the same type as G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    A new graph is created, of the same class as G.  It is recommended</span>
+<span class="sd">    that G and H be either both directed or both undirected.</span>
+
+<span class="sd">    The nodes of G are relabeled 0 to len(G)-1, and the nodes of H are</span>
+<span class="sd">    relabeled len(G) to len(G)+len(H)-1.</span>
+
+<span class="sd">    Graph, edge, and node attributes are propagated from G and H</span>
+<span class="sd">    to the union graph.  If a graph attribute is present in both</span>
+<span class="sd">    G and H the value from H is used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R1</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">convert_node_labels_to_integers</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">R2</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">convert_node_labels_to_integers</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="n">first_label</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">R1</span><span class="p">))</span>
+    <span class="n">R</span><span class="o">=</span><span class="n">union</span><span class="p">(</span><span class="n">R1</span><span class="p">,</span><span class="n">R2</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;disjoint_union( </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s"> )&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span>
+
+</div>
+<div class="viewcode-block" id="intersection"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.binary.intersection.html#networkx.algorithms.operators.binary.intersection">[docs]</a><span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a new graph that contains only the edges that exist in</span>
+<span class="sd">    both G and H.</span>
+
+<span class="sd">    The node sets of H and G must be the same.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G,H : graph</span>
+<span class="sd">       A NetworkX graph.  G and H must have the same node sets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GH : A new graph with the same type as G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Attributes from the graph, nodes, and edges are not copied to the new</span>
+<span class="sd">    graph.  If you want a new graph of the intersection of G and H</span>
+<span class="sd">    with the attributes (including edge data) from G use remove_nodes_from()</span>
+<span class="sd">    as follows</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(3)</span>
+<span class="sd">    &gt;&gt;&gt; H=nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; R=G.copy()</span>
+<span class="sd">    &gt;&gt;&gt; R.remove_nodes_from(n for n in G if n not in H)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># create new graph</span>
+    <span class="n">R</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">create_empty_copy</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="n">R</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Intersection of (</span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">!=</span><span class="nb">set</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Node sets of graphs are not equal&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span><span class="o">&lt;=</span><span class="n">H</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="n">edges</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edges</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">):</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="n">edges</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edges</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">):</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">R</span>
+</div>
+<div class="viewcode-block" id="difference"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.binary.difference.html#networkx.algorithms.operators.binary.difference">[docs]</a><span class="k">def</span> <span class="nf">difference</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a new graph that contains the edges that exist in G but not in H.</span>
+
+<span class="sd">    The node sets of H and G must be the same.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G,H : graph</span>
+<span class="sd">       A NetworkX graph.  G and H must have the same node sets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    D : A new graph with the same type as G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Attributes from the graph, nodes, and edges are not copied to the new</span>
+<span class="sd">    graph.  If you want a new graph of the difference of G and H with</span>
+<span class="sd">    with the attributes (including edge data) from G use remove_nodes_from()</span>
+<span class="sd">    as follows:</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(3)</span>
+<span class="sd">    &gt;&gt;&gt; H=nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; R=G.copy()</span>
+<span class="sd">    &gt;&gt;&gt; R.remove_nodes_from(n for n in G if n in H)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># create new graph</span>
+    <span class="n">R</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">create_empty_copy</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Difference of (</span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">!=</span><span class="nb">set</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Node sets of graphs not equal&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">):</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span>
+</div>
+<div class="viewcode-block" id="symmetric_difference"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.binary.symmetric_difference.html#networkx.algorithms.operators.binary.symmetric_difference">[docs]</a><span class="k">def</span> <span class="nf">symmetric_difference</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return new graph with edges that exist in either G or H but not both.</span>
+
+<span class="sd">    The node sets of H and G must be the same.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G,H : graph</span>
+<span class="sd">       A NetworkX graph.  G and H must have the same node sets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    D : A new graph with the same type as G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Attributes from the graph, nodes, and edges are not copied to the new</span>
+<span class="sd">    graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># create new graph</span>
+    <span class="n">R</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">create_empty_copy</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Symmetric difference of (</span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">!=</span><span class="nb">set</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Node sets of graphs not equal&quot;</span><span class="p">)</span>
+
+    <span class="n">gnodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="c"># set of nodes in G</span>
+    <span class="n">hnodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">H</span><span class="p">)</span> <span class="c"># set of nodes in H</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="n">gnodes</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">hnodes</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+    <span class="c"># we could copy the data here but then this function doesn&#39;t</span>
+    <span class="c"># match intersection and difference</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">):</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edges</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">):</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span>
+</div>
+<div class="viewcode-block" id="compose"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.binary.compose.html#networkx.algorithms.operators.binary.compose">[docs]</a><span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a new graph of G composed with H.</span>
+
+<span class="sd">    Composition is the simple union of the node sets and edge sets.</span>
+<span class="sd">    The node sets of G and H need not be disjoint.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G,H : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    name : string</span>
+<span class="sd">       Specify name for new graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    C: A new graph  with the same type as G</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    It is recommended that G and H be either both directed or both undirected.</span>
+<span class="sd">    Attributes from H take precedent over attributes from G.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">name</span><span class="o">=</span><span class="s">&quot;compose( </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s"> )&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">__class__</span><span class="p">()</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+
+    <span class="c"># add node attributes, H attributes take precedent over G attributes</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
+    <span class="c"># add graph attributes, H attributes take precedent over G attributes</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

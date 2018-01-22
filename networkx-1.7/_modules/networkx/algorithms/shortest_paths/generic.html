@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.shortest_paths.generic &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.shortest_paths.generic</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compute the shortest paths and path lengths between nodes in the graph.</span>
+
+<span class="sd">These algorithms work with undirected and directed graphs.</span>
+
+<span class="sd">For directed graphs the paths can be computed in the reverse</span>
+<span class="sd">order by first flipping the edge orientation using R=G.reverse(copy=False).</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2012 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Sérgio Nery Simões &lt;sergionery@gmail.com&gt;&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;shortest_path&#39;</span><span class="p">,</span> <span class="s">&#39;all_shortest_paths&#39;</span><span class="p">,</span>
+           <span class="s">&#39;shortest_path_length&#39;</span><span class="p">,</span> <span class="s">&#39;average_shortest_path_length&#39;</span><span class="p">,</span>
+           <span class="s">&#39;has_path&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="has_path"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.shortest_paths.generic.has_path.html#networkx.algorithms.shortest_paths.generic.has_path">[docs]</a><span class="k">def</span> <span class="nf">has_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if G has a path from source to target, False otherwise.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node</span>
+<span class="sd">       Starting node for path</span>
+
+<span class="sd">    target : node</span>
+<span class="sd">       Ending node for path</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoPath</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="shortest_path"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.shortest_paths.generic.shortest_path.html#networkx.algorithms.shortest_paths.generic.shortest_path">[docs]</a><span class="k">def</span> <span class="nf">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute shortest paths in the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Starting node for path.</span>
+<span class="sd">       If not specified compute shortest paths for all connected node pairs.</span>
+
+<span class="sd">    target : node, optional</span>
+<span class="sd">       Ending node for path.</span>
+<span class="sd">       If not specified compute shortest paths for every node reachable</span>
+<span class="sd">       from the source.</span>
+
+<span class="sd">    weight : None or string, optional (default = None)</span>
+<span class="sd">       If None, every edge has weight/distance/cost 1.</span>
+<span class="sd">       If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">       Any edge attribute not present defaults to 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    path: list or dictionary</span>
+<span class="sd">        If the source and target are both specified return a single list</span>
+<span class="sd">        of nodes in a shortest path.</span>
+<span class="sd">        If only the source is specified return a dictionary keyed by</span>
+<span class="sd">        targets with a list of nodes in a shortest path.</span>
+<span class="sd">        If neither the source or target is specified return a dictionary</span>
+<span class="sd">        of dictionaries with path[source][target]=[list of nodes in path].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.shortest_path(G,source=0,target=4))</span>
+<span class="sd">    [0, 1, 2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; p=nx.shortest_path(G,source=0) # target not specified</span>
+<span class="sd">    &gt;&gt;&gt; p[4]</span>
+<span class="sd">    [0, 1, 2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; p=nx.shortest_path(G) # source,target not specified</span>
+<span class="sd">    &gt;&gt;&gt; p[0][4]</span>
+<span class="sd">    [0, 1, 2, 3, 4]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    There may be more than one shortest path between a source and target.</span>
+<span class="sd">    This returns only one of them.</span>
+
+<span class="sd">    For digraphs this returns a shortest directed path.</span>
+<span class="sd">    To find paths in the reverse direction first use G.reverse(copy=False)</span>
+<span class="sd">    to flip the edge orientation.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    all_pairs_shortest_path()</span>
+<span class="sd">    all_pairs_dijkstra_path()</span>
+<span class="sd">    single_source_shortest_path()</span>
+<span class="sd">    single_source_dijkstra_path()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">all_pairs_shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">all_pairs_dijkstra_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>\
+                <span class="s">&quot;Target given but no source specified.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c"># source specified</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_dijkstra_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># shortest source-target path</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">bidirectional_shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">dijkstra_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">paths</span>
+
+</div>
+<div class="viewcode-block" id="shortest_path_length"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.shortest_paths.generic.shortest_path_length.html#networkx.algorithms.shortest_paths.generic.shortest_path_length">[docs]</a><span class="k">def</span> <span class="nf">shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute shortest path lengths in the graph.</span>
+
+<span class="sd">    This function can compute the single source shortest path</span>
+<span class="sd">    lengths by specifying only the source or all pairs shortest</span>
+<span class="sd">    path lengths by specifying neither the source or target.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Starting node for path.</span>
+<span class="sd">       If not specified compute shortest path lengths for all</span>
+<span class="sd">       connected node pairs.</span>
+
+<span class="sd">    target : node, optional</span>
+<span class="sd">       Ending node for path.</span>
+<span class="sd">       If not specified compute shortest path lengths for every</span>
+<span class="sd">       node reachable from the source.</span>
+
+<span class="sd">    weight : None or string, optional (default = None)</span>
+<span class="sd">       If None, every edge has weight/distance/cost 1.</span>
+<span class="sd">       If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">       Any edge attribute not present defaults to 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    length : number, or container of numbers</span>
+<span class="sd">        If the source and target are both specified return a</span>
+<span class="sd">        single number for the shortest path.</span>
+<span class="sd">        If only the source is specified return a dictionary keyed by</span>
+<span class="sd">        targets with a the shortest path as keys.</span>
+<span class="sd">        If neither the source or target is specified return a dictionary</span>
+<span class="sd">        of dictionaries with length[source][target]=value.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNoPath</span>
+<span class="sd">        If no path exists between source and target.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.shortest_path_length(G,source=0,target=4))</span>
+<span class="sd">    4</span>
+<span class="sd">    &gt;&gt;&gt; p=nx.shortest_path_length(G,source=0) # target not specified</span>
+<span class="sd">    &gt;&gt;&gt; p[4]</span>
+<span class="sd">    4</span>
+<span class="sd">    &gt;&gt;&gt; p=nx.shortest_path_length(G) # source,target not specified</span>
+<span class="sd">    &gt;&gt;&gt; p[0][4]</span>
+<span class="sd">    4</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For digraphs this returns the shortest directed path.</span>
+<span class="sd">    To find path lengths in the reverse direction use G.reverse(copy=False)</span>
+<span class="sd">    first to flip the edge orientation.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    all_pairs_shortest_path_length()</span>
+<span class="sd">    all_pairs_dijkstra_path_length()</span>
+<span class="sd">    single_source_shortest_path_length()</span>
+<span class="sd">    single_source_dijkstra_path_length()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">all_pairs_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">all_pairs_dijkstra_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Target given but no source specified.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c"># source specified</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_dijkstra_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># shortest source-target path</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">p</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">bidirectional_shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">)</span>
+                <span class="n">paths</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">dijkstra_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">paths</span>
+
+</div>
+<div class="viewcode-block" id="average_shortest_path_length"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.shortest_paths.generic.average_shortest_path_length.html#networkx.algorithms.shortest_paths.generic.average_shortest_path_length">[docs]</a><span class="k">def</span> <span class="nf">average_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Return the average shortest path length.</span>
+
+<span class="sd">    The average shortest path length is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}</span>
+
+<span class="sd">    where `V` is the set of nodes in `G`,</span>
+<span class="sd">    `d(s, t)` is the shortest path from `s` to `t`,</span>
+<span class="sd">    and `n` is the number of nodes in `G`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight : None or string, optional (default = None)</span>
+<span class="sd">       If None, every edge has weight/distance/cost 1.</span>
+<span class="sd">       If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">       Any edge attribute not present defaults to 1.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError:</span>
+<span class="sd">       if the graph is not connected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.average_shortest_path_length(G))</span>
+<span class="sd">    2.0</span>
+
+<span class="sd">    For disconnected graphs you can compute the average shortest path</span>
+<span class="sd">    length for each component:</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph([(1,2),(3,4)])</span>
+<span class="sd">    &gt;&gt;&gt; for g in nx.connected_component_subgraphs(G):</span>
+<span class="sd">    ...     print(nx.average_shortest_path_length(g))</span>
+<span class="sd">    1.0</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_weakly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Graph is not connected.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Graph is not connected.&quot;</span><span class="p">)</span>
+    <span class="n">avg</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">path_length</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="n">avg</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">path_length</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">path_length</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">single_source_dijkstra_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+            <span class="n">avg</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">path_length</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">avg</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="all_shortest_paths"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.shortest_paths.generic.all_shortest_paths.html#networkx.algorithms.shortest_paths.generic.all_shortest_paths">[docs]</a><span class="k">def</span> <span class="nf">all_shortest_paths</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute all shortest paths in the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node</span>
+<span class="sd">       Starting node for path.</span>
+
+<span class="sd">    target : node</span>
+<span class="sd">       Ending node for path.</span>
+
+<span class="sd">    weight : None or string, optional (default = None)</span>
+<span class="sd">       If None, every edge has weight/distance/cost 1.</span>
+<span class="sd">       If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">       Any edge attribute not present defaults to 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    paths: generator of lists</span>
+<span class="sd">        A generator of all paths between source and target.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_path([0,1,2])</span>
+<span class="sd">    &gt;&gt;&gt; G.add_path([0,10,2])</span>
+<span class="sd">    &gt;&gt;&gt; print([p for p in nx.all_shortest_paths(G,source=0,target=2)])</span>
+<span class="sd">    [[0, 1, 2], [0, 10, 2]]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    There may be many shortest paths between the source and target.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    shortest_path()</span>
+<span class="sd">    single_source_shortest_path()</span>
+<span class="sd">    all_pairs_shortest_path()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">pred</span><span class="p">,</span><span class="n">dist</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dijkstra_predecessor_and_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoPath</span><span class="p">()</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[[</span><span class="n">target</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">top</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">node</span><span class="p">,</span><span class="n">i</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="n">source</span><span class="p">:</span>
+          <span class="k">yield</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">n</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">stack</span><span class="p">[:</span><span class="n">top</span><span class="o">+</span><span class="mi">1</span><span class="p">])]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">node</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
+            <span class="n">top</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">top</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">):</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">pred</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">i</span><span class="p">],</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">top</span> <span class="o">-=</span> <span class="mi">1</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

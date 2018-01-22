@@ -1,0 +1,448 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.product &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.product</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Graph products.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Dan Schult(dschult@colgate.edu)&#39;</span>
+                            <span class="s">&#39;Ben Edwards(bedwards@cs.unm.edu)&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;tensor_product&#39;</span><span class="p">,</span><span class="s">&#39;cartesian_product&#39;</span><span class="p">,</span>
+           <span class="s">&#39;lexicographic_product&#39;</span><span class="p">,</span> <span class="s">&#39;strong_product&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">_dict_product</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,(</span><span class="n">d1</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">),</span><span class="n">d2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span><span class="o">|</span><span class="nb">set</span><span class="p">(</span><span class="n">d2</span><span class="p">))</span>
+
+
+<span class="c"># Generators for producting graph products</span>
+<span class="k">def</span> <span class="nf">_node_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span> <span class="n">_dict_product</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">H</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">v</span><span class="p">]))</span>
+
+<span class="k">def</span> <span class="nf">_directed_edges_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">),</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_undirected_edges_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">u</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">u</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">u</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">and</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">u</span><span class="p">,</span><span class="n">y</span><span class="p">),(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">),</span><span class="n">_dict_product</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_edges_cross_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="bp">None</span><span class="p">,</span><span class="n">d</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">x</span><span class="p">),</span><span class="n">d</span>
+
+
+<span class="k">def</span> <span class="nf">_nodes_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">),(</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">),(</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">),</span><span class="bp">None</span><span class="p">,</span><span class="n">d</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">u</span><span class="p">),(</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">),</span><span class="n">d</span>
+
+<span class="k">def</span> <span class="nf">_edges_cross_nodes_and_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">H</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">k</span><span class="p">,</span><span class="n">d</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">H</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="bp">None</span><span class="p">,</span><span class="n">d</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">x</span><span class="p">),(</span><span class="n">v</span><span class="p">,</span><span class="n">y</span><span class="p">),</span><span class="n">d</span>
+
+<span class="k">def</span> <span class="nf">_init_product_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="o">==</span> <span class="n">H</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;G and H must be both directed or&quot;</span><span class="p">,</span>
+                               <span class="s">&quot;both undirected&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="ow">or</span> <span class="n">H</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">GH</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">GH</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">GH</span> <span class="o">=</span> <span class="n">GH</span><span class="o">.</span><span class="n">to_directed</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">GH</span>
+
+
+<div class="viewcode-block" id="tensor_product"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.product.tensor_product.html#networkx.algorithms.product.tensor_product">[docs]</a><span class="k">def</span> <span class="nf">tensor_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="s">r&quot;&quot;&quot;Return the tensor product of G and H.</span>
+
+<span class="s">    The tensor product P of the graphs G and H has a node set that</span>
+<span class="s">    is the Cartesian product of the node sets, $V(P)=V(G) \times V(H)$.</span>
+<span class="s">    P has an edge ((u,v),(x,y)) if and only if (u,v) is an edge in G</span>
+<span class="s">    and (x,y) is an edge in H.</span>
+
+<span class="s">    Sometimes referred to as the categorical product. </span>
+
+
+<span class="s">    Parameters</span>
+<span class="s">    ----------</span>
+<span class="s">    G, H: graphs</span>
+<span class="s">     Networkx graphs. </span>
+
+<span class="s">    Returns</span>
+<span class="s">    -------</span>
+<span class="s">    P: NetworkX graph</span>
+<span class="s">     The tensor product of G and H. P will be a multi-graph if either G</span>
+<span class="s">     or H is a multi-graph. Will be a directed if G and H are directed,</span>
+<span class="s">     and undirected if G and H are undirected.</span>
+
+<span class="s">    Raises</span>
+<span class="s">    ------</span>
+<span class="s">    NetworkXError</span>
+<span class="s">     If G and H are not both directed or both undirected.</span>
+
+<span class="s">    Notes</span>
+<span class="s">    -----</span>
+<span class="s">    Node attributes in P are two-tuple of the G and H node attributes.</span>
+<span class="s">    Missing attributes are assigned None.</span>
+
+<span class="s">    For example</span>
+<span class="s">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="s">    &gt;&gt;&gt; H = nx.Graph()</span>
+<span class="s">    &gt;&gt;&gt; G.add_node(0,a1=True)</span>
+<span class="s">    &gt;&gt;&gt; H.add_node(&#39;a&#39;,a2=&#39;Spam&#39;)</span>
+<span class="s">    &gt;&gt;&gt; P = nx.tensor_product(G,H)</span>
+<span class="s">    &gt;&gt;&gt; P.nodes(data=True)</span>
+<span class="s">    [((0, &#39;a&#39;), {&#39;a1&#39;: (True, None), &#39;a2&#39;: (None, &#39;Spam&#39;)})]</span>
+
+<span class="s">    Edge attributes and edge keys (for multigraphs) are also copied to the</span>
+<span class="s">    new product graph</span>
+<span class="s">    &quot;&quot;&quot;</span>
+    <span class="n">GH</span> <span class="o">=</span> <span class="n">_init_product_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">_node_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_directed_edges_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">GH</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_undirected_edges_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Tensor product(&quot;</span><span class="o">+</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;)&quot;</span>
+    <span class="k">return</span> <span class="n">GH</span>
+</div>
+<div class="viewcode-block" id="cartesian_product"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.product.cartesian_product.html#networkx.algorithms.product.cartesian_product">[docs]</a><span class="k">def</span> <span class="nf">cartesian_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Cartesian product of G and H.</span>
+
+<span class="sd">    The tensor product P of the graphs G and H has a node set that</span>
+<span class="sd">    is the Cartesian product of the node sets, $V(P)=V(G) \times V(H)$.</span>
+<span class="sd">    P has an edge ((u,v),(x,y)) if and only if (u,v) is an edge in G </span>
+<span class="sd">    and x==y or  and (x,y) is an edge in H and u==v.</span>
+<span class="sd">    and (x,y) is an edge in H.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G, H: graphs</span>
+<span class="sd">     Networkx graphs. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    P: NetworkX graph</span>
+<span class="sd">     The Cartesian product of G and H. P will be a multi-graph if either G</span>
+<span class="sd">     or H is a multi-graph. Will be a directed if G and H are directed,</span>
+<span class="sd">     and undirected if G and H are undirected.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">     If G and H are not both directed or both undirected.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Node attributes in P are two-tuple of the G and H node attributes.</span>
+<span class="sd">    Missing attributes are assigned None.</span>
+
+<span class="sd">    For example</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; H = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(0,a1=True)</span>
+<span class="sd">    &gt;&gt;&gt; H.add_node(&#39;a&#39;,a2=&#39;Spam&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; P = nx.tensor_product(G,H)</span>
+<span class="sd">    &gt;&gt;&gt; P.nodes(data=True)</span>
+<span class="sd">    [((0, &#39;a&#39;), {&#39;a1&#39;: (True, None), &#39;a2&#39;: (None, &#39;Spam&#39;)})]</span>
+
+<span class="sd">    Edge attributes and edge keys (for multigraphs) are also copied to the</span>
+<span class="sd">    new product graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="o">==</span> <span class="n">H</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;G and H must be both directed or&quot;</span><span class="p">,</span>
+                               <span class="s">&quot;both undirected&quot;</span><span class="p">)</span>
+    <span class="n">GH</span> <span class="o">=</span> <span class="n">_init_product_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">_node_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_edges_cross_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_nodes_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Cartesian product(&quot;</span><span class="o">+</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;)&quot;</span>
+    <span class="k">return</span> <span class="n">GH</span>
+</div>
+<div class="viewcode-block" id="lexicographic_product"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.product.lexicographic_product.html#networkx.algorithms.product.lexicographic_product">[docs]</a><span class="k">def</span> <span class="nf">lexicographic_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the lexicographic product of G and H.</span>
+
+<span class="sd">    The lexicographical product P of the graphs G and H has a node set that</span>
+<span class="sd">    is the Cartesian product of the node sets, $V(P)=V(G) \times V(H)$.</span>
+<span class="sd">    P has an edge ((u,v),(x,y)) if and only if (u,v) is an edge in G </span>
+<span class="sd">    or u==v and (x,y) is an edge in H.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G, H: graphs</span>
+<span class="sd">     Networkx graphs. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    P: NetworkX graph</span>
+<span class="sd">     The Cartesian product of G and H. P will be a multi-graph if either G</span>
+<span class="sd">     or H is a multi-graph. Will be a directed if G and H are directed,</span>
+<span class="sd">     and undirected if G and H are undirected.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">     If G and H are not both directed or both undirected.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Node attributes in P are two-tuple of the G and H node attributes.</span>
+<span class="sd">    Missing attributes are assigned None.</span>
+
+<span class="sd">    For example</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; H = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(0,a1=True)</span>
+<span class="sd">    &gt;&gt;&gt; H.add_node(&#39;a&#39;,a2=&#39;Spam&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; P = nx.tensor_product(G,H)</span>
+<span class="sd">    &gt;&gt;&gt; P.nodes(data=True)</span>
+<span class="sd">    [((0, &#39;a&#39;), {&#39;a1&#39;: (True, None), &#39;a2&#39;: (None, &#39;Spam&#39;)})]</span>
+
+<span class="sd">    Edge attributes and edge keys (for multigraphs) are also copied to the</span>
+<span class="sd">    new product graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GH</span> <span class="o">=</span> <span class="n">_init_product_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">_node_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="c"># Edges in G regardless of H designation</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_edges_cross_nodes_and_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="c"># For each x in G, only if there is an edge in H</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_nodes_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Lexographic product(&quot;</span><span class="o">+</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;)&quot;</span>
+    <span class="k">return</span> <span class="n">GH</span>
+</div>
+<div class="viewcode-block" id="strong_product"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.product.strong_product.html#networkx.algorithms.product.strong_product">[docs]</a><span class="k">def</span> <span class="nf">strong_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the strong product of G and H.</span>
+
+<span class="sd">    The strong product P of the graphs G and H has a node set that</span>
+<span class="sd">    is the Cartesian product of the node sets, $V(P)=V(G) \times V(H)$.</span>
+<span class="sd">    P has an edge ((u,v),(x,y)) if and only if </span>
+<span class="sd">    u==v and (x,y) is an edge in H, or</span>
+<span class="sd">    x==y and (u,v) is an edge in G, or</span>
+<span class="sd">    (u,v) is an edge in G and (x,y) is an edge in H.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G, H: graphs</span>
+<span class="sd">     Networkx graphs. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    P: NetworkX graph</span>
+<span class="sd">     The Cartesian product of G and H. P will be a multi-graph if either G</span>
+<span class="sd">     or H is a multi-graph. Will be a directed if G and H are directed,</span>
+<span class="sd">     and undirected if G and H are undirected.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">     If G and H are not both directed or both undirected.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Node attributes in P are two-tuple of the G and H node attributes.</span>
+<span class="sd">    Missing attributes are assigned None.</span>
+
+<span class="sd">    For example</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; H = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(0,a1=True)</span>
+<span class="sd">    &gt;&gt;&gt; H.add_node(&#39;a&#39;,a2=&#39;Spam&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; P = nx.tensor_product(G,H)</span>
+<span class="sd">    &gt;&gt;&gt; P.nodes(data=True)</span>
+<span class="sd">    [((0, &#39;a&#39;), {&#39;a1&#39;: (True, None), &#39;a2&#39;: (None, &#39;Spam&#39;)})]</span>
+
+<span class="sd">    Edge attributes and edge keys (for multigraphs) are also copied to the</span>
+<span class="sd">    new product graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GH</span> <span class="o">=</span> <span class="n">_init_product_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">_node_product</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_nodes_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_edges_cross_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_directed_edges_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">GH</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">GH</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_undirected_edges_cross_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">GH</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Strong product(&quot;</span><span class="o">+</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">H</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;)&quot;</span>
+    <span class="k">return</span> <span class="n">GH</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

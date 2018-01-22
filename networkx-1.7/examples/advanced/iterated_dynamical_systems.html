@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Iterated Dynamical Systems &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="iterated-dynamical-systems">
+<span id="advanced-iterated-dynamical-systems"></span><h1>Iterated Dynamical Systems<a class="headerlink" href="#iterated-dynamical-systems" title="Permalink to this headline">¶</a></h1>
+<p>[<a class="reference external" href="../../_static/examples/iterated_dynamical_systems.py">source code</a>]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Digraphs from Integer-valued Iterated Functions</span>
+<span class="sd">===============================================</span>
+
+
+<span class="sd">Sums of cubes on 3N</span>
+<span class="sd">-------------------</span>
+
+<span class="sd">The number 153 has a curious property.</span>
+
+<span class="sd">Let 3N={3,6,9,12,...} be the set of positive multiples of 3.  Define an</span>
+<span class="sd">iterative process f:3N-&gt;3N as follows: for a given n, take each digit</span>
+<span class="sd">of n (in base 10), cube it and then sum the cubes to obtain f(n).</span>
+
+<span class="sd">When this process is repeated, the resulting series n, f(n), f(f(n)),...</span>
+<span class="sd">terminate in 153 after a finite number of iterations (the process ends</span>
+<span class="sd">because 153 = 1**3 + 5**3 + 3**3).</span>
+
+<span class="sd">In the language of discrete dynamical systems, 153 is the global</span>
+<span class="sd">attractor for the iterated map f restricted to the set 3N.</span>
+
+<span class="sd">For example: take the number 108</span>
+
+<span class="sd">f(108) = 1**3 + 0**3 + 8**3 = 513</span>
+
+<span class="sd">and</span>
+
+<span class="sd">f(513) = 5**3 + 1**3 + 3**3 = 153</span>
+
+<span class="sd">So, starting at 108 we reach 153 in two iterations,</span>
+<span class="sd">represented as:</span>
+
+<span class="sd">108-&gt;513-&gt;153</span>
+
+<span class="sd">Computing all orbits of 3N up to 10**5 reveals that the attractor</span>
+<span class="sd">153 is reached in a maximum of 14 iterations. In this code we</span>
+<span class="sd">show that 13 cycles is the maximum required for all integers (in 3N)</span>
+<span class="sd">less than 10,000.</span>
+
+<span class="sd">The smallest number that requires 13 iterations to reach 153, is 177, i.e.,</span>
+
+<span class="sd">177-&gt;687-&gt;1071-&gt;345-&gt;216-&gt;225-&gt;141-&gt;66-&gt;432-&gt;99-&gt;1458-&gt;702-&gt;351-&gt;153</span>
+
+<span class="sd">The resulting large digraphs are useful for testing network software.</span>
+
+<span class="sd">The general problem</span>
+<span class="sd">-------------------</span>
+
+<span class="sd">Given numbers n, a power p and base b, define F(n; p, b) as the sum of</span>
+<span class="sd">the digits of n (in base b) raised to the power p. The above example</span>
+<span class="sd">corresponds to f(n)=F(n; 3,10), and below F(n; p, b) is implemented as</span>
+<span class="sd">the function powersum(n,p,b). The iterative dynamical system defined by</span>
+<span class="sd">the mapping n:-&gt;f(n) above (over 3N) converges to a single fixed point;</span>
+<span class="sd">153. Applying the map to all positive integers N, leads to a discrete</span>
+<span class="sd">dynamical process with 5 fixed points: 1, 153, 370, 371, 407. Modulo 3</span>
+<span class="sd">those numbers are 1, 0, 1, 2, 2. The function f above has the added</span>
+<span class="sd">property that it maps a multiple of 3 to another multiple of 3; i.e. it</span>
+<span class="sd">is invariant on the subset 3N.</span>
+
+
+<span class="sd">The squaring of digits (in base 10) result in cycles and the</span>
+<span class="sd">single fixed point 1. I.e., from a certain point on, the process</span>
+<span class="sd">starts repeating itself.</span>
+
+<span class="sd">keywords: &quot;Recurring Digital Invariant&quot;, &quot;Narcissistic Number&quot;,</span>
+<span class="sd">&quot;Happy Number&quot;</span>
+
+<span class="sd">The 3n+1 problem</span>
+<span class="sd">----------------</span>
+
+<span class="sd">There is a rich history of mathematical recreations</span>
+<span class="sd">associated with discrete dynamical systems.  The most famous</span>
+<span class="sd">is the Collatz 3n+1 problem. See the function</span>
+<span class="sd">collatz_problem_digraph below. The Collatz conjecture</span>
+<span class="sd">--- that every orbit returrns to the fixed point 1 in finite time</span>
+<span class="sd">--- is still unproven. Even the great Paul Erdos said &quot;Mathematics</span>
+<span class="sd">is not yet ready for such problems&quot;, and offered $500</span>
+<span class="sd">for its solution.</span>
+
+<span class="sd">keywords: &quot;3n+1&quot;, &quot;3x+1&quot;, &quot;Collatz problem&quot;, &quot;Thwaite&#39;s conjecture&quot;</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="n">nmax</span><span class="o">=</span><span class="mi">10000</span>
+<span class="n">p</span><span class="o">=</span><span class="mi">3</span>
+<span class="n">mach_eps</span><span class="o">=</span><span class="mf">0.00000000001</span>
+
+<span class="k">def</span> <span class="nf">digitsrep</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return list of digits comprising n represented in base b.</span>
+<span class="sd">    n must be a nonnegative integer&quot;&quot;&quot;</span>
+
+    <span class="c"># very inefficient if you only work with base 10</span>
+    <span class="n">dlist</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">if</span> <span class="n">n</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">maxpow</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span> <span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">mach_eps</span> <span class="p">))</span>
+    <span class="nb">pow</span><span class="o">=</span><span class="n">maxpow</span>
+    <span class="k">while</span> <span class="nb">pow</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">x</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="n">b</span><span class="o">**</span><span class="nb">pow</span><span class="p">))</span>
+        <span class="n">dlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="n">x</span><span class="o">*</span><span class="n">b</span><span class="o">**</span><span class="nb">pow</span>
+        <span class="nb">pow</span><span class="o">=</span><span class="nb">pow</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">dlist</span>
+
+<span class="k">def</span> <span class="nf">powersum</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return sum of digits of n (in base b) raised to the power p.&quot;&quot;&quot;</span>
+    <span class="n">dlist</span><span class="o">=</span><span class="n">digitsrep</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="nb">sum</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dlist</span><span class="p">:</span>
+        <span class="nb">sum</span><span class="o">+=</span><span class="n">k</span><span class="o">**</span><span class="n">p</span>
+    <span class="k">return</span> <span class="nb">sum</span>
+
+<span class="k">def</span> <span class="nf">attractor153_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">multiple</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return digraph of iterations of powersum(n,3,10).&quot;&quot;&quot;</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">%</span><span class="n">multiple</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">k1</span><span class="o">=</span><span class="n">k</span>
+            <span class="n">knext</span><span class="o">=</span><span class="n">powersum</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">k1</span><span class="o">!=</span><span class="n">knext</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">knext</span><span class="p">)</span>
+                <span class="n">k1</span><span class="o">=</span><span class="n">knext</span>
+                <span class="n">knext</span><span class="o">=</span><span class="n">powersum</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="k">def</span> <span class="nf">squaring_cycle_graph_old</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return digraph of iterations of powersum(n,2,10).&quot;&quot;&quot;</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">k1</span><span class="o">=</span><span class="n">k</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">k1</span><span class="p">)</span> <span class="c"># case k1==knext, at least add node</span>
+        <span class="n">knext</span><span class="o">=</span><span class="n">powersum</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">knext</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">k1</span><span class="o">!=</span><span class="n">knext</span><span class="p">:</span> <span class="c"># stop if fixed point</span>
+             <span class="n">k1</span><span class="o">=</span><span class="n">knext</span>
+             <span class="n">knext</span><span class="o">=</span><span class="n">powersum</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+             <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">knext</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">knext</span><span class="p">)</span> <span class="o">&gt;=</span><span class="mi">1</span><span class="p">:</span>
+                 <span class="c"># knext has already been iterated in and out</span>
+                 <span class="k">break</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="k">def</span> <span class="nf">sum_of_digits_graph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">n</span><span class="p">):</span> <span class="k">return</span> <span class="n">powersum</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">discrete_dynamics_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">squaring_cycle_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">n</span><span class="p">):</span> <span class="k">return</span> <span class="n">powersum</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">discrete_dynamics_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">cubing_153_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">n</span><span class="p">):</span> <span class="k">return</span> <span class="n">powersum</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">discrete_dynamics_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">discrete_dynamics_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">itermax</span><span class="o">=</span><span class="mi">50000</span><span class="p">):</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nmax</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">kold</span><span class="o">=</span><span class="n">k</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">kold</span><span class="p">)</span>
+        <span class="n">knew</span><span class="o">=</span><span class="n">f</span><span class="p">(</span><span class="n">kold</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">kold</span><span class="p">,</span><span class="n">knew</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">kold</span><span class="o">!=</span><span class="n">knew</span> <span class="ow">and</span> <span class="n">kold</span><span class="o">&lt;&lt;</span><span class="n">itermax</span><span class="p">:</span>
+        <span class="c"># iterate until fixed point reached or itermax is exceeded</span>
+            <span class="n">kold</span><span class="o">=</span><span class="n">knew</span>
+            <span class="n">knew</span><span class="o">=</span><span class="n">f</span><span class="p">(</span><span class="n">kold</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">kold</span><span class="p">,</span><span class="n">knew</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">knew</span><span class="p">)</span> <span class="o">&gt;=</span><span class="mi">1</span><span class="p">:</span>
+               <span class="c"># knew has already been iterated in and out</span>
+               <span class="k">break</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="k">def</span> <span class="nf">collatz_problem_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">%</span><span class="mi">2</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">3</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">discrete_dynamics_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">fixed_points</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of fixed points for the discrete dynamical</span>
+<span class="sd">    system represented by the digraph G.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">nmax</span><span class="o">=</span><span class="mi">10000</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Building cubing_153_digraph(</span><span class="si">%d</span><span class="s">)&quot;</span><span class="o">%</span> <span class="n">nmax</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">cubing_153_digraph</span><span class="p">(</span><span class="n">nmax</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Resulting digraph has&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="s">&quot;nodes and&quot;</span><span class="p">,</span>
+          <span class="n">G</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span><span class="s">&quot; edges&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Shortest path from 177 to 153 is:&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="mi">177</span><span class="p">,</span><span class="mi">153</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;fixed points are </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">fixed_points</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

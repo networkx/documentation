@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.components.weakly_connected &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.components.weakly_connected</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Weakly connected components.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__authors__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span>
+                         <span class="s">&#39;Christopher Ellison&#39;</span><span class="p">])</span>
+<span class="c">#    Copyright (C) 2004-2010 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;number_weakly_connected_components&#39;</span><span class="p">,</span> 
+           <span class="s">&#39;weakly_connected_components&#39;</span><span class="p">,</span>
+           <span class="s">&#39;weakly_connected_component_subgraphs&#39;</span><span class="p">,</span>
+           <span class="s">&#39;is_weakly_connected&#39;</span> 
+           <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<div class="viewcode-block" id="weakly_connected_components"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.weakly_connected.weakly_connected_components.html#networkx.algorithms.components.weakly_connected.weakly_connected_components">[docs]</a><span class="k">def</span> <span class="nf">weakly_connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return weakly connected components of G.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Not allowed for undirected graph G. </span>
+<span class="s">              Use connected_components() &quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">seen</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">components</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">_single_source_shortest_unipath_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">components</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">components</span>
+
+</div>
+<div class="viewcode-block" id="number_weakly_connected_components"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.weakly_connected.number_weakly_connected_components.html#networkx.algorithms.components.weakly_connected.number_weakly_connected_components">[docs]</a><span class="k">def</span> <span class="nf">number_weakly_connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the number of connected components in G.</span>
+<span class="sd">    For directed graphs only. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">weakly_connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="weakly_connected_component_subgraphs"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.weakly_connected.weakly_connected_component_subgraphs.html#networkx.algorithms.components.weakly_connected.weakly_connected_component_subgraphs">[docs]</a><span class="k">def</span> <span class="nf">weakly_connected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return weakly connected components as subgraphs.</span>
+
+<span class="sd">    Graph, node, and edge attributes are copied to the subgraphs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">wcc</span><span class="o">=</span><span class="n">weakly_connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">graph_list</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wcc</span><span class="p">:</span>
+        <span class="n">graph_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">graph_list</span>
+</div>
+<div class="viewcode-block" id="is_weakly_connected"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.components.weakly_connected.is_weakly_connected.html#networkx.algorithms.components.weakly_connected.is_weakly_connected">[docs]</a><span class="k">def</span> <span class="nf">is_weakly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test directed graph for weak connectivity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">       A directed graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    connected : bool</span>
+<span class="sd">      True if the graph is weakly connected, False otherwise.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    strongly_connected_components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For directed graphs only. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;&quot;&quot;Not allowed for undirected graph G.</span>
+<span class="s">              See is_connected() for connectivity test.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span>
+            <span class="sd">&quot;&quot;&quot;Connectivity is undefined for the null graph.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">weakly_connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">_single_source_shortest_unipath_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">source</span><span class="p">,</span><span class="n">cutoff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the shortest path lengths from source to all reachable nodes.</span>
+
+<span class="sd">    The direction of the edge between nodes is ignored.</span>
+<span class="sd">    </span>
+<span class="sd">    For directed graphs only.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node</span>
+<span class="sd">       Starting node for path</span>
+
+<span class="sd">    cutoff : integer, optional</span>
+<span class="sd">        Depth to stop the search. Only paths of length &lt;= cutoff are returned.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lengths : dictionary</span>
+<span class="sd">        Dictionary of shortest path lengths keyed by target.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># namespace speedups</span>
+    <span class="n">Gsucc</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">succ</span>
+    <span class="n">Gpred</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">pred</span>
+
+    <span class="n">seen</span><span class="o">=</span><span class="p">{}</span>                  <span class="c"># level (number of hops) when seen in BFS</span>
+    <span class="n">level</span><span class="o">=</span><span class="mi">0</span>                  <span class="c"># the current level</span>
+    <span class="n">nextlevel</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">source</span><span class="p">])</span> <span class="c"># set of nodes to check at next level</span>
+    <span class="k">while</span> <span class="n">nextlevel</span><span class="p">:</span>
+        <span class="n">thislevel</span><span class="o">=</span><span class="n">nextlevel</span>  <span class="c"># advance to next level</span>
+        <span class="n">nextlevel</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>         <span class="c"># and start a new list (fringe)</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">thislevel</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="n">seen</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="n">level</span> <span class="c"># set the level of vertex v</span>
+                <span class="n">nextlevel</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Gsucc</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="c"># add successors of v</span>
+                <span class="n">nextlevel</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Gpred</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="c"># add predecessors of v</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cutoff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">cutoff</span> <span class="o">&lt;=</span> <span class="n">level</span><span class="p">):</span>  <span class="k">break</span>
+        <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">seen</span>  <span class="c"># return all path lengths as dictionary</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

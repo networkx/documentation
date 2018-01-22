@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.boundary &mdash; NetworkX 1.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml" title="Search within NetworkX 1.11 documentation" href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="NetworkX 1.11 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.11
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../download.html">Download</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">NetworkX Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.boundary</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.boundary</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Routines to find the boundary of a set of nodes.</span>
+
+<span class="sd">Edge boundaries are edges that have only one end</span>
+<span class="sd">in the set of nodes.</span>
+
+<span class="sd">Node boundaries are nodes outside the set of nodes</span>
+<span class="sd">that have an edge to a node in the set.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)</span><span class="se">\n</span><span class="s2">Pieter Swart (swart@lanl.gov)</span><span class="se">\n</span><span class="s2">Dan Schult (dschult@colgate.edu)&quot;&quot;&quot;</span>
+<span class="c1">#    Copyright (C) 2004-2015 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+
+<span class="n">__all__</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;edge_boundary&#39;</span><span class="p">,</span><span class="s1">&#39;node_boundary&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="edge_boundary"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.boundary.edge_boundary.html#networkx.algorithms.boundary.edge_boundary">[docs]</a><span class="k">def</span> <span class="nf">edge_boundary</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch1</span><span class="p">,</span> <span class="n">nbunch2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the edge boundary.</span>
+
+<span class="sd">    Edge boundaries are edges that have only one end</span>
+<span class="sd">    in the given set of nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A networkx graph</span>
+
+<span class="sd">    nbunch1 : list, container</span>
+<span class="sd">       Interior node set</span>
+
+<span class="sd">    nbunch2 : list, container</span>
+<span class="sd">       Exterior node set.  If None then it is set to all of the</span>
+<span class="sd">       nodes in G not in nbunch1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    elist : list</span>
+<span class="sd">       List of edges</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Nodes in nbunch1 and nbunch2 that are not in G are ignored.</span>
+
+<span class="sd">    nbunch1 and nbunch2 are usually meant to be disjoint,</span>
+<span class="sd">    but in the interest of speed and generality, that is</span>
+<span class="sd">    not required here.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nbunch2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>     <span class="c1"># Then nbunch2 is complement of nbunch1</span>
+        <span class="n">nset1</span><span class="o">=</span><span class="nb">set</span><span class="p">((</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nbunch1</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">)</span> <span class="k">for</span> <span class="n">n1</span> <span class="ow">in</span> <span class="n">nset1</span> <span class="k">for</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">]</span> \
+                <span class="k">if</span> <span class="n">n2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nset1</span><span class="p">]</span>
+
+    <span class="n">nset2</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">nbunch2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">)</span> <span class="k">for</span> <span class="n">n1</span> <span class="ow">in</span> <span class="n">nbunch1</span> <span class="k">if</span> <span class="n">n1</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">]</span> \
+            <span class="k">if</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">nset2</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="node_boundary"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.boundary.node_boundary.html#networkx.algorithms.boundary.node_boundary">[docs]</a><span class="k">def</span> <span class="nf">node_boundary</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch1</span><span class="p">,</span> <span class="n">nbunch2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the node boundary.</span>
+
+<span class="sd">    The node boundary is all nodes in the edge boundary of a given</span>
+<span class="sd">    set of nodes that are in the set.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A networkx graph</span>
+
+<span class="sd">    nbunch1 : list, container</span>
+<span class="sd">       Interior node set</span>
+
+<span class="sd">    nbunch2 : list, container</span>
+<span class="sd">       Exterior node set.  If None then it is set to all of the</span>
+<span class="sd">       nodes in G not in nbunch1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nlist : list</span>
+<span class="sd">       List of nodes.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Nodes in nbunch1 and nbunch2 that are not in G are ignored.</span>
+
+<span class="sd">    nbunch1 and nbunch2 are usually meant to be disjoint,</span>
+<span class="sd">    but in the interest of speed and generality, that is</span>
+<span class="sd">    not required here.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nset1</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nbunch1</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">)</span>
+    <span class="n">bdy</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">n1</span> <span class="ow">in</span> <span class="n">nset1</span><span class="p">:</span>
+        <span class="n">bdy</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">])</span>
+    <span class="n">bdy</span> <span class="o">-=</span> <span class="n">nset1</span>
+    <span class="k">if</span> <span class="n">nbunch2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># else nbunch2 is complement of nbunch1</span>
+        <span class="n">bdy</span> <span class="o">&amp;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nbunch2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">bdy</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, NetworkX Developers.
+      Last updated on Sep 08, 2017.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.11',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.block &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.block</h1><div class="highlight"><pre>
+<span class="c"># encoding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for creating network blockmodels from node partitions.</span>
+
+<span class="sd">Created by Drew Conway &lt;drew.conway@nyu.edu&gt; </span>
+<span class="sd">Copyright (c) 2010. All rights reserved.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Drew Conway &lt;drew.conway@nyu.edu&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Aric Hagberg &lt;hagberg@lanl.gov&gt;&#39;</span><span class="p">])</span>
+<span class="n">__all__</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;blockmodel&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<div class="viewcode-block" id="blockmodel"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.block.blockmodel.html#networkx.algorithms.block.blockmodel">[docs]</a><span class="k">def</span> <span class="nf">blockmodel</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">partitions</span><span class="p">,</span><span class="n">multigraph</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a reduced graph constructed using the generalized block modeling</span>
+<span class="sd">    technique.</span>
+
+<span class="sd">    The blockmodel technique collapses nodes into blocks based on a</span>
+<span class="sd">    given partitioning of the node set.  Each partition of nodes</span>
+<span class="sd">    (block) is represented as a single node in the reduced graph.</span>
+
+<span class="sd">    Edges between nodes in the block graph are added according to the</span>
+<span class="sd">    edges in the original graph.  If the parameter multigraph is False</span>
+<span class="sd">    (the default) a single edge is added with a weight equal to the</span>
+<span class="sd">    sum of the edge weights between nodes in the original graph</span>
+<span class="sd">    The default is a weight of 1 if weights are not specified.  If the</span>
+<span class="sd">    parameter multigraph is True then multiple edges are added each</span>
+<span class="sd">    with the edge data from the original graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        A networkx Graph or DiGraph</span>
+<span class="sd">    partitions : list of lists, or list of sets </span>
+<span class="sd">        The partition of the nodes.  Must be non-overlapping.</span>
+<span class="sd">    multigraph : bool, optional</span>
+<span class="sd">        If True return a MultiGraph with the edge data of the original</span>
+<span class="sd">        graph applied to each corresponding edge in the new graph.</span>
+<span class="sd">        If False return a Graph with the sum of the edge weights, or a</span>
+<span class="sd">        count of the edges if the original graph is unweighted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    blockmodel : a Networkx graph object</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(6)</span>
+<span class="sd">    &gt;&gt;&gt; partition=[[0,1],[2,3],[4,5]]</span>
+<span class="sd">    &gt;&gt;&gt; M=nx.blockmodel(G,partition)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Patrick Doreian, Vladimir Batagelj, and Anuska Ferligoj</span>
+<span class="sd">    	&quot;Generalized Blockmodeling&quot;,Cambridge University Press, 2004.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Create sets of node partitions</span>
+    <span class="n">part</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">set</span><span class="p">,</span><span class="n">partitions</span><span class="p">))</span> 
+
+    <span class="c"># Check for overlapping node partitions</span>
+    <span class="n">u</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">p1</span><span class="p">,</span><span class="n">p2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">part</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">part</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="c">#if not u.isdisjoint(p2):  # Python 2.6 required</span>
+        <span class="k">if</span> <span class="nb">len</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">p2</span><span class="p">))</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s">&quot;Overlapping node partitions.&quot;</span><span class="p">)</span>
+
+    <span class="c"># Initialize blockmodel graph</span>
+    <span class="k">if</span> <span class="n">multigraph</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span> 
+        
+    <span class="c"># Add nodes and properties to blockmodel            </span>
+    <span class="c"># The blockmodel nodes are node-induced subgraphs of G</span>
+    <span class="c"># Label them with integers starting at 0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)),</span><span class="n">part</span><span class="p">):</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="c"># The node-induced subgraph is stored as the node &#39;graph&#39; attribute </span>
+        <span class="n">SG</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;graph&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">SG</span>        
+        <span class="n">M</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;nnodes&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">SG</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;nedges&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">SG</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span>
+        <span class="n">M</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&#39;density&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">SG</span><span class="p">)</span>
+        
+    <span class="c"># Create mapping between original node labels and new blockmodel node labels</span>
+    <span class="n">block_mapping</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">M</span><span class="p">:</span>
+        <span class="n">nodes_in_block</span><span class="o">=</span><span class="n">M</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s">&#39;graph&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
+        <span class="n">block_mapping</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">nodes_in_block</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="c"># Add edges to block graph </span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">bmu</span><span class="o">=</span><span class="n">block_mapping</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+        <span class="n">bmv</span><span class="o">=</span><span class="n">block_mapping</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bmu</span><span class="o">==</span><span class="n">bmv</span><span class="p">:</span> <span class="c"># no self loops</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">multigraph</span><span class="p">:</span> 
+            <span class="c"># For multigraphs add an edge for each edge in original graph</span>
+            <span class="n">M</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">bmu</span><span class="p">,</span><span class="n">bmv</span><span class="p">,</span><span class="n">attr_dict</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># For graphs and digraphs add single weighted edge</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;weight&#39;</span><span class="p">,</span><span class="mf">1.0</span><span class="p">)</span> <span class="c"># default to 1 if no weight specified</span>
+            <span class="k">if</span> <span class="n">M</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">bmu</span><span class="p">,</span><span class="n">bmv</span><span class="p">):</span>
+                <span class="n">M</span><span class="p">[</span><span class="n">bmu</span><span class="p">][</span><span class="n">bmv</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span><span class="o">+=</span><span class="n">weight</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">M</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">bmu</span><span class="p">,</span><span class="n">bmv</span><span class="p">,</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">M</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

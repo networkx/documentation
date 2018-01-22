@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.graphical &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.graphical</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Generate graphs with a given degree sequence or expected degree sequence.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Dan Schult (dschult@colgate.edu)&#39;</span>
+                        <span class="s">&#39;Joel Miller (joel.c.miller.research@gmail.com)&#39;</span>
+                        <span class="s">&#39;Ben Edwards&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;is_valid_degree_sequence&#39;</span><span class="p">,</span>
+           <span class="s">&#39;is_valid_degree_sequence_erdos_gallai&#39;</span><span class="p">,</span>
+           <span class="s">&#39;is_valid_degree_sequence_havel_hakimi&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="is_valid_degree_sequence"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.graphical.is_valid_degree_sequence.html#networkx.algorithms.graphical.is_valid_degree_sequence">[docs]</a><span class="k">def</span> <span class="nf">is_valid_degree_sequence</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;hh&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if deg_sequence is a valid degree sequence.</span>
+<span class="sd">    </span>
+<span class="sd">    A degree sequence is valid if some graph can realize it.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deg_sequence : list</span>
+<span class="sd">        A list of integers where each element specifies the degree of a node</span>
+<span class="sd">        in a graph.</span>
+<span class="sd">    method : &quot;eg&quot; | &quot;hh&quot;</span>
+<span class="sd">        The method used to validate the degree sequence.  </span>
+<span class="sd">        &quot;eg&quot; corresponds to the Erdős-Gallai algorithm, and </span>
+<span class="sd">        &quot;hh&quot; to the Havel-Hakimi algorithm.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    valid : bool</span>
+<span class="sd">        True if deg_sequence is a valid degree sequence and False if not.</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Erdős-Gallai</span>
+<span class="sd">        [EG1960]_, [choudum1986]_</span>
+<span class="sd">    </span>
+<span class="sd">    Havel-Hakimi</span>
+<span class="sd">        [havel1955]_, [hakimi1962]_, [CL1996]_</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;eg&#39;</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">is_valid_degree_sequence_erdos_gallai</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;hh&#39;</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">is_valid_degree_sequence_havel_hakimi</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;`method` must be &#39;eg&#39; or &#39;hh&#39;&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">valid</span>
+
+</div>
+<div class="viewcode-block" id="is_valid_degree_sequence_havel_hakimi"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.graphical.is_valid_degree_sequence_havel_hakimi.html#networkx.algorithms.graphical.is_valid_degree_sequence_havel_hakimi">[docs]</a><span class="k">def</span> <span class="nf">is_valid_degree_sequence_havel_hakimi</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if deg_sequence is a valid degree sequence.</span>
+<span class="sd">    </span>
+<span class="sd">    A degree sequence is valid if some graph can realize it. </span>
+<span class="sd">    Validation proceeds via the Havel-Hakimi algorithm.</span>
+<span class="sd">    </span>
+<span class="sd">    Worst-case run time is: O( n**(log n) )</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deg_sequence : list</span>
+<span class="sd">        A list of integers where each element specifies the degree of a node</span>
+<span class="sd">        in a graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    valid : bool</span>
+<span class="sd">        True if deg_sequence is a valid degree sequence and False if not.</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [havel1955]_, [hakimi1962]_, [CL1996]_</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># some simple tests </span>
+    <span class="k">if</span> <span class="n">deg_sequence</span><span class="o">==</span><span class="p">[]:</span>
+        <span class="k">return</span> <span class="bp">True</span> <span class="c"># empty sequence = empty graph </span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">is_list_of_ints</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>   <span class="c"># list of ints</span>
+    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>      <span class="c"># each int not negative</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>      <span class="c"># must be even</span>
+    
+    <span class="c"># successively reduce degree sequence by removing node of maximum degree</span>
+    <span class="c"># as in Havel-Hakimi algorithm</span>
+        
+    <span class="n">s</span><span class="o">=</span><span class="n">deg_sequence</span><span class="p">[:]</span>  <span class="c"># copy to s</span>
+    <span class="k">while</span> <span class="n">s</span><span class="p">:</span>      
+        <span class="n">s</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>    <span class="c"># sort in increasing order</span>
+        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span> 
+            <span class="k">return</span> <span class="bp">False</span>  <span class="c"># check if removed too many from some node</span>
+
+        <span class="n">d</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>             <span class="c"># pop largest degree </span>
+        <span class="k">if</span> <span class="n">d</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="bp">True</span>  <span class="c"># done! rest must be zero due to ordering</span>
+
+        <span class="c"># degree must be &lt;= number of available nodes</span>
+        <span class="k">if</span> <span class="n">d</span><span class="o">&gt;</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>   <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="c"># remove edges to nodes of next higher degrees</span>
+        <span class="c">#s.reverse()  # to make it easy to get at higher degree nodes.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">d</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-=</span><span class="mi">1</span>
+
+    <span class="c"># should never get here b/c either d==0, d&gt;len(s) or d&lt;0 before s=[]</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="is_valid_degree_sequence_erdos_gallai"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.graphical.is_valid_degree_sequence_erdos_gallai.html#networkx.algorithms.graphical.is_valid_degree_sequence_erdos_gallai">[docs]</a><span class="k">def</span> <span class="nf">is_valid_degree_sequence_erdos_gallai</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if deg_sequence is a valid degree sequence.</span>
+<span class="sd">    </span>
+<span class="sd">    A degree sequence is valid if some graph can realize it. </span>
+<span class="sd">    Validation proceeds via the Erdős-Gallai algorithm.</span>
+<span class="sd">    </span>
+<span class="sd">    Worst-case run time is: O( n**2 )</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deg_sequence : list</span>
+<span class="sd">        A list of integers where each element specifies the degree of a node</span>
+<span class="sd">        in a graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    valid : bool</span>
+<span class="sd">        True if deg_sequence is a valid degree sequence and False if not.</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [EG1960]_, [choudum1986]_    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># some simple tests </span>
+    <span class="k">if</span> <span class="n">deg_sequence</span><span class="o">==</span><span class="p">[]:</span>
+        <span class="k">return</span> <span class="bp">True</span> <span class="c"># empty sequence = empty graph </span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">is_list_of_ints</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>   <span class="c"># list of ints</span>
+    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>      <span class="c"># each int not negative</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>      <span class="c"># must be even</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+    <span class="n">deg_seq</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">sigk</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg_seq</span><span class="p">))</span> <span class="k">if</span> <span class="n">deg_seq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">deg_seq</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sigk</span><span class="p">:</span>
+        <span class="n">sum_deg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg_seq</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">sum_min</span> <span class="o">=</span> <span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">min</span><span class="p">([</span><span class="n">k</span><span class="p">,</span><span class="n">deg_seq</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> 
+                                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">n</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="n">sum_deg</span><span class="o">&gt;</span><span class="n">sum_min</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+ </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

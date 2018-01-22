@@ -1,0 +1,582 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.readwrite.edgelist &mdash; NetworkX 1.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.readwrite.edgelist</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">**********</span>
+<span class="sd">Edge Lists</span>
+<span class="sd">**********</span>
+<span class="sd">Read and write NetworkX graphs as edge lists.</span>
+
+<span class="sd">The multi-line adjacency list format is useful for graphs with nodes</span>
+<span class="sd">that can be meaningfully represented as strings.  With the edgelist</span>
+<span class="sd">format simple edge data can be stored but node or graph data is not.</span>
+<span class="sd">There is no way of representing isolated nodes unless the node has a</span>
+<span class="sd">self-loop edge.</span>
+
+<span class="sd">Format</span>
+<span class="sd">------</span>
+<span class="sd">You can read or write three formats of edge lists with these functions.</span>
+
+<span class="sd">Node pairs with no data::</span>
+
+<span class="sd"> 1 2 </span>
+
+<span class="sd">Python dictionary as data::</span>
+
+<span class="sd"> 1 2 {&#39;weight&#39;:7, &#39;color&#39;:&#39;green&#39;} </span>
+
+<span class="sd">Arbitrary data::</span>
+
+<span class="sd"> 1 2 7 green</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)</span><span class="se">\n</span><span class="s">Dan Schult (dschult@colgate.edu)&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;generate_edgelist&#39;</span><span class="p">,</span>
+           <span class="s">&#39;write_edgelist&#39;</span><span class="p">,</span>
+           <span class="s">&#39;parse_edgelist&#39;</span><span class="p">,</span>
+           <span class="s">&#39;read_edgelist&#39;</span><span class="p">,</span>
+           <span class="s">&#39;read_weighted_edgelist&#39;</span><span class="p">,</span>
+           <span class="s">&#39;write_weighted_edgelist&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">open_file</span><span class="p">,</span> <span class="n">make_str</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<div class="viewcode-block" id="generate_edgelist"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.edgelist.generate_edgelist.html#networkx.readwrite.edgelist.generate_edgelist">[docs]</a><span class="k">def</span> <span class="nf">generate_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a single line of the graph G in edge list format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">    </span>
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       Separator for node labels </span>
+
+<span class="sd">    data : bool or list of keys       </span>
+<span class="sd">       If False generate no edge data.  If True use a dictionary </span>
+<span class="sd">       representation of edge data.  If a list of keys use a list of data</span>
+<span class="sd">       values corresponding to the keys.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lines : string</span>
+<span class="sd">        Lines of data in adjlist format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.lollipop_graph(4, 3)</span>
+<span class="sd">    &gt;&gt;&gt; G[1][2][&#39;weight&#39;] = 3</span>
+<span class="sd">    &gt;&gt;&gt; G[3][4][&#39;capacity&#39;] = 12</span>
+<span class="sd">    &gt;&gt;&gt; for line in nx.generate_edgelist(G, data=False):</span>
+<span class="sd">    ...     print(line)</span>
+<span class="sd">    0 1</span>
+<span class="sd">    0 2</span>
+<span class="sd">    0 3</span>
+<span class="sd">    1 2</span>
+<span class="sd">    1 3</span>
+<span class="sd">    2 3</span>
+<span class="sd">    3 4</span>
+<span class="sd">    4 5</span>
+<span class="sd">    5 6</span>
+
+<span class="sd">    &gt;&gt;&gt; for line in nx.generate_edgelist(G):</span>
+<span class="sd">    ...     print(line)</span>
+<span class="sd">    0 1 {}</span>
+<span class="sd">    0 2 {}</span>
+<span class="sd">    0 3 {}</span>
+<span class="sd">    1 2 {&#39;weight&#39;: 3}</span>
+<span class="sd">    1 3 {}</span>
+<span class="sd">    2 3 {}</span>
+<span class="sd">    3 4 {&#39;capacity&#39;: 12}</span>
+<span class="sd">    4 5 {}</span>
+<span class="sd">    5 6 {}</span>
+
+<span class="sd">    &gt;&gt;&gt; for line in nx.generate_edgelist(G,data=[&#39;weight&#39;]):</span>
+<span class="sd">    ...     print(line)</span>
+<span class="sd">    0 1</span>
+<span class="sd">    0 2</span>
+<span class="sd">    0 3</span>
+<span class="sd">    1 2 3</span>
+<span class="sd">    1 3</span>
+<span class="sd">    2 3</span>
+<span class="sd">    3 4</span>
+<span class="sd">    4 5</span>
+<span class="sd">    5 6</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_adjlist, read_adjlist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">or</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">delimiter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">make_str</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">=</span><span class="p">[</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span> <span class="c"># missing data for this edge, should warn?</span>
+            <span class="k">yield</span> <span class="n">delimiter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">make_str</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+</div>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;wb&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="write_edgelist"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.edgelist.write_edgelist.html#networkx.readwrite.edgelist.write_edgelist">[docs]</a><span class="k">def</span> <span class="nf">write_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&quot;#&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                   <span class="n">encoding</span> <span class="o">=</span> <span class="s">&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write graph as a list of edges.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX graph</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write. If a file is provided, it must be</span>
+<span class="sd">       opened in &#39;wb&#39; mode. Filenames ending in .gz or .bz2 will be compressed.</span>
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       The character used to indicate the start of a comment </span>
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       The string used to separate values.  The default is whitespace.</span>
+<span class="sd">    data : bool or list, optional</span>
+<span class="sd">       If False write no edge data.</span>
+<span class="sd">       If True write a string representation of the edge data dictionary..  </span>
+<span class="sd">       If a list (or other iterable) is provided, write the  keys specified </span>
+<span class="sd">       in the list.</span>
+<span class="sd">    encoding: string, optional</span>
+<span class="sd">       Specify which encoding to use when writing file.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, &quot;test.edgelist&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; fh=open(&quot;test.edgelist&quot;,&#39;wb&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fh)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, &quot;test.edgelist.gz&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, &quot;test.edgelist.gz&quot;, data=False)</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1,2,weight=7,color=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G,&#39;test.edgelist&#39;,data=False)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G,&#39;test.edgelist&#39;,data=[&#39;color&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G,&#39;test.edgelist&#39;,data=[&#39;color&#39;,&#39;weight&#39;])</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_edgelist()</span>
+<span class="sd">    write_weighted_edgelist()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">generate_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">line</span><span class="o">+=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">encoding</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="parse_edgelist"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.edgelist.parse_edgelist.html#networkx.readwrite.edgelist.parse_edgelist">[docs]</a><span class="k">def</span> <span class="nf">parse_edgelist</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&#39;#&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse lines of an edge list representation of a graph.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G: NetworkX Graph</span>
+<span class="sd">        The graph corresponding to lines</span>
+<span class="sd">    data : bool or list of (label,type) tuples</span>
+<span class="sd">       If False generate no edge data or if True use a dictionary </span>
+<span class="sd">       representation of edge data or a list tuples specifying dictionary </span>
+<span class="sd">       key names and types for edge data.</span>
+<span class="sd">    create_using: NetworkX graph container, optional</span>
+<span class="sd">       Use given NetworkX graph for holding nodes or edges.</span>
+<span class="sd">    nodetype : Python type, optional</span>
+<span class="sd">       Convert nodes to this type.  </span>
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       Marker for comment lines</span>
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       Separator for node labels </span>
+<span class="sd">    create_using: NetworkX graph container       </span>
+<span class="sd">       Use given NetworkX graph for holding nodes or edges.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Edgelist with no data:</span>
+
+<span class="sd">    &gt;&gt;&gt; lines = [&quot;1 2&quot;,</span>
+<span class="sd">    ...          &quot;2 3&quot;,</span>
+<span class="sd">    ...          &quot;3 4&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.parse_edgelist(lines, nodetype = int)</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes()</span>
+<span class="sd">    [1, 2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; G.edges()</span>
+<span class="sd">    [(1, 2), (2, 3), (3, 4)]</span>
+
+<span class="sd">    Edgelist with data in Python dictionary representation:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; lines = [&quot;1 2 {&#39;weight&#39;:3}&quot;,</span>
+<span class="sd">    ...          &quot;2 3 {&#39;weight&#39;:27}&quot;,</span>
+<span class="sd">    ...          &quot;3 4 {&#39;weight&#39;:3.0}&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.parse_edgelist(lines, nodetype = int)</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes()</span>
+<span class="sd">    [1, 2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; G.edges(data = True)</span>
+<span class="sd">    [(1, 2, {&#39;weight&#39;: 3}), (2, 3, {&#39;weight&#39;: 27}), (3, 4, {&#39;weight&#39;: 3.0})]</span>
+
+<span class="sd">    Edgelist with data in a list:</span>
+
+<span class="sd">    &gt;&gt;&gt; lines = [&quot;1 2 3&quot;,</span>
+<span class="sd">    ...          &quot;2 3 27&quot;,</span>
+<span class="sd">    ...          &quot;3 4 3.0&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.parse_edgelist(lines, nodetype = int, data=((&#39;weight&#39;,float),))</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes()</span>
+<span class="sd">    [1, 2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; G.edges(data = True)</span>
+<span class="sd">    [(1, 2, {&#39;weight&#39;: 3.0}), (2, 3, {&#39;weight&#39;: 27.0}), (3, 4, {&#39;weight&#39;: 3.0})]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    read_weighted_edgelist</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">literal_eval</span>
+    <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">=</span><span class="n">create_using</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;create_using input is not a NetworkX graph type&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">p</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="c"># split line, should have 2 or more</span>
+        <span class="n">s</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">u</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">v</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">=</span><span class="n">s</span>
+        <span class="k">if</span> <span class="n">nodetype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">u</span><span class="o">=</span><span class="n">nodetype</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="n">v</span><span class="o">=</span><span class="n">nodetype</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Failed to convert nodes </span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s"> to type </span><span class="si">%s</span><span class="s">.&quot;</span>
+                                <span class="o">%</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">nodetype</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="c"># no data or data type specified</span>
+            <span class="n">edgedata</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">elif</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="c"># no edge types specified</span>
+            <span class="k">try</span><span class="p">:</span> <span class="c"># try to evaluate as dictionary</span>
+                <span class="n">edgedata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">literal_eval</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;Failed to convert edge data (</span><span class="si">%s</span><span class="s">) to dictionary.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># convert edge data to dictionary with specified keys and type</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s">&quot;Edge data </span><span class="si">%s</span><span class="s"> and data_keys </span><span class="si">%s</span><span class="s"> are not the same length&quot;</span><span class="o">%</span>
+                    <span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span>
+            <span class="n">edgedata</span><span class="o">=</span><span class="p">{}</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">edge_key</span><span class="p">,</span><span class="n">edge_type</span><span class="p">),</span><span class="n">edge_value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">d</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">edge_value</span><span class="o">=</span><span class="n">edge_type</span><span class="p">(</span><span class="n">edge_value</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s">&quot;Failed to convert </span><span class="si">%s</span><span class="s"> data </span><span class="si">%s</span><span class="s"> to type </span><span class="si">%s</span><span class="s">.&quot;</span>
+                        <span class="o">%</span><span class="p">(</span><span class="n">edge_key</span><span class="p">,</span> <span class="n">edge_value</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">))</span>
+                <span class="n">edgedata</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">edge_key</span><span class="p">:</span><span class="n">edge_value</span><span class="p">})</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr_dict</span><span class="o">=</span><span class="n">edgedata</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;rb&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="read_edgelist"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.edgelist.read_edgelist.html#networkx.readwrite.edgelist.read_edgelist">[docs]</a><span class="k">def</span> <span class="nf">read_edgelist</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&quot;#&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                  <span class="n">nodetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">edgetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a graph from a list of edges.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write. If a file is provided, it must be</span>
+<span class="sd">       opened in &#39;rb&#39; mode.</span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be uncompressed.</span>
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       The character used to indicate the start of a comment. </span>
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       The string used to separate values.  The default is whitespace.</span>
+<span class="sd">    create_using : Graph container, optional, </span>
+<span class="sd">       Use specified container to build graph.  The default is networkx.Graph,</span>
+<span class="sd">       an undirected graph.</span>
+<span class="sd">    nodetype : int, float, str, Python type, optional</span>
+<span class="sd">       Convert node data from strings to specified type</span>
+<span class="sd">    data : bool or list of (label,type) tuples</span>
+<span class="sd">       Tuples specifying dictionary key names and types for edge data</span>
+<span class="sd">    edgetype : int, float, str, Python type, optional OBSOLETE</span>
+<span class="sd">       Convert edge data from strings to specified type and use as &#39;weight&#39;</span>
+<span class="sd">    encoding: string, optional</span>
+<span class="sd">       Specify which encoding to use when reading file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A networkx Graph or other type specified with create_using</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(nx.path_graph(4), &quot;test.edgelist&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_edgelist(&quot;test.edgelist&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; fh=open(&quot;test.edgelist&quot;, &#39;rb&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_edgelist(fh)</span>
+<span class="sd">    &gt;&gt;&gt; fh.close()</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.read_edgelist(&quot;test.edgelist&quot;, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_edgelist(&quot;test.edgelist&quot;,create_using=nx.DiGraph())</span>
+
+<span class="sd">    Edgelist with data in a list:</span>
+
+<span class="sd">    &gt;&gt;&gt; textline = &#39;1 2 3&#39;</span>
+<span class="sd">    &gt;&gt;&gt; fh = open(&#39;test.edgelist&#39;,&#39;w&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; d = fh.write(textline)</span>
+<span class="sd">    &gt;&gt;&gt; fh.close()</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(&#39;test.edgelist&#39;, nodetype=int, data=((&#39;weight&#39;,float),))</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes()</span>
+<span class="sd">    [1, 2]</span>
+<span class="sd">    &gt;&gt;&gt; G.edges(data = True)</span>
+<span class="sd">    [(1, 2, {&#39;weight&#39;: 3.0})]</span>
+
+<span class="sd">    See parse_edgelist() for more examples of formatting.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    parse_edgelist</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Since nodes must be hashable, the function nodetype must return hashable</span>
+<span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.) </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parse_edgelist</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span><span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                          <span class="n">create_using</span><span class="o">=</span><span class="n">create_using</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="n">nodetype</span><span class="p">,</span>
+                          <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="write_weighted_edgelist"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.edgelist.write_weighted_edgelist.html#networkx.readwrite.edgelist.write_weighted_edgelist">[docs]</a><span class="k">def</span> <span class="nf">write_weighted_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&quot;#&quot;</span><span class="p">,</span> 
+                            <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write graph G as a list of edges with numeric weights.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX graph</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write. If a file is provided, it must be</span>
+<span class="sd">       opened in &#39;wb&#39; mode.</span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be compressed.</span>
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       The character used to indicate the start of a comment </span>
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       The string used to separate values.  The default is whitespace.</span>
+<span class="sd">    encoding: string, optional</span>
+<span class="sd">       Specify which encoding to use when writing file.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1,2,weight=7)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_weighted_edgelist(G, &#39;test.weighted.edgelist&#39;)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    read_edgelist()</span>
+<span class="sd">    write_edgelist()</span>
+<span class="sd">    write_weighted_edgelist()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">write_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                   <span class="n">data</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;weight&#39;</span><span class="p">,),</span> <span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="read_weighted_edgelist"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.edgelist.read_weighted_edgelist.html#networkx.readwrite.edgelist.read_weighted_edgelist">[docs]</a><span class="k">def</span> <span class="nf">read_weighted_edgelist</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s">&quot;#&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                           <span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Read a graph as list of edges with numeric weights.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write. If a file is provided, it must be</span>
+<span class="sd">       opened in &#39;rb&#39; mode.</span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be uncompressed.</span>
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       The character used to indicate the start of a comment. </span>
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       The string used to separate values.  The default is whitespace.</span>
+<span class="sd">    create_using : Graph container, optional, </span>
+<span class="sd">       Use specified container to build graph.  The default is networkx.Graph,</span>
+<span class="sd">       an undirected graph.</span>
+<span class="sd">    nodetype : int, float, str, Python type, optional</span>
+<span class="sd">       Convert node data from strings to specified type</span>
+<span class="sd">    encoding: string, optional</span>
+<span class="sd">       Specify which encoding to use when reading file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A networkx Graph or other type specified with create_using</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Since nodes must be hashable, the function nodetype must return hashable</span>
+<span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.) </span>
+
+<span class="sd">    Example edgelist file format.</span>
+
+<span class="sd">    With numeric edge data:: </span>
+
+<span class="sd">     # read with </span>
+<span class="sd">     # &gt;&gt;&gt; G=nx.read_weighted_edgelist(fh)</span>
+<span class="sd">     # source target data  </span>
+<span class="sd">     a b 1</span>
+<span class="sd">     a c 3.14159</span>
+<span class="sd">     d e 42</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">read_edgelist</span><span class="p">(</span><span class="n">path</span><span class="p">,</span>
+                         <span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">,</span>
+                         <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                         <span class="n">create_using</span><span class="o">=</span><span class="n">create_using</span><span class="p">,</span>
+                         <span class="n">nodetype</span><span class="o">=</span><span class="n">nodetype</span><span class="p">,</span>
+                         <span class="n">data</span><span class="o">=</span><span class="p">((</span><span class="s">&#39;weight&#39;</span><span class="p">,</span><span class="nb">float</span><span class="p">),),</span>
+                         <span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span>
+                         <span class="p">)</span>
+
+
+<span class="c"># fixture for nose tests</span></div>
+<span class="k">def</span> <span class="nf">teardown_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s">&#39;test.edgelist&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s">&#39;test.edgelist.gz&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s">&#39;test.weighted.edgelist&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

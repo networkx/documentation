@@ -1,0 +1,268 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.operators.all &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.operators.all</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Operations on many graphs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2012 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">izip_longest</span> <span class="k">as</span> <span class="n">zip_longest</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="c"># Python3 has zip_longest</span>
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">is_string_like</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span> <span class="s">&#39;Robert King &lt;kingrobertking@gmail.com&gt;&#39;</span><span class="p">,</span>
+                             <span class="s">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;union_all&#39;</span><span class="p">,</span> <span class="s">&#39;compose_all&#39;</span><span class="p">,</span> <span class="s">&#39;disjoint_union_all&#39;</span><span class="p">,</span>
+           <span class="s">&#39;intersection_all&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="union_all"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.all.union_all.html#networkx.algorithms.operators.all.union_all">[docs]</a><span class="k">def</span> <span class="nf">union_all</span><span class="p">(</span><span class="n">graphs</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="p">(</span><span class="bp">None</span><span class="p">,)</span> <span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the union of all graphs.</span>
+
+<span class="sd">    The graphs must be disjoint, otherwise an exception is raised.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graphs : list of graphs</span>
+<span class="sd">       List of NetworkX graphs</span>
+
+<span class="sd">    rename : bool , default=(None, None)</span>
+<span class="sd">       Node names of G and H can be changed by specifying the tuple</span>
+<span class="sd">       rename=(&#39;G-&#39;,&#39;H-&#39;) (for example).  Node &quot;u&quot; in G is then renamed</span>
+<span class="sd">       &quot;G-u&quot; and &quot;v&quot; in H is renamed &quot;H-v&quot;.</span>
+
+<span class="sd">    name : string</span>
+<span class="sd">       Specify the name for the union graph@not_implemnted_for(&#39;direct</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U : a graph with the same type as the first graph in list</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To force a disjoint union with node relabeling, use</span>
+<span class="sd">    disjoint_union_all(G,H) or convert_node_labels_to integers().</span>
+
+<span class="sd">    Graph, edge, and node attributes are propagated to the union graph.</span>
+<span class="sd">    If a graph attribute is present in multiple graphs, then the value</span>
+<span class="sd">    from the last graph in the list with that attribute is used.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    union</span>
+<span class="sd">    disjoint_union_all</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graphs_names</span> <span class="o">=</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">graphs</span><span class="p">,</span><span class="n">rename</span><span class="p">)</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">gname</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">graphs_names</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">H</span><span class="p">,</span><span class="n">hname</span> <span class="ow">in</span> <span class="n">graphs_names</span><span class="p">:</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="p">(</span><span class="n">gname</span><span class="p">,</span><span class="n">hname</span><span class="p">),</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">gname</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">U</span>
+</div>
+<div class="viewcode-block" id="disjoint_union_all"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.all.disjoint_union_all.html#networkx.algorithms.operators.all.disjoint_union_all">[docs]</a><span class="k">def</span> <span class="nf">disjoint_union_all</span><span class="p">(</span><span class="n">graphs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the disjoint union of all graphs.</span>
+
+<span class="sd">    This operation forces distinct integer node labels starting with 0</span>
+<span class="sd">    for the first graph in the list and numbering consecutively.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graphs : list</span>
+<span class="sd">       List of NetworkX graphs</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U : A graph with the same type as the first graph in list</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    It is recommended that the graphs be either all directed or all undirected.</span>
+
+<span class="sd">    Graph, edge, and node attributes are propagated to the union graph.</span>
+<span class="sd">    If a graph attribute is present in multiple graphs, then the value</span>
+<span class="sd">    from the last graph in the list with that attribute is used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graphs</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">graphs</span><span class="p">:</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">disjoint_union</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">U</span>
+</div>
+<div class="viewcode-block" id="compose_all"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.all.compose_all.html#networkx.algorithms.operators.all.compose_all">[docs]</a><span class="k">def</span> <span class="nf">compose_all</span><span class="p">(</span><span class="n">graphs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the composition of all graphs.</span>
+
+<span class="sd">    Composition is the simple union of the node sets and edge sets.</span>
+<span class="sd">    The node sets of the supplied graphs need not be disjoint.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graphs : list</span>
+<span class="sd">       List of NetworkX graphs</span>
+
+<span class="sd">    name : string</span>
+<span class="sd">       Specify name for new graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    C : A graph with the same type as the first graph in list</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    It is recommended that the supplied graphs be either all directed or all</span>
+<span class="sd">    undirected.</span>
+
+<span class="sd">    Graph, edge, and node attributes are propagated to the union graph.</span>
+<span class="sd">    If a graph attribute is present in multiple graphs, then the value</span>
+<span class="sd">    from the last graph in the list with that attribute is used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graphs</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">graphs</span><span class="p">:</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">C</span>
+</div>
+<div class="viewcode-block" id="intersection_all"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.operators.all.intersection_all.html#networkx.algorithms.operators.all.intersection_all">[docs]</a><span class="k">def</span> <span class="nf">intersection_all</span><span class="p">(</span><span class="n">graphs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a new graph that contains only the edges that exist in</span>
+<span class="sd">    all graphs.</span>
+
+<span class="sd">    All supplied graphs must have the same node set.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graphs_list : list</span>
+<span class="sd">       List of NetworkX graphs</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    R : A new graph with the same type as the first graph in list</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Attributes from the graph, nodes, and edges are not copied to the new</span>
+<span class="sd">    graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graphs</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">H</span> <span class="ow">in</span> <span class="n">graphs</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

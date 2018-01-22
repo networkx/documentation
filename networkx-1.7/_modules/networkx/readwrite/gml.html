@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.readwrite.gml &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.readwrite.gml</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Read graphs in GML format.</span>
+
+<span class="sd">&quot;GML, the G&gt;raph Modelling Language, is our proposal for a portable</span>
+<span class="sd">file format for graphs. GML&#39;s key features are portability, simple</span>
+<span class="sd">syntax, extensibility and flexibility. A GML file consists of a</span>
+<span class="sd">hierarchical key-value lists. Graphs can be annotated with arbitrary</span>
+<span class="sd">data structures. The idea for a common file format was born at the</span>
+<span class="sd">GD&#39;95; this proposal is the outcome of many discussions. GML is the</span>
+<span class="sd">standard file format in the Graphlet graph editor system. It has been</span>
+<span class="sd">overtaken and adapted by several other systems for drawing graphs.&quot;</span>
+
+<span class="sd">See http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html</span>
+
+<span class="sd">Requires pyparsing: http://pyparsing.wikispaces.com/</span>
+
+<span class="sd">Format</span>
+<span class="sd">------</span>
+<span class="sd">See http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html</span>
+<span class="sd">for format specification.</span>
+
+<span class="sd">Example graphs in GML format:</span>
+<span class="sd">http://www-personal.umich.edu/~mejn/netdata/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2008-2010 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;read_gml&#39;</span><span class="p">,</span> <span class="s">&#39;parse_gml&#39;</span><span class="p">,</span> <span class="s">&#39;generate_gml&#39;</span><span class="p">,</span> <span class="s">&#39;write_gml&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">is_string_like</span><span class="p">,</span> <span class="n">open_file</span>
+
+
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;rb&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="read_gml"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.gml.read_gml.html#networkx.readwrite.gml.read_gml">[docs]</a><span class="k">def</span> <span class="nf">read_gml</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">encoding</span><span class="o">=</span><span class="s">&#39;UTF-8&#39;</span><span class="p">,</span><span class="n">relabel</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read graph in GML format from path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : filename or filehandle</span>
+<span class="sd">       The filename or filehandle to read from.</span>
+
+<span class="sd">    encoding : string, optional</span>
+<span class="sd">       Text encoding. </span>
+
+<span class="sd">    relabel : bool, optional       </span>
+<span class="sd">       If True use the GML node label attribute for node names otherwise use</span>
+<span class="sd">       the node id.  </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : MultiGraph or MultiDiGraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ImportError</span>
+<span class="sd">        If the pyparsing module is not available.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_gml, parse_gml</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Requires pyparsing: http://pyparsing.wikispaces.com/</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    GML specification:</span>
+<span class="sd">    http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_gml(G,&#39;test.gml&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; H=nx.read_gml(&#39;test.gml&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lines</span><span class="o">=</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">parse_gml</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span><span class="n">relabel</span><span class="o">=</span><span class="n">relabel</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<div class="viewcode-block" id="parse_gml"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.gml.parse_gml.html#networkx.readwrite.gml.parse_gml">[docs]</a><span class="k">def</span> <span class="nf">parse_gml</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">relabel</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse GML graph from a string or iterable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lines : string or iterable</span>
+<span class="sd">       Data in GML format.</span>
+
+<span class="sd">    relabel : bool, optional       </span>
+<span class="sd">       If True use the GML node label attribute for node names otherwise use</span>
+<span class="sd">       the node id.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : MultiGraph or MultiDiGraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ImportError</span>
+<span class="sd">        If the pyparsing module is not available.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_gml, read_gml</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This stores nested GML attributes as dictionaries in the </span>
+<span class="sd">    NetworkX graph, node, and edge attribute structures.</span>
+
+<span class="sd">    Requires pyparsing: http://pyparsing.wikispaces.com/</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    GML specification:</span>
+<span class="sd">    http://www.infosun.fim.uni-passau.de/Graphlet/GML/gml-tr.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">pyparsing</span> <span class="kn">import</span> <span class="n">ParseException</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">matplotlib.pyparsing</span> <span class="kn">import</span> <span class="n">ParseException</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;Import Error: not able to import pyparsing:&#39;</span><span class="p">,</span> 
+                              <span class="s">&#39;http://pyparsing.wikispaces.com/&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">gml</span> <span class="o">=</span> <span class="n">pyparse_gml</span><span class="p">()</span>
+        <span class="n">tokens</span> <span class="o">=</span><span class="n">gml</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ParseException</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">((</span><span class="n">err</span><span class="o">.</span><span class="n">line</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">((</span><span class="s">&quot; &quot;</span><span class="o">*</span><span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;^&quot;</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+    <span class="c"># function to recursively make dicts of key/value pairs</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">tok</span><span class="p">):</span>
+        <span class="n">listtype</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">tok</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">==</span><span class="n">listtype</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span><span class="o">=</span><span class="n">wrap</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span><span class="o">=</span><span class="n">v</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c"># Set flag</span>
+    <span class="n">multigraph</span><span class="o">=</span><span class="bp">False</span>
+    <span class="c"># but assume multigraphs to start</span>
+    <span class="k">if</span> <span class="n">tokens</span><span class="o">.</span><span class="n">directed</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">tokens</span><span class="o">.</span><span class="n">asList</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="s">&quot;node&quot;</span><span class="p">:</span>
+            <span class="n">vdict</span><span class="o">=</span><span class="n">wrap</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">node</span><span class="o">=</span><span class="n">vdict</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span><span class="n">attr_dict</span><span class="o">=</span><span class="n">vdict</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">k</span><span class="o">==</span><span class="s">&quot;edge&quot;</span><span class="p">:</span>
+            <span class="n">vdict</span><span class="o">=</span><span class="n">wrap</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">vdict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;source&#39;</span><span class="p">)</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">vdict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;target&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">):</span>
+                <span class="n">multigraph</span><span class="o">=</span><span class="bp">True</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">,</span><span class="n">attr_dict</span><span class="o">=</span><span class="n">vdict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">=</span><span class="n">v</span>
+
+    <span class="c"># switch to Graph or DiGraph if no parallel edges were found.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">multigraph</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">relabel</span><span class="p">:</span>
+        <span class="c"># relabel, but check for duplicate labels first</span>
+        <span class="n">mapping</span><span class="o">=</span><span class="p">[(</span><span class="n">n</span><span class="p">,</span><span class="n">d</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">mapping</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">y</span><span class="p">))</span><span class="o">!=</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;Failed to relabel nodes: &#39;</span>
+                                <span class="s">&#39;duplicate node labels found. &#39;</span>
+                                <span class="s">&#39;Use relabel=False.&#39;</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">relabel_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="nb">dict</span><span class="p">(</span><span class="n">mapping</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+</div>
+<span class="k">def</span> <span class="nf">pyparse_gml</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;A pyparsing tokenizer for GML graph format.</span>
+
+<span class="sd">    This is not intended to be called directly.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_gml, read_gml, parse_gml</span>
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">pyparsing</span> <span class="kn">import</span> \
+             <span class="n">Literal</span><span class="p">,</span> <span class="n">CaselessLiteral</span><span class="p">,</span> <span class="n">Word</span><span class="p">,</span> <span class="n">Forward</span><span class="p">,</span>\
+             <span class="n">ZeroOrMore</span><span class="p">,</span> <span class="n">Group</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Combine</span><span class="p">,</span>\
+             <span class="n">ParseException</span><span class="p">,</span> <span class="n">restOfLine</span><span class="p">,</span> <span class="n">White</span><span class="p">,</span> <span class="n">alphas</span><span class="p">,</span> <span class="n">alphanums</span><span class="p">,</span> <span class="n">nums</span><span class="p">,</span>\
+             <span class="n">OneOrMore</span><span class="p">,</span><span class="n">quotedString</span><span class="p">,</span><span class="n">removeQuotes</span><span class="p">,</span><span class="n">dblQuotedString</span><span class="p">,</span> <span class="n">Regex</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">matplotlib.pyparsing</span> <span class="kn">import</span> \
+             <span class="n">Literal</span><span class="p">,</span> <span class="n">CaselessLiteral</span><span class="p">,</span> <span class="n">Word</span><span class="p">,</span> <span class="n">Forward</span><span class="p">,</span>\
+             <span class="n">ZeroOrMore</span><span class="p">,</span> <span class="n">Group</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Combine</span><span class="p">,</span>\
+             <span class="n">ParseException</span><span class="p">,</span> <span class="n">restOfLine</span><span class="p">,</span> <span class="n">White</span><span class="p">,</span> <span class="n">alphas</span><span class="p">,</span> <span class="n">alphanums</span><span class="p">,</span> <span class="n">nums</span><span class="p">,</span>\
+             <span class="n">OneOrMore</span><span class="p">,</span><span class="n">quotedString</span><span class="p">,</span><span class="n">removeQuotes</span><span class="p">,</span><span class="n">dblQuotedString</span><span class="p">,</span> <span class="n">Regex</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;pyparsing not found&#39;</span><span class="p">,</span>
+                              <span class="s">&#39;http://pyparsing.wikispaces.com/&#39;</span><span class="p">)</span>
+
+    <span class="n">lbrack</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="s">&quot;[&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span>
+    <span class="n">rbrack</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="s">&quot;]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span>
+    <span class="n">pound</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;#&quot;</span><span class="p">)</span>
+    <span class="n">comment</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">+</span> <span class="n">Optional</span><span class="p">(</span> <span class="n">restOfLine</span> <span class="p">)</span>
+    <span class="n">integer</span> <span class="o">=</span> <span class="n">Word</span><span class="p">(</span><span class="n">nums</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setParseAction</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">t</span><span class="p">:[</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="n">Regex</span><span class="p">(</span><span class="s">r&quot;[+-]?\d+\.\d*([eE][+-]?\d+)?&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">setParseAction</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">s</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">t</span><span class="p">:[</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">])</span>
+    <span class="n">dblQuotedString</span><span class="o">.</span><span class="n">setParseAction</span><span class="p">(</span> <span class="n">removeQuotes</span> <span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">Word</span><span class="p">(</span><span class="n">alphas</span><span class="p">,</span><span class="n">alphanums</span><span class="o">+</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">value_atom</span> <span class="o">=</span> <span class="p">(</span><span class="n">real</span> <span class="o">|</span> <span class="n">integer</span> <span class="o">|</span> <span class="n">Word</span><span class="p">(</span><span class="n">alphanums</span><span class="p">)</span> <span class="o">|</span> <span class="n">dblQuotedString</span><span class="p">)</span> 
+    <span class="n">value</span> <span class="o">=</span> <span class="n">Forward</span><span class="p">()</span>   <span class="c"># to be defined later with &lt;&lt; operator</span>
+    <span class="n">keyvalue</span> <span class="o">=</span> <span class="n">Group</span><span class="p">(</span><span class="n">key</span><span class="o">+</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">value_atom</span> <span class="o">|</span> <span class="n">Group</span><span class="p">(</span> <span class="n">lbrack</span> <span class="o">+</span> <span class="n">ZeroOrMore</span><span class="p">(</span><span class="n">keyvalue</span><span class="p">)</span> <span class="o">+</span> <span class="n">rbrack</span> <span class="p">))</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">Group</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="s">&quot;node&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">lbrack</span> <span class="o">+</span> <span class="n">Group</span><span class="p">(</span><span class="n">OneOrMore</span><span class="p">(</span><span class="n">keyvalue</span><span class="p">))</span> <span class="o">+</span> <span class="n">rbrack</span><span class="p">)</span>
+    <span class="n">edge</span> <span class="o">=</span> <span class="n">Group</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="s">&quot;edge&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">lbrack</span> <span class="o">+</span> <span class="n">Group</span><span class="p">(</span><span class="n">OneOrMore</span><span class="p">(</span><span class="n">keyvalue</span><span class="p">))</span> <span class="o">+</span> <span class="n">rbrack</span><span class="p">)</span>
+
+    <span class="n">creator</span> <span class="o">=</span> <span class="n">Group</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="s">&quot;Creator&quot;</span><span class="p">)</span><span class="o">+</span> <span class="n">Optional</span><span class="p">(</span> <span class="n">restOfLine</span> <span class="p">))</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">Group</span><span class="p">(</span><span class="n">Literal</span><span class="p">(</span><span class="s">&quot;Version&quot;</span><span class="p">)</span><span class="o">+</span> <span class="n">Optional</span><span class="p">(</span> <span class="n">restOfLine</span> <span class="p">))</span>
+    <span class="n">graphkey</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">(</span><span class="s">&quot;graph&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span>
+
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">Dict</span> <span class="p">(</span><span class="n">Optional</span><span class="p">(</span><span class="n">creator</span><span class="p">)</span><span class="o">+</span><span class="n">Optional</span><span class="p">(</span><span class="n">version</span><span class="p">)</span><span class="o">+</span>\
+        <span class="n">graphkey</span> <span class="o">+</span> <span class="n">lbrack</span> <span class="o">+</span> <span class="n">ZeroOrMore</span><span class="p">(</span> <span class="p">(</span><span class="n">node</span><span class="o">|</span><span class="n">edge</span><span class="o">|</span><span class="n">keyvalue</span><span class="p">)</span> <span class="p">)</span> <span class="o">+</span> <span class="n">rbrack</span> <span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">ignore</span><span class="p">(</span><span class="n">comment</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">graph</span>
+
+<div class="viewcode-block" id="generate_gml"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.gml.generate_gml.html#networkx.readwrite.gml.generate_gml">[docs]</a><span class="k">def</span> <span class="nf">generate_gml</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a single entry of the graph G in GML format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lines: string</span>
+<span class="sd">       Lines in GML format.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation does not support all Python data types as GML</span>
+<span class="sd">    data.  Nodes, node attributes, edge attributes, and graph</span>
+<span class="sd">    attributes must be either dictionaries or single stings or</span>
+<span class="sd">    numbers.  If they are not an attempt is made to represent them as</span>
+<span class="sd">    strings.  For example, a list as edge data</span>
+<span class="sd">    G[1][2][&#39;somedata&#39;]=[1,2,3], will be represented in the GML file</span>
+<span class="sd">    as::</span>
+
+<span class="sd">       edge [</span>
+<span class="sd">         source 1</span>
+<span class="sd">         target 2</span>
+<span class="sd">         somedata &quot;[1, 2, 3]&quot;</span>
+<span class="sd">       ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># recursively make dicts into gml brackets</span>
+    <span class="k">def</span> <span class="nf">listify</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">indent</span><span class="p">,</span><span class="n">indentlevel</span><span class="p">):</span>
+        <span class="n">result</span><span class="o">=</span><span class="s">&#39;[ </span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">==</span><span class="nb">dict</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">=</span><span class="n">listify</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">indent</span><span class="p">,</span><span class="n">indentlevel</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">indentlevel</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">indent</span> <span class="o">+</span> \
+                <span class="n">string_item</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">indentlevel</span><span class="o">*</span><span class="n">indent</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">+</span><span class="n">indentlevel</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="s">&quot;]&quot;</span>
+
+    <span class="k">def</span> <span class="nf">string_item</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">indent</span><span class="p">):</span>
+        <span class="c"># try to make a string of the data</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">==</span><span class="nb">dict</span><span class="p">:</span> 
+            <span class="n">v</span><span class="o">=</span><span class="n">listify</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">indent</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_string_like</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="n">v</span><span class="o">=</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span><span class="o">%</span><span class="n">v</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">==</span><span class="nb">bool</span><span class="p">:</span>
+            <span class="n">v</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c"># check for attributes or assign empty dict</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="s">&#39;graph_attr&#39;</span><span class="p">):</span>
+        <span class="n">graph_attr</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">graph_attr</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">graph_attr</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="s">&#39;node_attr&#39;</span><span class="p">):</span>
+        <span class="n">node_attr</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">node_attr</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_attr</span><span class="o">=</span><span class="p">{}</span>
+
+    <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="s">&#39; &#39;</span>
+    <span class="n">count</span><span class="o">=</span><span class="nb">iter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)))</span>
+    <span class="n">node_id</span><span class="o">=</span><span class="p">{}</span>
+
+    <span class="k">yield</span> <span class="s">&quot;graph [&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">yield</span> <span class="n">indent</span><span class="o">+</span><span class="s">&quot;directed 1&quot;</span>
+    <span class="c"># write graph attributes </span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s">&#39;directed&#39;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">indent</span><span class="o">+</span><span class="n">string_item</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">indent</span><span class="p">)</span>
+    <span class="c"># write nodes</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">indent</span><span class="o">+</span><span class="s">&quot;node [&quot;</span>
+        <span class="c"># get id or assign number</span>
+        <span class="n">nid</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span><span class="nb">next</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+        <span class="n">node_id</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">nid</span>
+        <span class="k">yield</span> <span class="mi">2</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="s">&quot;id </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">nid</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_string_like</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+            <span class="n">label</span><span class="o">=</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span><span class="o">%</span><span class="n">label</span>
+        <span class="k">yield</span> <span class="mi">2</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="s">&#39;label </span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="n">label</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+              <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="s">&#39;id&#39;</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">==</span> <span class="s">&#39;label&#39;</span><span class="p">:</span> <span class="k">continue</span>
+              <span class="k">yield</span> <span class="mi">2</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="n">string_item</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">indent</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">indent</span><span class="o">+</span><span class="s">&quot;]&quot;</span>
+    <span class="c"># write edges</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">edgedata</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">indent</span><span class="o">+</span><span class="s">&quot;edge [&quot;</span>
+        <span class="k">yield</span> <span class="mi">2</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="s">&quot;source </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">node_id</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+        <span class="k">yield</span> <span class="mi">2</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="s">&quot;target </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">node_id</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">edgedata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="s">&#39;source&#39;</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">yield</span> <span class="mi">2</span><span class="o">*</span><span class="n">indent</span><span class="o">+</span><span class="n">string_item</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">indent</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">indent</span><span class="o">+</span><span class="s">&quot;]&quot;</span>
+    <span class="k">yield</span> <span class="s">&quot;]&quot;</span>
+</div>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;wb&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="write_gml"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.gml.write_gml.html#networkx.readwrite.gml.write_gml">[docs]</a><span class="k">def</span> <span class="nf">write_gml</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write the graph G in GML format to the file or file handle path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : filename or filehandle</span>
+<span class="sd">       The filename or filehandle to write.  Filenames ending in</span>
+<span class="sd">       .gz or .gz2 will be compressed.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    read_gml, parse_gml</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    GML specifications indicate that the file should only use</span>
+<span class="sd">    7bit ASCII text encoding.iso8859-1 (latin-1). </span>
+
+<span class="sd">    This implementation does not support all Python data types as GML</span>
+<span class="sd">    data.  Nodes, node attributes, edge attributes, and graph</span>
+<span class="sd">    attributes must be either dictionaries or single stings or</span>
+<span class="sd">    numbers.  If they are not an attempt is made to represent them as</span>
+<span class="sd">    strings.  For example, a list as edge data</span>
+<span class="sd">    G[1][2][&#39;somedata&#39;]=[1,2,3], will be represented in the GML file</span>
+<span class="sd">    as::</span>
+
+<span class="sd">       edge [</span>
+<span class="sd">         source 1</span>
+<span class="sd">         target 2</span>
+<span class="sd">         somedata &quot;[1, 2, 3]&quot;</span>
+<span class="sd">       ]</span>
+
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    ---------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_gml(G,&quot;test.gml&quot;)</span>
+
+<span class="sd">    Filenames ending in .gz or .bz2 will be compressed.</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.write_gml(G,&quot;test.gml.gz&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">generate_gml</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="n">line</span><span class="o">+=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;latin-1&#39;</span><span class="p">))</span>
+
+
+<span class="c"># fixture for nose tests</span></div>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="kn">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">pyparsing</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.pyparsing</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s">&quot;pyparsing not available&quot;</span><span class="p">)</span>
+
+<span class="c"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">teardown_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s">&#39;test.gml&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s">&#39;test.gml.gz&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

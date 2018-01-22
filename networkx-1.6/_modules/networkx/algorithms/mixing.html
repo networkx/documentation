@@ -1,0 +1,709 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.mixing &mdash; NetworkX 1.6.dev20110822230031 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.dev20110822230031',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6.dev20110822230031 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6.dev20110822230031 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+<br/><p>This documentation is for version <b>1.6.dev_20110822230031</b>, which is
+  not released yet.</p>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.mixing</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Mixing matrices and assortativity coefficients.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;degree_assortativity&#39;</span><span class="p">,</span>
+           <span class="s">&#39;attribute_assortativity&#39;</span><span class="p">,</span>
+           <span class="s">&#39;numeric_assortativity&#39;</span><span class="p">,</span>
+           <span class="s">&#39;attribute_mixing_matrix&#39;</span><span class="p">,</span>
+           <span class="s">&#39;degree_mixing_matrix&#39;</span><span class="p">,</span>
+           <span class="s">&#39;degree_pearsonr&#39;</span><span class="p">,</span>
+           <span class="s">&#39;degree_mixing_dict&#39;</span><span class="p">,</span>
+           <span class="s">&#39;attribute_mixing_dict&#39;</span><span class="p">,</span>
+           <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<span class="k">def</span> <span class="nf">degree_assortativity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="degree_assortativity"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.degree_assortativity.html#networkx.algorithms.mixing.degree_assortativity">[docs]</a>    <span class="sd">&quot;&quot;&quot;Compute degree assortativity of graph.</span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the node degree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute degree assortativity only for nodes in container. </span>
+<span class="sd">        The default is all nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : float</span>
+<span class="sd">       Assortativity of graph by degree.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; r=nx.degree_assortativity(G)</span>
+<span class="sd">    &gt;&gt;&gt; print(&quot;%3.1f&quot;%r)</span>
+<span class="sd">    -0.5</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    attribute_assortativity</span>
+<span class="sd">    numeric_assortativity</span>
+<span class="sd">    neighbor_connectivity</span>
+<span class="sd">    degree_mixing_dict</span>
+<span class="sd">    degree_mixing_matrix</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (21) in Ref. [1]_ , where e is the joint</span>
+<span class="sd">    probability distribution (mixing matrix) of the degrees.  If G is</span>
+<span class="sd">    directed than the matrix e is the joint probability of out-degree</span>
+<span class="sd">    and in-degree.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks,</span>
+<span class="sd">       Physical Review E, 67 026126, 2003</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numeric_assortativity_coefficient</span><span class="p">(</span><span class="n">degree_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_iter</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">degree_pearsonr</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></div>
+<div class="viewcode-block" id="degree_pearsonr"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.degree_pearsonr.html#networkx.algorithms.mixing.degree_pearsonr">[docs]</a>    <span class="sd">&quot;&quot;&quot;Compute degree assortativity of graph. </span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the node degree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute pearson correlation of degrees only for nodes in container.</span>
+<span class="sd">        The default is all nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : float</span>
+<span class="sd">       Assortativity of graph by degree.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; r=nx.degree_pearsonr(G) </span>
+<span class="sd">    &gt;&gt;&gt; r </span>
+<span class="sd">    -0.5</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This calls scipy.stats.pearsonr().</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks</span>
+<span class="sd">           Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+          <span class="s">&quot;Assortativity requires SciPy: http://scipy.org/ &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">xy</span><span class="o">=</span><span class="n">node_degree_xy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">xy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">attribute_mixing_dict</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+<div class="viewcode-block" id="attribute_mixing_dict"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.attribute_mixing_dict.html#networkx.algorithms.mixing.attribute_mixing_dict">[docs]</a>    <span class="sd">&quot;&quot;&quot;Return dictionary representation of mixing matrix for attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph </span>
+<span class="sd">       NetworkX graph object.</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">       Node attribute key.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Unse nodes in container to build the dict. The default is all nodes.</span>
+
+<span class="sd">    normalized : bool (default=False)</span>
+<span class="sd">       Return counts if False or probabilities if True.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([0,1],color=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([2,3],color=&#39;blue&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1,3)</span>
+<span class="sd">    &gt;&gt;&gt; d=nx.attribute_mixing_dict(G,&#39;color&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; print(d[&#39;red&#39;][&#39;blue&#39;])</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; print(d[&#39;blue&#39;][&#39;red&#39;]) # d symmetric for undirected graphs</span>
+<span class="sd">    1</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    d : dictionary</span>
+<span class="sd">       Counts or joint probability of occurrence of attribute pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">xy_iter</span><span class="o">=</span><span class="n">node_attribute_xy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mixing_dict</span><span class="p">(</span><span class="n">xy_iter</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="n">normalized</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">attribute_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">mapping</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span></div>
+<div class="viewcode-block" id="attribute_mixing_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.attribute_mixing_matrix.html#networkx.algorithms.mixing.attribute_mixing_matrix">[docs]</a>    <span class="sd">&quot;&quot;&quot;Return mixing matrix for attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph </span>
+<span class="sd">       NetworkX graph object.</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">       Node attribute key.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Use only nodes in container to build the matrix. The default is </span>
+<span class="sd">        all nodes.</span>
+
+<span class="sd">    mapping : dictionary, optional        </span>
+<span class="sd">       Mapping from node attribute to integer index in matrix.  </span>
+<span class="sd">       If not specified, an arbitrary ordering will be used. </span>
+<span class="sd">    </span>
+<span class="sd">    normalized : bool (default=False)</span>
+<span class="sd">       Return counts if False or probabilities if True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    m: numpy array</span>
+<span class="sd">       Counts or joint probability of occurrence of attribute pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">=</span><span class="n">attribute_mixing_dict</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">dict_to_numpy_array</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="o">/</span><span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+
+<span class="k">def</span> <span class="nf">attribute_assortativity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></div>
+<div class="viewcode-block" id="attribute_assortativity"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.attribute_assortativity.html#networkx.algorithms.mixing.attribute_assortativity">[docs]</a>    <span class="sd">&quot;&quot;&quot;Compute assortativity for node attributes.</span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the given attribute.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">        Node attribute key</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute attribute assortativity for nodes in container. </span>
+<span class="sd">        The default is all nodes. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a: float</span>
+<span class="sd">       Assortativity of given attribute</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([0,1],color=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([2,3],color=&#39;blue&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(0,1),(2,3)])</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.attribute_assortativity(G,&#39;color&#39;))</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (2) in Ref. [1]_ , (trace(e)-sum(e))/(1-sum(e)),</span>
+<span class="sd">    where e is the joint probability distribution (mixing matrix)</span>
+<span class="sd">    of the specified attribute.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks,</span>
+<span class="sd">       Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">attribute_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">attribute_assortativity_coefficient</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">numeric_assortativity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></div>
+<div class="viewcode-block" id="numeric_assortativity"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.numeric_assortativity.html#networkx.algorithms.mixing.numeric_assortativity">[docs]</a>    <span class="sd">&quot;&quot;&quot;Compute assortativity for numerical node attributes.</span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the given numeric attribute.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">        Node attribute key</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute numeric assortativity only for attributes of nodes in </span>
+<span class="sd">        container. The default is all nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a: float</span>
+<span class="sd">       Assortativity of given attribute</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([0,1],size=2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([2,3],size=3)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(0,1),(2,3)])</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.numeric_assortativity(G,&#39;size&#39;))</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (21) in Ref. [1]_ ,</span>
+<span class="sd">    where e is the joint probability distribution (mixing matrix)</span>
+<span class="sd">    of the specified attribute.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks</span>
+<span class="sd">           Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">numeric_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numeric_assortativity_coefficient</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">attribute_assortativity_coefficient</span><span class="p">(</span><span class="n">e</span><span class="p">):</span></div>
+    <span class="sd">&quot;&quot;&quot;Compute assortativity for attribute matrix e.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    e : numpy array or matrix</span>
+<span class="sd">        Attribute mixing matrix.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (2) in Ref. [1]_ , (trace(e)-sum(e))/(1-sum(e)),</span>
+<span class="sd">    where e is the joint probability distribution (mixing matrix)</span>
+<span class="sd">    of the specified attribute.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks,</span>
+<span class="sd">       Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+          <span class="s">&quot;attribute_assortativity requires NumPy: http://scipy.org/ &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">e</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">=</span><span class="p">(</span><span class="n">e</span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">t</span><span class="o">=</span><span class="n">e</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span>
+    <span class="n">r</span><span class="o">=</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="n">s</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">degree_mixing_dict</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="degree_mixing_dict"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.degree_mixing_dict.html#networkx.algorithms.mixing.degree_mixing_dict">[docs]</a>    <span class="sd">&quot;&quot;&quot;Return dictionary representation of mixing matrix for degree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph </span>
+<span class="sd">        NetworkX graph object.</span>
+
+<span class="sd">    normalized : bool (default=False)</span>
+<span class="sd">        Return counts if False or probabilities if True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    d: dictionary</span>
+<span class="sd">       Counts or joint probability of occurrence of degree pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">xy_iter</span><span class="o">=</span><span class="n">node_degree_xy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mixing_dict</span><span class="p">(</span><span class="n">xy_iter</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="n">normalized</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">numeric_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span></div>
+    <span class="sd">&quot;&quot;&quot;Return numeric mixing matrix for attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph </span>
+<span class="sd">       NetworkX graph object.</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">       Node attribute key.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Build the matrix only with nodes in container. The default is all nodes.</span>
+<span class="sd">    </span>
+<span class="sd">    normalized : bool (default=False)</span>
+<span class="sd">       Return counts if False or probabilities if True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    m: numpy array</span>
+<span class="sd">       Counts, or joint, probability of occurrence of node attribute pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">=</span><span class="n">attribute_mixing_dict</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">m</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>            
+    <span class="n">mapping</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">dict_to_numpy_array</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="o">/</span><span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+<span class="k">def</span> <span class="nf">degree_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="degree_mixing_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.mixing.degree_mixing_matrix.html#networkx.algorithms.mixing.degree_mixing_matrix">[docs]</a>    <span class="sd">&quot;&quot;&quot;Return mixing matrix for attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph </span>
+<span class="sd">       NetworkX graph object.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Build the matrix using only nodes in container. </span>
+<span class="sd">        The default is all nodes.</span>
+
+<span class="sd">    normalized : bool (default=False)</span>
+<span class="sd">       Return counts if False or probabilities if True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    m: numpy array</span>
+<span class="sd">       Counts, or joint probability, of occurrence of node degree.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_iter</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">=</span><span class="n">degree_mixing_dict</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">node_iter</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">m</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>            
+    <span class="n">mapping</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">dict_to_numpy_array</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">mapping</span><span class="o">=</span><span class="n">mapping</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="o">/</span><span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+<span class="k">def</span> <span class="nf">numeric_assortativity_coefficient</span><span class="p">(</span><span class="n">e</span><span class="p">):</span></div>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+          <span class="s">&quot;numeric_assortativity_coefficient requires NumPy: http://scipy.org/ &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="o">=</span><span class="n">e</span><span class="o">.</span><span class="n">shape</span> <span class="c"># nx=ny</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">=</span><span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">b</span><span class="o">=</span><span class="n">e</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">vara</span><span class="o">=</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">-</span><span class="p">((</span><span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">varb</span><span class="o">=</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">-</span><span class="p">((</span><span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">xy</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">ab</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">xy</span><span class="o">*</span><span class="p">(</span><span class="n">e</span><span class="o">-</span><span class="n">ab</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vara</span><span class="o">*</span><span class="n">varb</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mixing_dict</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span><span class="n">normalized</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a dictionary representation of mixing matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xy : list or container of two-tuples</span>
+<span class="sd">       Pairs of (x,y) items. </span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">       Node attribute key </span>
+
+<span class="sd">    normalized : bool (default=False)</span>
+<span class="sd">       Return counts if False or probabilities if True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    d: dictionary</span>
+<span class="sd">       Counts or Joint probability of occurrence of values in xy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">d</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">psum</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">xy</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">y</span><span class="p">]</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">v</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">psum</span><span class="o">+=</span><span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">jdict</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">jdict</span><span class="p">:</span>
+                <span class="n">jdict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">/=</span><span class="n">psum</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+
+<span class="k">def</span> <span class="nf">dict_to_numpy_array</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="n">mapping</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a dictionary to numpy array with optional mapping.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> 
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+          <span class="s">&quot;dict_to_numpy_array requires numpy : http://scipy.org/ &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">s</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">mapping</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))))</span>
+    <span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">k1</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">k2</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">mapping</span><span class="p">[</span><span class="n">k1</span><span class="p">]</span>
+            <span class="n">j</span><span class="o">=</span><span class="n">mapping</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> 
+    <span class="k">return</span> <span class="n">a</span>
+
+
+<span class="k">def</span> <span class="nf">node_attribute_xy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return iterator of node attribute pairs for all edges in G.</span>
+
+<span class="sd">    For undirected graphs each edge is produced twice, once for each</span>
+<span class="sd">    representation u-v and v-u, with the exception of self loop edges</span>
+<span class="sd">    that only appear once.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_set</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_set</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">node</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">node</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">nbrsdict</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency_iter</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_set</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">uattr</span><span class="o">=</span><span class="n">node</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">keys</span> <span class="ow">in</span> <span class="n">nbrsdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">vattr</span><span class="o">=</span><span class="n">node</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>                
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="n">uattr</span><span class="p">,</span><span class="n">vattr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">eattr</span> <span class="ow">in</span> <span class="n">nbrsdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">vattr</span><span class="o">=</span><span class="n">node</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span><span class="bp">None</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">uattr</span><span class="p">,</span><span class="n">vattr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">node_degree_xy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return iterator of degree-degree pairs for edges in G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Use only edges that start or end in nodes in this container. </span>
+<span class="sd">        The default is all nodes.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For undirected graphs each edge is produced twice, once for each </span>
+<span class="sd">    representation u-v and v-u, with the exception of self loop edges </span>
+<span class="sd">    that only appear once.</span>
+
+<span class="sd">    For directed graphs this produces out-degree,in-degree pairs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">node_set</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node_set</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">in_degree</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">in_degree</span>
+        <span class="n">out_degree</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">out_degree</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">in_degree</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span>
+        <span class="n">out_degree</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">nbrsdict</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency_iter</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_set</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">degu</span><span class="o">=</span><span class="n">out_degree</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">keys</span> <span class="ow">in</span> <span class="n">nbrsdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">degv</span><span class="o">=</span><span class="n">in_degree</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">keys</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="n">degu</span><span class="p">,</span><span class="n">degv</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">eattr</span> <span class="ow">in</span> <span class="n">nbrsdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">degv</span><span class="o">=</span><span class="n">in_degree</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">degu</span><span class="p">,</span><span class="n">degv</span>
+
+<span class="c"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="kn">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s">&quot;NumPy not available&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s">&quot;SciPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Aug 22, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

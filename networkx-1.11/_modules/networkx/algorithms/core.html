@@ -1,0 +1,559 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.core &mdash; NetworkX 1.11 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml" title="Search within NetworkX 1.11 documentation" href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="NetworkX 1.11 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.11
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../download.html">Download</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../test.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">NetworkX Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.core</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Find the k-cores of a graph.</span>
+
+<span class="sd">The k-core is found by recursively pruning nodes with degrees less than k.</span>
+
+<span class="sd">See the following reference for details:</span>
+
+<span class="sd">An O(m) Algorithm for Cores Decomposition of Networks</span>
+<span class="sd">Vladimir Batagelj and Matjaz Zaversnik, 2003.</span>
+<span class="sd">http://arxiv.org/abs/cs.DS/0310049</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Dan Schult (dschult@colgate.edu)&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Jason Grout (jason-sage@creativetrax.com)&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">])</span>
+
+<span class="c1">#    Copyright (C) 2004-2015 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;core_number&#39;</span><span class="p">,</span><span class="s1">&#39;k_core&#39;</span><span class="p">,</span><span class="s1">&#39;k_shell&#39;</span><span class="p">,</span><span class="s1">&#39;k_crust&#39;</span><span class="p">,</span><span class="s1">&#39;k_corona&#39;</span><span class="p">,</span><span class="s1">&#39;find_cores&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<div class="viewcode-block" id="core_number"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.core.core_number.html#networkx.algorithms.core.core_number">[docs]</a><span class="k">def</span> <span class="nf">core_number</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the core number for each vertex.</span>
+
+<span class="sd">    A k-core is a maximal subgraph that contains nodes of degree k or more.</span>
+
+<span class="sd">    The core number of a node is the largest value k of a k-core containing</span>
+<span class="sd">    that node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph or directed graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    core_number : dictionary</span>
+<span class="sd">       A dictionary keyed by node to the core number.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The k-core is not defined for graphs with self loops or parallel edges.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Not implemented for graphs with parallel edges or self loops.</span>
+
+<span class="sd">    For directed graphs the node degree is defined to be the</span>
+<span class="sd">    in-degree + out-degree.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] An O(m) Algorithm for Cores Decomposition of Networks</span>
+<span class="sd">       Vladimir Batagelj and Matjaz Zaversnik, 2003.</span>
+<span class="sd">       http://arxiv.org/abs/cs.DS/0310049</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s1">&#39;MultiGraph and MultiDiGraph types not supported.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_selfloops</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s1">&#39;Input graph has self loops; the core number is not defined.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Consider using G.remove_edges_from(G.selfloop_edges()).&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="kn">import</span> <span class="nn">itertools</span>
+        <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">G</span><span class="o">.</span><span class="n">predecessors_iter</span><span class="p">(</span><span class="n">v</span><span class="p">),</span>
+                                                  <span class="n">G</span><span class="o">.</span><span class="n">successors_iter</span><span class="p">(</span><span class="n">v</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">neighbors</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors_iter</span>
+    <span class="n">degrees</span><span class="o">=</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="c1"># sort nodes by degree</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">degrees</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="n">degrees</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+    <span class="n">bin_boundaries</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">curr_degree</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">degrees</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">&gt;</span><span class="n">curr_degree</span><span class="p">:</span>
+            <span class="n">bin_boundaries</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">degrees</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">-</span><span class="n">curr_degree</span><span class="p">))</span>
+            <span class="n">curr_degree</span><span class="o">=</span><span class="n">degrees</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+    <span class="n">node_pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="n">pos</span><span class="p">)</span> <span class="k">for</span> <span class="n">pos</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">))</span>
+    <span class="c1"># initial guesses for core is degree</span>
+    <span class="n">core</span><span class="o">=</span><span class="n">degrees</span>
+    <span class="n">nbrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span><span class="nb">set</span><span class="p">(</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">core</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">core</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                <span class="n">nbrs</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">pos</span><span class="o">=</span><span class="n">node_pos</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                <span class="n">bin_start</span><span class="o">=</span><span class="n">bin_boundaries</span><span class="p">[</span><span class="n">core</span><span class="p">[</span><span class="n">u</span><span class="p">]]</span>
+                <span class="n">node_pos</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">=</span><span class="n">bin_start</span>
+                <span class="n">node_pos</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">bin_start</span><span class="p">]]</span><span class="o">=</span><span class="n">pos</span>
+                <span class="n">nodes</span><span class="p">[</span><span class="n">bin_start</span><span class="p">],</span><span class="n">nodes</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">=</span><span class="n">nodes</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span><span class="n">nodes</span><span class="p">[</span><span class="n">bin_start</span><span class="p">]</span>
+                <span class="n">bin_boundaries</span><span class="p">[</span><span class="n">core</span><span class="p">[</span><span class="n">u</span><span class="p">]]</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="n">core</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">-=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">core</span></div>
+
+<span class="n">find_cores</span><span class="o">=</span><span class="n">core_number</span>
+
+<div class="viewcode-block" id="k_core"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.core.k_core.html#networkx.algorithms.core.k_core">[docs]</a><span class="k">def</span> <span class="nf">k_core</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">core_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the k-core of G.</span>
+
+<span class="sd">    A k-core is a maximal subgraph that contains nodes of degree k or more.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">      A graph or directed graph</span>
+<span class="sd">    k : int, optional</span>
+<span class="sd">      The order of the core.  If not specified return the main core.</span>
+<span class="sd">    core_number : dictionary, optional</span>
+<span class="sd">      Precomputed core numbers for the graph G.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">      The k-core subgraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">      The k-core is not defined for graphs with self loops or parallel edges.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The main core is the core with the largest degree.</span>
+
+<span class="sd">    Not implemented for graphs with parallel edges or self loops.</span>
+
+<span class="sd">    For directed graphs the node degree is defined to be the</span>
+<span class="sd">    in-degree + out-degree.</span>
+
+<span class="sd">    Graph, node, and edge attributes are copied to the subgraph.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    core_number</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] An O(m) Algorithm for Cores Decomposition of Networks</span>
+<span class="sd">       Vladimir Batagelj and Matjaz Zaversnik,  2003.</span>
+<span class="sd">       http://arxiv.org/abs/cs.DS/0310049</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">core_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">core_number</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">core_number</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="c1"># max core</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">core_number</span> <span class="k">if</span> <span class="n">core_number</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="k_shell"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.core.k_shell.html#networkx.algorithms.core.k_shell">[docs]</a><span class="k">def</span> <span class="nf">k_shell</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">core_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the k-shell of G.</span>
+
+<span class="sd">    The k-shell is the subgraph of nodes in the k-core but not in the (k+1)-core.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">      A graph or directed graph.</span>
+<span class="sd">    k : int, optional</span>
+<span class="sd">      The order of the shell.  If not specified return the main shell.</span>
+<span class="sd">    core_number : dictionary, optional</span>
+<span class="sd">      Precomputed core numbers for the graph G.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       The k-shell subgraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The k-shell is not defined for graphs with self loops or parallel edges.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is similar to k_corona but in that case only neighbors in the</span>
+<span class="sd">    k-core are considered.</span>
+
+<span class="sd">    Not implemented for graphs with parallel edges or self loops.</span>
+
+<span class="sd">    For directed graphs the node degree is defined to be the</span>
+<span class="sd">    in-degree + out-degree.</span>
+
+<span class="sd">    Graph, node, and edge attributes are copied to the subgraph.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    core_number</span>
+<span class="sd">    k_corona</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A model of Internet topology using k-shell decomposition</span>
+<span class="sd">       Shai Carmi, Shlomo Havlin, Scott Kirkpatrick, Yuval Shavitt,</span>
+<span class="sd">       and Eran Shir, PNAS  July 3, 2007   vol. 104  no. 27  11150-11154</span>
+<span class="sd">       http://www.pnas.org/content/104/27/11150.full</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">core_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">core_number</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">core_number</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="c1"># max core</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">core_number</span> <span class="k">if</span> <span class="n">core_number</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">==</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="k_crust"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.core.k_crust.html#networkx.algorithms.core.k_crust">[docs]</a><span class="k">def</span> <span class="nf">k_crust</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">core_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the k-crust of G.</span>
+
+<span class="sd">    The k-crust is the graph G with the k-core removed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph or directed graph.</span>
+<span class="sd">    k : int, optional</span>
+<span class="sd">      The order of the shell.  If not specified return the main crust.</span>
+<span class="sd">    core_number : dictionary, optional</span>
+<span class="sd">      Precomputed core numbers for the graph G.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       The k-crust subgraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The k-crust is not defined for graphs with self loops or parallel edges.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This definition of k-crust is different than the definition in [1]_.</span>
+<span class="sd">    The k-crust in [1]_ is equivalent to the k+1 crust of this algorithm.</span>
+
+<span class="sd">    Not implemented for graphs with parallel edges or self loops.</span>
+
+<span class="sd">    For directed graphs the node degree is defined to be the</span>
+<span class="sd">    in-degree + out-degree.</span>
+
+<span class="sd">    Graph, node, and edge attributes are copied to the subgraph.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    core_number</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A model of Internet topology using k-shell decomposition</span>
+<span class="sd">       Shai Carmi, Shlomo Havlin, Scott Kirkpatrick, Yuval Shavitt,</span>
+<span class="sd">       and Eran Shir, PNAS  July 3, 2007   vol. 104  no. 27  11150-11154</span>
+<span class="sd">       http://www.pnas.org/content/104/27/11150.full</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">core_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">core_number</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">core_number</span><span class="o">.</span><span class="n">values</span><span class="p">())</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">nodes</span><span class="o">=</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">core_number</span> <span class="k">if</span> <span class="n">core_number</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="k_corona"><a class="viewcode-back" href="../../../reference/generated/networkx.algorithms.core.k_corona.html#networkx.algorithms.core.k_corona">[docs]</a><span class="k">def</span> <span class="nf">k_corona</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">core_number</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the k-corona of G.</span>
+
+<span class="sd">    The k-corona is the subgraph of nodes in the k-core which have</span>
+<span class="sd">    exactly k neighbours in the k-core.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph or directed graph</span>
+<span class="sd">    k : int</span>
+<span class="sd">       The order of the corona.</span>
+<span class="sd">    core_number : dictionary, optional</span>
+<span class="sd">       Precomputed core numbers for the graph G.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       The k-corona subgraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The k-cornoa is not defined for graphs with self loops or</span>
+<span class="sd">        parallel edges.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Not implemented for graphs with parallel edges or self loops.</span>
+
+<span class="sd">    For directed graphs the node degree is defined to be the</span>
+<span class="sd">    in-degree + out-degree.</span>
+
+<span class="sd">    Graph, node, and edge attributes are copied to the subgraph.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    core_number</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]  k -core (bootstrap) percolation on complex networks:</span>
+<span class="sd">       Critical phenomena and nonlocal effects,</span>
+<span class="sd">       A. V. Goltsev, S. N. Dorogovtsev, and J. F. F. Mendes,</span>
+<span class="sd">       Phys. Rev. E 73, 056101 (2006)</span>
+<span class="sd">       http://link.aps.org/doi/10.1103/PhysRevE.73.056101</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">core_number</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">core_number</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">core_number</span>
+             <span class="k">if</span> <span class="n">core_number</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="n">k</span>
+             <span class="ow">and</span> <span class="nb">len</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">if</span> <span class="n">core_number</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">])</span> <span class="o">==</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, NetworkX Developers.
+      Last updated on Sep 08, 2017.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.11',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

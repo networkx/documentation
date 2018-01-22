@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.readwrite.sparsegraph6 &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.readwrite.sparsegraph6</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">**************</span>
+<span class="sd">SparseGraph 6</span>
+<span class="sd">**************</span>
+<span class="sd">Read graphs in graph6 and sparse6 format.</span>
+
+<span class="sd">Format</span>
+<span class="sd">------</span>
+
+<span class="sd">&quot;graph6 and sparse6 are formats for storing undirected graphs in a</span>
+<span class="sd">compact manner, using only printable ASCII characters. Files in these</span>
+<span class="sd">formats have text type and contain one line per graph.&quot;</span>
+<span class="sd">http://cs.anu.edu.au/~bdm/data/formats.html</span>
+
+<span class="sd">See http://cs.anu.edu.au/~bdm/data/formats.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c"># Original author: D. Eppstein, UC Irvine, August 12, 2003.</span>
+<span class="c"># The original code at http://www.ics.uci.edu/~eppstein/PADS/ is public domain.</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2010 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;read_graph6&#39;</span><span class="p">,</span> <span class="s">&#39;parse_graph6&#39;</span><span class="p">,</span> <span class="s">&#39;read_graph6_list&#39;</span><span class="p">,</span>
+           <span class="s">&#39;read_sparse6&#39;</span><span class="p">,</span> <span class="s">&#39;parse_sparse6&#39;</span><span class="p">,</span> <span class="s">&#39;read_sparse6_list&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">open_file</span>
+	
+<span class="c"># graph6</span>
+
+<div class="viewcode-block" id="read_graph6"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.sparsegraph6.read_graph6.html#networkx.readwrite.sparsegraph6.read_graph6">[docs]</a><span class="k">def</span> <span class="nf">read_graph6</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read simple undirected graphs in graph6 format from path.</span>
+
+<span class="sd">    Returns a single Graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">read_graph6_list</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+	</div>
+<div class="viewcode-block" id="parse_graph6"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.sparsegraph6.parse_graph6.html#networkx.readwrite.sparsegraph6.parse_graph6">[docs]</a><span class="k">def</span> <span class="nf">parse_graph6</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a simple undirected graph in graph6 format from string.</span>
+
+<span class="sd">    Returns a single Graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">bits</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Return sequence of individual bits from 6-bit-per-value</span>
+<span class="sd">        list of data values.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">d</span><span class="o">&gt;&gt;</span><span class="n">i</span><span class="p">)</span><span class="o">&amp;</span><span class="mi">1</span>
+
+    <span class="k">if</span> <span class="nb">str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;&gt;&gt;graph6&lt;&lt;&#39;</span><span class="p">):</span>
+        <span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">graph6data</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">graph6n</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="o">//</span> <span class="mi">6</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nd</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>\
+            <span class="s">&#39;Expected </span><span class="si">%d</span><span class="s"> bits but got </span><span class="si">%d</span><span class="s"> in graph6&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="mi">6</span><span class="p">))</span>
+
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)],</span> <span class="n">bits</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">b</span><span class="p">:</span> <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;rt&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="read_graph6_list"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.sparsegraph6.read_graph6_list.html#networkx.readwrite.sparsegraph6.read_graph6_list">[docs]</a><span class="k">def</span> <span class="nf">read_graph6_list</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read simple undirected graphs in graph6 format from path.</span>
+
+<span class="sd">    Returns a list of Graphs, one for each line in file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">glist</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="n">glist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_graph6</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">glist</span>
+
+<span class="c"># sparse6</span>
+</div>
+<div class="viewcode-block" id="read_sparse6"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.sparsegraph6.read_sparse6.html#networkx.readwrite.sparsegraph6.read_sparse6">[docs]</a><span class="k">def</span> <span class="nf">read_sparse6</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read simple undirected graphs in sparse6 format from path.</span>
+
+<span class="sd">    Returns a single MultiGraph.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">read_sparse6_list</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s">&#39;rt&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="read_sparse6_list"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.sparsegraph6.read_sparse6_list.html#networkx.readwrite.sparsegraph6.read_sparse6_list">[docs]</a><span class="k">def</span> <span class="nf">read_sparse6_list</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read undirected graphs in sparse6 format from path.</span>
+
+<span class="sd">    Returns a list of MultiGraphs, one for each line in file.&quot;&quot;&quot;</span>
+    <span class="n">glist</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="n">glist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_sparse6</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">glist</span>
+</div>
+<div class="viewcode-block" id="parse_sparse6"><a class="viewcode-back" href="../../../reference/generated/networkx.readwrite.sparsegraph6.parse_sparse6.html#networkx.readwrite.sparsegraph6.parse_sparse6">[docs]</a><span class="k">def</span> <span class="nf">parse_sparse6</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read undirected graph in sparse6 format from string.</span>
+
+<span class="sd">    Returns a MultiGraph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;&gt;&gt;sparse6&lt;&lt;&#39;</span><span class="p">):</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;Expected colon in sparse6&#39;</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">graph6n</span><span class="p">(</span><span class="n">graph6data</span><span class="p">(</span><span class="n">string</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">k</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+	
+    <span class="k">def</span> <span class="nf">parseData</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Return stream of pairs b[i], x[i] for sparse6 format.&quot;&quot;&quot;</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">None</span> <span class="c"># partial data word</span>
+        <span class="n">dLen</span> <span class="o">=</span> <span class="mi">0</span> <span class="c"># how many unparsed bits are left in d</span>
+    
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dLen</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+                <span class="n">dLen</span> <span class="o">=</span> <span class="mi">6</span>
+            <span class="n">dLen</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span><span class="o">&gt;&gt;</span><span class="n">dLen</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span> <span class="c"># grab top remaining bit</span>
+			
+            <span class="n">x</span> <span class="o">=</span> <span class="n">d</span> <span class="o">&amp;</span> <span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="n">dLen</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c"># partially built up value of x</span>
+            <span class="n">xLen</span> <span class="o">=</span> <span class="n">dLen</span>		<span class="c"># how many bits included so far in x</span>
+            <span class="k">while</span> <span class="n">xLen</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>	<span class="c"># now grab full chunks until we have enough</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+                <span class="n">dLen</span> <span class="o">=</span> <span class="mi">6</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">&lt;&lt;</span><span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">d</span>
+                <span class="n">xLen</span> <span class="o">+=</span> <span class="mi">6</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">xLen</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span> <span class="c"># shift back the extra bits</span>
+            <span class="n">dLen</span> <span class="o">=</span> <span class="n">xLen</span> <span class="o">-</span> <span class="n">k</span>
+            <span class="k">yield</span> <span class="n">b</span><span class="p">,</span><span class="n">x</span>
+	
+    <span class="n">v</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">b</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="n">parseData</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">b</span><span class="p">:</span> <span class="n">v</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span> <span class="k">break</span> <span class="c"># padding with ones can cause overlarge number here</span>
+        <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="c"># helper functions</span>
+</div>
+<span class="k">def</span> <span class="nf">graph6data</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert graph6 character sequence to 6-bit integers.&quot;&quot;&quot;</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">-</span><span class="mi">63</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">63</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">v</span>
+	
+<span class="k">def</span> <span class="nf">graph6n</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read initial one or four-unit value from graph6 sequence.  </span>
+<span class="sd">    Return value, rest of seq.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">62</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;&lt;</span><span class="mi">12</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">&lt;&lt;</span><span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

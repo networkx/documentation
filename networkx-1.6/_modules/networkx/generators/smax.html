@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.generators.smax &mdash; NetworkX 1.6.dev20111116230024 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.dev20111116230024',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.6.dev20111116230024 documentation"
+          href="../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.6.dev20111116230024 documentation" href="../../../index.html" />
+    <link rel="up" title="networkx" href="../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+<br/><p>This documentation is for version <b>1.6.dev_20111116230024</b>, which is
+  not released yet.</p>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.generators.smax</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;smax graph</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2004-2011 by </span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">heapq</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.generators.classic</span> <span class="kn">import</span> <span class="n">empty_graph</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s">&#39;Dan Schult (dschult@colgate.edu)&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;li_smax_graph&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">li_smax_graph</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="li_smax_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.smax.li_smax_graph.html#networkx.generators.smax.li_smax_graph">[docs]</a>    <span class="sd">&quot;&quot;&quot;Generates a graph based with a given degree sequence and maximizing</span>
+<span class="sd">    the s-metric.  Experimental implementation.</span>
+
+<span class="sd">    Maximum s-metrix  means that high degree nodes are connected to high</span>
+<span class="sd">    degree nodes. </span>
+<span class="sd">        </span>
+<span class="sd">    - `degree_seq`: degree sequence, a list of integers with each entry</span>
+<span class="sd">       corresponding to the degree of a node.</span>
+<span class="sd">       A non-graphical degree sequence raises an Exception.    </span>
+
+<span class="sd">    Reference::      </span>
+<span class="sd">    </span>
+<span class="sd">      @unpublished{li-2005,</span>
+<span class="sd">       author = {Lun Li and David Alderson and Reiko Tanaka</span>
+<span class="sd">                and John C. Doyle and Walter Willinger},</span>
+<span class="sd">       title = {Towards a Theory of Scale-Free Graphs:</span>
+<span class="sd">               Definition, Properties, and  Implications (Extended Version)},</span>
+<span class="sd">       url = {http://arxiv.org/abs/cond-mat/0501169},</span>
+<span class="sd">       year = {2005}</span>
+<span class="sd">      }</span>
+
+<span class="sd">    The algorithm::</span>
+
+<span class="sd">     STEP 0 - Initialization</span>
+<span class="sd">     A = {0}</span>
+<span class="sd">     B = {1, 2, 3, ..., n}</span>
+<span class="sd">     O = {(i; j), ..., (k, l),...} where i &lt; j, i &lt;= k &lt; l and </span>
+<span class="sd">             d_i * d_j &gt;= d_k *d_l </span>
+<span class="sd">     wA = d_1</span>
+<span class="sd">     dB = sum(degrees)</span>
+
+<span class="sd">     STEP 1 - Link selection</span>
+<span class="sd">     (a) If |O| = 0 TERMINATE. Return graph A.</span>
+<span class="sd">     (b) Select element(s) (i, j) in O having the largest d_i * d_j , if for </span>
+<span class="sd">             any i or j either w_i = 0 or w_j = 0 delete (i, j) from O</span>
+<span class="sd">     (c) If there are no elements selected go to (a).</span>
+<span class="sd">     (d) Select the link (i, j) having the largest value w_i (where for each </span>
+<span class="sd">             (i, j) w_i is the smaller of w_i and w_j ), and proceed to STEP 2.</span>
+
+<span class="sd">     STEP 2 - Link addition</span>
+<span class="sd">     Type 1: i in A and j in B. </span>
+<span class="sd">             Add j to the graph A and remove it from the set B add a link </span>
+<span class="sd">             (i, j) to the graph A. Update variables:</span>
+<span class="sd">             wA = wA + d_j -2 and dB = dB - d_j</span>
+<span class="sd">             Decrement w_i and w_j with one. Delete (i, j) from O</span>
+<span class="sd">     Type 2: i and j in A.</span>
+<span class="sd">         Check Tree Condition: If dB = 2 * |B| - wA. </span>
+<span class="sd">             Delete (i, j) from O, continue to STEP 3</span>
+<span class="sd">         Check Disconnected Cluster Condition: If wA = 2. </span>
+<span class="sd">             Delete (i, j) from O, continue to STEP 3</span>
+<span class="sd">         Add the link (i, j) to the graph A </span>
+<span class="sd">         Decrement w_i and w_j with one, and wA = wA -2</span>
+<span class="sd">     STEP 3</span>
+<span class="sd">         Go to STEP 1</span>
+
+
+<span class="sd">    The article states that the algorithm will result in a maximal s-metric. </span>
+<span class="sd">    This implementation can not guarantee such maximality. I may have </span>
+<span class="sd">    misunderstood the algorithm, but I can not see how it can be anything </span>
+<span class="sd">    but a heuristic. Please contact me at sundsdal@gmail.com if you can </span>
+<span class="sd">    provide python code that can guarantee maximality.</span>
+<span class="sd">    Several optimizations are included in this code and it may be hard to read.</span>
+<span class="sd">    Commented code to come.</span>
+
+<span class="sd">    A POSSIBLE ALTERNATIVE:</span>
+
+<span class="sd">    For an &#39;unconstrained&#39; graph, that is one they describe as having</span>
+<span class="sd">    the sum of the degree sequence be even(ie all undirected graphs) they</span>
+<span class="sd">    present a simpler algorithm. It is as follows</span>
+
+<span class="sd">        &quot;For each vertex i: if di is even then attach di/2 self-loops;</span>
+<span class="sd">        if di is odd, then attach (di-1)/2 self-loops, leaving one</span>
+<span class="sd">        available &quot;stub&quot;. Second for all remaining vertices with &quot;stubs&quot;</span>
+<span class="sd">        connect them in pairs according to decreasing values of di.&quot;[1]</span>
+<span class="sd">    </span>
+<span class="sd">    Since this only works for undirected graphs anyway, perhaps this is</span>
+<span class="sd">    the better method? Note this also returns a graph with a larger</span>
+<span class="sd">    s_metric than the other method, and it seems to have the same</span>
+<span class="sd">    degree sequence, though I haven&#39;t tested it extensively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_valid_degree_sequence</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;Invalid degree sequence&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">create_using</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Directed Graph not supported&quot;</span><span class="p">)</span>
+
+    <span class="n">degree_seq</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># make sure it&#39;s sorted</span>
+   
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)</span> <span class="o">%</span><span class="mi">2</span><span class="p">):</span> <span class="c">#check if the sum of the degree sequence is even, Should be if it is undirected</span>
+        <span class="n">dseven</span> <span class="o">=</span> <span class="p">[</span><span class="n">di</span> <span class="k">for</span> <span class="n">di</span> <span class="ow">in</span> <span class="n">degree_seq</span> <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">di</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="n">dsodd</span> <span class="o">=</span> <span class="p">[</span><span class="n">di</span> <span class="k">for</span> <span class="n">di</span> <span class="ow">in</span> <span class="n">degree_seq</span> <span class="k">if</span> <span class="p">(</span><span class="n">di</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="n">Gmax</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">di</span> <span class="ow">in</span> <span class="n">dseven</span><span class="p">:</span>
+            <span class="n">Gmax</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">di</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">Gmax</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">dsodd</span><span class="p">),</span><span class="mi">2</span><span class="p">):</span> <span class="c">#do this iteratively to connect</span>
+            <span class="n">Gmax</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>            <span class="c">#node stubs as we go</span>
+            <span class="n">Gmax</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">dsodd</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">Gmax</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">dsodd</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">Gmax</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">Gmax</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">Gmax</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">degrees_left</span> <span class="o">=</span> <span class="n">degree_seq</span><span class="p">[:]</span>
+        <span class="n">A_graph</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">create_using</span><span class="p">)</span>
+        <span class="n">A_graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">a_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">False</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)</span>
+        <span class="n">b_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)))</span>
+        <span class="n">a_open</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">O</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">b_set</span><span class="p">:</span>
+            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">degree_seq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">degree_seq</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">j</span><span class="p">))),</span>
+        <span class="n">wa</span> <span class="o">=</span> <span class="n">degrees_left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#stubs in a_graph</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)</span> <span class="o">-</span> <span class="n">degree_seq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c">#stubs in b-graph</span>
+        <span class="n">a_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span> <span class="c">#node 0 is now in a_Graph</span>
+        <span class="n">bsize</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span> <span class="c">#size of b_graph</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">O</span> <span class="ow">or</span> <span class="n">selected</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span> <span class="o">&lt;</span><span class="mi">1</span> <span class="p">:</span>
+                <span class="n">firstrun</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">while</span> <span class="n">O</span><span class="p">:</span>
+                    <span class="p">(</span><span class="n">newweight</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">))</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">firstrun</span><span class="p">:</span>
+                        <span class="n">firstrun</span> <span class="o">=</span> <span class="bp">False</span>
+                        <span class="n">weight</span> <span class="o">=</span> <span class="n">newweight</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">newweight</span> <span class="o">==</span> <span class="n">weight</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">selected</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> \
+                                        <span class="o">-</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)])</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">weight</span> <span class="o">==</span> <span class="n">newweight</span><span class="p">:</span>
+                    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">O</span><span class="p">,(</span><span class="n">newweight</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)))</span>
+                <span class="n">weight</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="p">[</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">a_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">b_set</span><span class="p">:</span>
+                <span class="c">#TYPE1</span>
+                <span class="n">a_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">b_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">A_graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">A_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">wa</span> <span class="o">+=</span> <span class="n">degree_seq</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span>
+                <span class="n">db</span> <span class="o">-=</span> <span class="n">degree_seq</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">bsize</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">newweight</span> <span class="o">=</span> <span class="n">weight</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">a_open</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">b_set</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">A_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span> <span class="k">continue</span>
+                        <span class="n">w</span> <span class="o">=</span> <span class="n">degree_seq</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">degree_seq</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="n">newweight</span><span class="p">:</span>
+                            <span class="n">newweight</span> <span class="o">=</span> <span class="n">w</span>
+                        <span class="k">if</span> <span class="n">weight</span> <span class="o">==</span> <span class="n">w</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">newweight</span> <span class="o">&gt;</span> <span class="n">weight</span><span class="p">:</span>
+                            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">selected</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> \
+                                                <span class="o">-</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">)])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">)))</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">weight</span> <span class="o">==</span> <span class="n">newweight</span><span class="p">:</span>
+                        <span class="k">while</span> <span class="n">selected</span><span class="p">:</span>
+                            <span class="p">[</span><span class="n">w1</span><span class="p">,</span><span class="n">w2</span><span class="p">,(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">degree_seq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">degree_seq</span><span class="p">[</span><span class="n">j</span><span class="p">],(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)])</span>
+                <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">a_open</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c">#TYPE2</span>
+                <span class="k">if</span> <span class="n">db</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">bsize</span> <span class="o">-</span> <span class="n">wa</span><span class="p">):</span>
+                    <span class="c">#tree condition</span>
+                    <span class="c">#print &quot;removing because tree condition    &quot;</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">db</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">*</span><span class="n">bsize</span> <span class="o">-</span><span class="n">wa</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>\
+                            <span class="s">&quot;THIS SHOULD NOT HAPPEN!-not graphable&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">wa</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">bsize</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c">#print &quot;removing because disconnected  cluster&quot;</span>
+                    <span class="c">#disconnected cluster condition</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">wa</span> <span class="o">==</span> <span class="n">db</span> <span class="o">-</span> <span class="p">(</span><span class="n">bsize</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">bsize</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="c">#print &quot;MYOWN removing because disconnected  cluster&quot;</span>
+                    <span class="k">continue</span>
+                <span class="n">A_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+                <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">a_open</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">a_open</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">wa</span> <span class="o">-=</span>  <span class="mi">2</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">selected2</span> <span class="o">=</span> <span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+                    <span class="n">selected</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">while</span> <span class="n">selected2</span><span class="p">:</span>
+                        <span class="p">[</span><span class="n">w1</span><span class="p">,</span><span class="n">w1</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">selected2</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">selected</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> \
+                                            <span class="o">-</span><span class="n">degrees_left</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">A_graph</span> 
+
+<span class="k">def</span> <span class="nf">connected_smax_graph</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></div>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Not implemented.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># incomplete implementation</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_degree_sequence</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&#39;Invalid degree sequence&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">create_using</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s">&quot;Directed Graph not supported&quot;</span><span class="p">)</span>
+   
+    <span class="c"># build dictionary of node id and degree, sorted by degree, largest first</span>
+    <span class="n">degree_seq</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span> 
+    <span class="n">degree_seq</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="n">ddict</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)),</span><span class="n">degree_seq</span><span class="p">))</span>
+
+    <span class="n">G</span><span class="o">=</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">create_using</span><span class="p">)</span> <span class="c"># start with single node</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Nov 16, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,206 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Blockmodel &mdash; NetworkX v1.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX v1.4 documentation"
+          href="../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX v1.4 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="blockmodel">
+<span id="algorithms-blockmodel"></span><h1>Blockmodel<a class="headerlink" href="#blockmodel" title="Permalink to this headline">¶</a></h1>
+<p>[<a class="reference external" href="../../_static/examples/blockmodel.py">source code</a>]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c"># encoding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Example of creating a block model using the blockmodel function in NX.  Data used is the Hartford, CT drug users network:</span>
+
+<span class="sd">@article{,</span>
+<span class="sd">    title = {Social Networks of Drug Users in {High-Risk} Sites: Finding the Connections},</span>
+<span class="sd">    volume = {6},</span>
+<span class="sd">    shorttitle = {Social Networks of Drug Users in {High-Risk} Sites},</span>
+<span class="sd">    url = {http://dx.doi.org/10.1023/A:1015457400897},</span>
+<span class="sd">    doi = {10.1023/A:1015457400897},</span>
+<span class="sd">    number = {2},</span>
+<span class="sd">    journal = {{AIDS} and Behavior},</span>
+<span class="sd">    author = {Margaret R. Weeks and Scott Clair and Stephen P. Borgatti and Kim Radda and Jean J. Schensul},</span>
+<span class="sd">    month = jun,</span>
+<span class="sd">    year = {2002},</span>
+<span class="sd">    pages = {193--206}</span>
+<span class="sd">}</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;Drew Conway &lt;drew.conway@nyu.edu&gt;&#39;</span><span class="p">,</span>
+                            <span class="s">&#39;Aric Hagberg &lt;hagberg@lanl.gov&gt;&#39;</span><span class="p">])</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">scipy.cluster</span> <span class="kn">import</span> <span class="n">hierarchy</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+
+<span class="k">def</span> <span class="nf">create_hc</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates hierarchical cluster of graph G from distance matrix&quot;&quot;&quot;</span>
+    <span class="n">path_length</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">all_pairs_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">distances</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="n">path_length</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">distances</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="n">d</span>
+    <span class="c"># Create hierarchical cluster</span>
+    <span class="n">Y</span><span class="o">=</span><span class="n">distance</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
+    <span class="n">Z</span><span class="o">=</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>  <span class="c"># Creates HC using farthest point linkage</span>
+    <span class="c"># This partition selection is arbitrary, for illustrive purposes</span>
+    <span class="n">membership</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">hierarchy</span><span class="o">.</span><span class="n">fcluster</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span><span class="n">t</span><span class="o">=</span><span class="mf">1.15</span><span class="p">))</span>
+    <span class="c"># Create collection of lists for blockmodel</span>
+    <span class="n">partition</span><span class="o">=</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">))),</span><span class="n">membership</span><span class="p">):</span>
+        <span class="n">partition</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">read_edgelist</span><span class="p">(</span><span class="s">&quot;hartford_drug.edgelist&quot;</span><span class="p">)</span>
+
+    <span class="c"># Extract largest connected component into graph H</span>
+    <span class="n">H</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">connected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c"># Makes life easier to have consecutively labeled integer nodes</span>
+    <span class="n">H</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">convert_node_labels_to_integers</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="c"># Create parititions with hierarchical clustering</span>
+    <span class="n">partitions</span><span class="o">=</span><span class="n">create_hc</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="c"># Build blockmodel graph</span>
+    <span class="n">BM</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">blockmodel</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="n">partitions</span><span class="p">)</span>
+
+
+    <span class="c"># Draw original graph</span>
+    <span class="n">pos</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">H</span><span class="p">,</span><span class="n">pos</span><span class="p">,</span><span class="n">with_labels</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">node_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c"># Draw block model with weighted edges and nodes sized by number of internal nodes</span>
+    <span class="n">node_size</span><span class="o">=</span><span class="p">[</span><span class="n">BM</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s">&#39;nnodes&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">BM</span><span class="o">.</span><span class="n">nodes</span><span class="p">()]</span>
+    <span class="n">edge_width</span><span class="o">=</span><span class="p">[(</span><span class="mi">2</span><span class="o">*</span><span class="n">d</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="n">BM</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="bp">True</span><span class="p">)]</span>
+    <span class="c"># Set positions to mean of positions of internal nodes from original graph</span>
+    <span class="n">posBM</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">BM</span><span class="p">:</span>
+        <span class="n">xy</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pos</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">BM</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s">&#39;graph&#39;</span><span class="p">]])</span>
+        <span class="n">posBM</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">xy</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">)</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">BM</span><span class="p">,</span><span class="n">posBM</span><span class="p">,</span><span class="n">node_size</span><span class="o">=</span><span class="n">node_size</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="n">edge_width</span><span class="p">,</span><span class="n">with_labels</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&#39;hartford_drug_block_model.png&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jan 23, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Football &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../index.html" />
+    <link rel="up" title="Graph" href="index.html" />
+    <link rel="next" title="Karate Club" href="karate_club.html" />
+    <link rel="prev" title="Expected Degree Sequence" href="expected_degree_sequence.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="karate_club.html" title="Karate Club"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="expected_degree_sequence.html" title="Expected Degree Sequence"
+             accesskey="P">previous</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../index.html" >NetworkX Examples</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Graph</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="expected_degree_sequence.html"
+                        title="previous chapter">Expected Degree Sequence</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="karate_club.html"
+                        title="next chapter">Karate Club</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="football">
+<span id="graph-football"></span><h1>Football<a class="headerlink" href="#football" title="Permalink to this headline">¶</a></h1>
+<p>[<a class="reference external" href="../../_static/examples/football.py">source code</a>]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Load football network in GML format and compute some network statistcs.</span>
+
+<span class="sd">Shows how to download GML graph in a zipped file, unpack it, and load</span>
+<span class="sd">into a NetworkX graph.</span>
+
+<span class="sd">Requires Internet connection to download the URL</span>
+<span class="sd">http://www-personal.umich.edu/~mejn/netdata/football.zip</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+<span class="c">#    Copyright (C) 2007 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pyparsing</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;. Check http://pyparsing.wikispaces.com/&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">url</span><span class="o">=</span><span class="s">&quot;http://www-personal.umich.edu/~mejn/netdata/football.zip&quot;</span>
+
+<span class="k">try</span><span class="p">:</span> <span class="c"># Python 3.x</span>
+    <span class="kn">import</span> <span class="nn">urllib.request</span> <span class="kn">as</span> <span class="nn">urllib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="c"># Python 2.x</span>
+    <span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+
+<span class="n">sock</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>  <span class="c"># open URL</span>
+<span class="n">s</span><span class="o">=</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">sock</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c"># read into BytesIO &quot;file&quot;</span>
+<span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="n">zf</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="c"># zipfile object</span>
+<span class="n">txt</span><span class="o">=</span><span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&#39;football.txt&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span> <span class="c"># read info file</span>
+<span class="n">gml</span><span class="o">=</span><span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s">&#39;football.gml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span> <span class="c"># read gml data</span>
+<span class="c"># throw away bogus first line with # from mejn files</span>
+<span class="n">gml</span><span class="o">=</span><span class="n">gml</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+<span class="n">G</span><span class="o">=</span><span class="n">parse_gml</span><span class="p">(</span><span class="n">gml</span><span class="p">)</span> <span class="c"># parse gml data</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+<span class="c"># print degree for each team - number of games</span>
+<span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree_iter</span><span class="p">():</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="karate_club.html" title="Karate Club"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="expected_degree_sequence.html" title="Expected Degree Sequence"
+             >previous</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../index.html" >NetworkX Examples</a> &raquo;</li>
+          <li><a href="index.html" >Graph</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

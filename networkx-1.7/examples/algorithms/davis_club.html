@@ -1,0 +1,274 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Davis Club &mdash; NetworkX 1.7 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.7 documentation"
+          href="../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.7 documentation" href="../../index.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="davis-club">
+<span id="algorithms-davis-club"></span><h1>Davis Club<a class="headerlink" href="#davis-club" title="Permalink to this headline">¶</a></h1>
+<p>[<a class="reference external" href="../../_static/examples/davis_club.py">source code</a>]</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Davis Southern Club Women</span>
+
+<span class="sd">Shows how to make unipartite projections of the graph and compute the</span>
+<span class="sd">properties of those graphs.</span>
+
+<span class="sd">These data were collected by Davis et al</span>
+<span class="sd">in the 1930s.  They represent observed attendance at 14 social events</span>
+<span class="sd">by 18 Southern women.  The graph is bipartite (clubs, women).</span>
+
+<span class="sd">Data from:</span>
+<span class="sd">http://vlado.fmf.uni-lj.si/pub/networks/data/Ucinet/UciData.htm</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s">&quot;$Date: 2005-05-12 14:33:11 -0600 (Thu, 12 May 2005) $&quot;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+<span class="n">__revision__</span> <span class="o">=</span> <span class="s">&quot;$Revision: 998 $&quot;</span>
+<span class="c">#    Copyright (C) 2004 by</span>
+<span class="c">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c">#    All rights reserved.</span>
+<span class="c">#    BSD license.</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<span class="k">def</span> <span class="nf">davis_club_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+    <span class="n">nwomen</span><span class="o">=</span><span class="mi">14</span>
+    <span class="n">nclubs</span><span class="o">=</span><span class="mi">18</span>
+    <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">nwomen</span><span class="o">+</span><span class="n">nclubs</span><span class="p">,</span><span class="n">create_using</span><span class="o">=</span><span class="n">create_using</span><span class="p">,</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;Davis Southern Club Women&quot;</span>
+
+    <span class="n">women</span><span class="o">=</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">EVELYN</span>
+<span class="s">LAURA</span>
+<span class="s">THERESA</span>
+<span class="s">BRENDA</span>
+<span class="s">CHARLOTTE</span>
+<span class="s">FRANCES</span>
+<span class="s">ELEANOR</span>
+<span class="s">PEARL</span>
+<span class="s">RUTH</span>
+<span class="s">VERNE</span>
+<span class="s">MYRNA</span>
+<span class="s">KATHERINE</span>
+<span class="s">SYLVIA</span>
+<span class="s">NORA</span>
+<span class="s">HELEN</span>
+<span class="s">DOROTHY</span>
+<span class="s">OLIVIA</span>
+<span class="s">FLORA&quot;&quot;&quot;</span>
+
+    <span class="n">clubs</span><span class="o">=</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">E1</span>
+<span class="s">E2</span>
+<span class="s">E3</span>
+<span class="s">E4</span>
+<span class="s">E5</span>
+<span class="s">E6</span>
+<span class="s">E7</span>
+<span class="s">E8</span>
+<span class="s">E9</span>
+<span class="s">E10</span>
+<span class="s">E11</span>
+<span class="s">E12</span>
+<span class="s">E13</span>
+<span class="s">E14&quot;&quot;&quot;</span>
+
+    <span class="n">davisdat</span><span class="o">=</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">1 1 1 1 1 1 0 1 1 0 0 0 0 0</span>
+<span class="s">1 1 1 0 1 1 1 1 0 0 0 0 0 0</span>
+<span class="s">0 1 1 1 1 1 1 1 1 0 0 0 0 0</span>
+<span class="s">1 0 1 1 1 1 1 1 0 0 0 0 0 0</span>
+<span class="s">0 0 1 1 1 0 1 0 0 0 0 0 0 0</span>
+<span class="s">0 0 1 0 1 1 0 1 0 0 0 0 0 0</span>
+<span class="s">0 0 0 0 1 1 1 1 0 0 0 0 0 0</span>
+<span class="s">0 0 0 0 0 1 0 1 1 0 0 0 0 0</span>
+<span class="s">0 0 0 0 1 0 1 1 1 0 0 0 0 0</span>
+<span class="s">0 0 0 0 0 0 1 1 1 0 0 1 0 0</span>
+<span class="s">0 0 0 0 0 0 0 1 1 1 0 1 0 0</span>
+<span class="s">0 0 0 0 0 0 0 1 1 1 0 1 1 1</span>
+<span class="s">0 0 0 0 0 0 1 1 1 1 0 1 1 1</span>
+<span class="s">0 0 0 0 0 1 1 0 1 1 1 1 1 1</span>
+<span class="s">0 0 0 0 0 0 1 1 0 1 1 1 1 1</span>
+<span class="s">0 0 0 0 0 0 0 1 1 1 0 1 0 0</span>
+<span class="s">0 0 0 0 0 0 0 0 1 0 1 0 0 0</span>
+<span class="s">0 0 0 0 0 0 0 0 1 0 1 0 0 0&quot;&quot;&quot;</span>
+
+
+    <span class="c"># women names</span>
+    <span class="n">w</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">n</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">women</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+        <span class="n">w</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">name</span>
+        <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
+
+    <span class="c"># club names</span>
+    <span class="n">c</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">n</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">clubs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+        <span class="n">c</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">=</span><span class="n">name</span>
+        <span class="n">n</span><span class="o">+=</span><span class="mi">1</span>
+
+    <span class="c"># parse matrix</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">davisdat</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">):</span>
+        <span class="n">thisrow</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">thisrow</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">thisrow</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">row</span><span class="p">],</span><span class="n">c</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+        <span class="n">row</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="nb">list</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+<span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">pv</span><span class="p">,</span><span class="n">result</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a graph that is the unipartite projection of the</span>
+<span class="sd">    bipartite graph B onto the set of nodes given in list pv.</span>
+
+<span class="sd">    The nodes retain their names and are connected if they share a</span>
+<span class="sd">    common node in the vertex set of {B not pv}.</span>
+
+<span class="sd">    No attempt is made to verify that the input graph B is bipartite.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pv</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cv</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">v</span><span class="p">,</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">B</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">cv</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c"># return graph and women and clubs lists</span>
+    <span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">women</span><span class="p">,</span><span class="n">clubs</span><span class="p">)</span><span class="o">=</span><span class="n">davis_club_graph</span><span class="p">()</span>
+
+    <span class="c"># project bipartite graph onto women nodes</span>
+    <span class="n">W</span><span class="o">=</span><span class="n">project</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">women</span><span class="p">)</span>
+    <span class="c"># project bipartite graph onto club nodes</span>
+    <span class="n">C</span><span class="o">=</span><span class="n">project</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">clubs</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Degree distributions of projected graphs&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Member #Friends&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">W</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">W</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Clubs #Members&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">C</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="../../download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac">Developer Zone</a>|&nbsp;</li>
+        <li><a href="../../contents.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.lanl.gov/trac/blog">Blog</a> &raquo;</li>
+
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, NetworkX Developers.
+      Last updated on Jul 04, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

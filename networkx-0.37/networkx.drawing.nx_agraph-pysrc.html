@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>networkx.drawing.nx_agraph</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="networkx-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="networkx-module.html">Package&nbsp;networkx</a> ::
+        <a href="networkx.drawing-module.html">Package&nbsp;drawing</a> ::
+        Module&nbsp;nx_agraph
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="networkx.drawing.nx_agraph-pysrc.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<h1 class="epydoc">Source Code for <a href="networkx.drawing.nx_agraph-module.html">Module networkx.drawing.nx_agraph</a></h1>
+<pre class="py-src">
+<a name="L1"></a><tt class="py-lineno">  1</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L2"></a><tt class="py-lineno">  2</tt>  <tt class="py-line"><tt class="py-docstring">Interface to pygraphviz AGraph class.</tt> </tt>
+<a name="L3"></a><tt class="py-lineno">  3</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L4"></a><tt class="py-lineno">  4</tt>  <tt class="py-line"><tt class="py-docstring">Usage </tt> </tt>
+<a name="L5"></a><tt class="py-lineno">  5</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L6"></a><tt class="py-lineno">  6</tt>  <tt class="py-line"><tt class="py-docstring"> &gt;&gt;&gt; from networkx import *</tt> </tt>
+<a name="L7"></a><tt class="py-lineno">  7</tt>  <tt class="py-line"><tt class="py-docstring"> &gt;&gt;&gt; G=complete_graph(5)</tt> </tt>
+<a name="L8"></a><tt class="py-lineno">  8</tt>  <tt class="py-line"><tt class="py-docstring"> &gt;&gt;&gt; A=to_agraph(G)</tt> </tt>
+<a name="L9"></a><tt class="py-lineno">  9</tt>  <tt class="py-line"><tt class="py-docstring"> &gt;&gt;&gt; H=from_agraph(A)</tt> </tt>
+<a name="L10"></a><tt class="py-lineno"> 10</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L11"></a><tt class="py-lineno"> 11</tt>  <tt class="py-line"><tt class="py-docstring">"""</tt> </tt>
+<a name="L12"></a><tt class="py-lineno"> 12</tt>  <tt class="py-line"><tt class="py-name">__author__</tt> <tt class="py-op">=</tt> <tt class="py-string">"""Aric Hagberg (hagberg@lanl.gov)"""</tt> </tt>
+<a name="L13"></a><tt class="py-lineno"> 13</tt>  <tt class="py-line"><tt class="py-comment">#    Copyright (C) 2004-2006 by </tt> </tt>
+<a name="L14"></a><tt class="py-lineno"> 14</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</tt> </tt>
+<a name="L15"></a><tt class="py-lineno"> 15</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#    Dan Schult &lt;dschult@colgate.edu&gt;</tt> </tt>
+<a name="L16"></a><tt class="py-lineno"> 16</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#    Pieter Swart &lt;swart@lanl.gov&gt;</tt> </tt>
+<a name="L17"></a><tt class="py-lineno"> 17</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#    Distributed under the terms of the GNU Lesser General Public License</tt> </tt>
+<a name="L18"></a><tt class="py-lineno"> 18</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-comment">#    http://www.gnu.org/copyleft/lesser.html</tt> </tt>
+<a name="L19"></a><tt class="py-lineno"> 19</tt>  <tt class="py-line"><tt class="py-comment"></tt><tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
+<a name="L20"></a><tt class="py-lineno"> 20</tt>  <tt class="py-line"><tt class="py-keyword">import</tt> <tt class="py-name">sys</tt> </tt>
+<a name="L21"></a><tt class="py-lineno"> 21</tt>  <tt class="py-line"><tt class="py-keyword">from</tt> <tt id="link-0" class="py-name" targets="Package networkx=networkx-module.html"><a title="networkx" class="py-name" href="#" onclick="return doclink('link-0', 'networkx', 'link-0');">networkx</a></tt><tt class="py-op">.</tt><tt id="link-1" class="py-name" targets="Module networkx.utils=networkx.utils-module.html"><a title="networkx.utils" class="py-name" href="#" onclick="return doclink('link-1', 'utils', 'link-1');">utils</a></tt> <tt class="py-keyword">import</tt> <tt id="link-2" class="py-name" targets="Function networkx.io._get_fh()=networkx.io-module.html#_get_fh,Function networkx.utils._get_fh()=networkx.utils-module.html#_get_fh"><a title="networkx.io._get_fh
+networkx.utils._get_fh" class="py-name" href="#" onclick="return doclink('link-2', '_get_fh', 'link-2');">_get_fh</a></tt> </tt>
+<a name="L22"></a><tt class="py-lineno"> 22</tt>  <tt class="py-line"><tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L23"></a><tt class="py-lineno"> 23</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">pygraphviz</tt> </tt>
+<a name="L24"></a><tt class="py-lineno"> 24</tt>  <tt class="py-line"><tt class="py-keyword">except</tt> <tt class="py-name">ImportError</tt><tt class="py-op">:</tt> </tt>
+<a name="L25"></a><tt class="py-lineno"> 25</tt>  <tt class="py-line">    <tt class="py-keyword">raise</tt> </tt>
+<a name="L26"></a><tt class="py-lineno"> 26</tt>  <tt class="py-line"> </tt>
+<a name="from_agraph"></a><div id="from_agraph-def"><a name="L27"></a><tt class="py-lineno"> 27</tt> <a class="py-toggle" href="#" id="from_agraph-toggle" onclick="return toggle('from_agraph');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#from_agraph">from_agraph</a><tt class="py-op">(</tt><tt class="py-param">A</tt><tt class="py-op">,</tt><tt class="py-param">create_using</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="from_agraph-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="from_agraph-expanded"><a name="L28"></a><tt class="py-lineno"> 28</tt>  <tt class="py-line">    <tt class="py-docstring">"""Return a NetworkX XGraph or XDiGraph from a pygraphviz graph.</tt> </tt>
+<a name="L29"></a><tt class="py-lineno"> 29</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L30"></a><tt class="py-lineno"> 30</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; X=from_agraph(A)</tt> </tt>
+<a name="L31"></a><tt class="py-lineno"> 31</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L32"></a><tt class="py-lineno"> 32</tt>  <tt class="py-line"><tt class="py-docstring">    The XGraph X will have a dictionary X.graph_attr containing</tt> </tt>
+<a name="L33"></a><tt class="py-lineno"> 33</tt>  <tt class="py-line"><tt class="py-docstring">    the default graphviz attributes for graphs, nodes and edges.</tt> </tt>
+<a name="L34"></a><tt class="py-lineno"> 34</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L35"></a><tt class="py-lineno"> 35</tt>  <tt class="py-line"><tt class="py-docstring">    Default node attributes will be in the dictionary X.node_attr</tt> </tt>
+<a name="L36"></a><tt class="py-lineno"> 36</tt>  <tt class="py-line"><tt class="py-docstring">    which is keyed by node.</tt> </tt>
+<a name="L37"></a><tt class="py-lineno"> 37</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L38"></a><tt class="py-lineno"> 38</tt>  <tt class="py-line"><tt class="py-docstring">    Edge attributes will be returned as edge data in the graph X.</tt> </tt>
+<a name="L39"></a><tt class="py-lineno"> 39</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L40"></a><tt class="py-lineno"> 40</tt>  <tt class="py-line"><tt class="py-docstring">    If you want a Graph with no attributes attached instead of an XGraph</tt> </tt>
+<a name="L41"></a><tt class="py-lineno"> 41</tt>  <tt class="py-line"><tt class="py-docstring">    with attributes use</tt> </tt>
+<a name="L42"></a><tt class="py-lineno"> 42</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L43"></a><tt class="py-lineno"> 43</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; G=Graph(X)</tt> </tt>
+<a name="L44"></a><tt class="py-lineno"> 44</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L45"></a><tt class="py-lineno"> 45</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L46"></a><tt class="py-lineno"> 46</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt id="link-3" class="py-name"><a title="networkx" class="py-name" href="#" onclick="return doclink('link-3', 'networkx', 'link-0');">networkx</a></tt> </tt>
+<a name="L47"></a><tt class="py-lineno"> 47</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">is_strict</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L48"></a><tt class="py-lineno"> 48</tt>  <tt class="py-line">        <tt class="py-name">multiedges</tt><tt class="py-op">=</tt><tt class="py-name">False</tt> </tt>
+<a name="L49"></a><tt class="py-lineno"> 49</tt>  <tt class="py-line">        <tt class="py-name">selfloops</tt><tt class="py-op">=</tt><tt class="py-name">False</tt> </tt>
+<a name="L50"></a><tt class="py-lineno"> 50</tt>  <tt class="py-line">    <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L51"></a><tt class="py-lineno"> 51</tt>  <tt class="py-line">        <tt class="py-name">multiedges</tt><tt class="py-op">=</tt><tt class="py-name">True</tt> </tt>
+<a name="L52"></a><tt class="py-lineno"> 52</tt>  <tt class="py-line">        <tt class="py-name">selfloops</tt><tt class="py-op">=</tt><tt class="py-name">True</tt> </tt>
+<a name="L53"></a><tt class="py-lineno"> 53</tt>  <tt class="py-line">         </tt>
+<a name="L54"></a><tt class="py-lineno"> 54</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">create_using</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt>         </tt>
+<a name="L55"></a><tt class="py-lineno"> 55</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">is_undirected</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L56"></a><tt class="py-lineno"> 56</tt>  <tt class="py-line">            <tt class="py-name">create_using</tt><tt class="py-op">=</tt><tt id="link-4" class="py-name"><a title="networkx" class="py-name" href="#" onclick="return doclink('link-4', 'networkx', 'link-0');">networkx</a></tt><tt class="py-op">.</tt><tt id="link-5" class="py-name" targets="Class networkx.xgraph.XGraph=networkx.xgraph.XGraph-class.html"><a title="networkx.xgraph.XGraph" class="py-name" href="#" onclick="return doclink('link-5', 'XGraph', 'link-5');">XGraph</a></tt><tt class="py-op">(</tt><tt class="py-name">multiedges</tt><tt class="py-op">=</tt><tt class="py-name">multiedges</tt><tt class="py-op">,</tt> </tt>
+<a name="L57"></a><tt class="py-lineno"> 57</tt>  <tt class="py-line">                                         <tt class="py-name">selfloops</tt><tt class="py-op">=</tt><tt class="py-name">selfloops</tt><tt class="py-op">)</tt> </tt>
+<a name="L58"></a><tt class="py-lineno"> 58</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L59"></a><tt class="py-lineno"> 59</tt>  <tt class="py-line">            <tt class="py-name">create_using</tt><tt class="py-op">=</tt><tt id="link-6" class="py-name"><a title="networkx" class="py-name" href="#" onclick="return doclink('link-6', 'networkx', 'link-0');">networkx</a></tt><tt class="py-op">.</tt><tt id="link-7" class="py-name" targets="Class networkx.xdigraph.XDiGraph=networkx.xdigraph.XDiGraph-class.html"><a title="networkx.xdigraph.XDiGraph" class="py-name" href="#" onclick="return doclink('link-7', 'XDiGraph', 'link-7');">XDiGraph</a></tt><tt class="py-op">(</tt><tt class="py-name">multiedges</tt><tt class="py-op">=</tt><tt class="py-name">multiedges</tt><tt class="py-op">,</tt> </tt>
+<a name="L60"></a><tt class="py-lineno"> 60</tt>  <tt class="py-line">                                           <tt class="py-name">selfloops</tt><tt class="py-op">=</tt><tt class="py-name">selfloops</tt><tt class="py-op">)</tt> </tt>
+<a name="L61"></a><tt class="py-lineno"> 61</tt>  <tt class="py-line"> </tt>
+<a name="L62"></a><tt class="py-lineno"> 62</tt>  <tt class="py-line">    <tt class="py-comment"># assign defaults        </tt> </tt>
+<a name="L63"></a><tt class="py-lineno"> 63</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-name">N</tt><tt class="py-op">=</tt><tt id="link-8" class="py-name"><a title="networkx" class="py-name" href="#" onclick="return doclink('link-8', 'networkx', 'link-0');">networkx</a></tt><tt class="py-op">.</tt><tt id="link-9" class="py-name" targets="Function networkx.generators.classic.empty_graph()=networkx.generators.classic-module.html#empty_graph"><a title="networkx.generators.classic.empty_graph" class="py-name" href="#" onclick="return doclink('link-9', 'empty_graph', 'link-9');">empty_graph</a></tt><tt class="py-op">(</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">create_using</tt><tt class="py-op">)</tt> </tt>
+<a name="L64"></a><tt class="py-lineno"> 64</tt>  <tt class="py-line">    <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-10" class="py-name" targets="Variable networkx.release.name=networkx.release-module.html#name"><a title="networkx.release.name" class="py-name" href="#" onclick="return doclink('link-10', 'name', 'link-10');">name</a></tt><tt class="py-op">=</tt><tt class="py-name">str</tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">)</tt> </tt>
+<a name="L65"></a><tt class="py-lineno"> 65</tt>  <tt class="py-line">    <tt class="py-name">node_attr</tt><tt class="py-op">=</tt><tt class="py-op">{</tt><tt class="py-op">}</tt> </tt>
+<a name="L66"></a><tt class="py-lineno"> 66</tt>  <tt class="py-line">    <tt class="py-comment"># add nodes, attributes to N.node_attr</tt> </tt>
+<a name="L67"></a><tt class="py-lineno"> 67</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">for</tt> <tt class="py-name">n</tt> <tt class="py-keyword">in</tt> <tt class="py-name">A</tt><tt class="py-op">.</tt><tt id="link-11" class="py-name" targets="Function networkx.function.nodes()=networkx.function-module.html#nodes,Method networkx.graph.Graph.nodes()=networkx.graph.Graph-class.html#nodes"><a title="networkx.function.nodes
+networkx.graph.Graph.nodes" class="py-name" href="#" onclick="return doclink('link-11', 'nodes', 'link-11');">nodes</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L68"></a><tt class="py-lineno"> 68</tt>  <tt class="py-line">        <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-12" class="py-name" targets="Method networkx.digraph.DiGraph.add_node()=networkx.digraph.DiGraph-class.html#add_node,Method networkx.graph.Graph.add_node()=networkx.graph.Graph-class.html#add_node,Method networkx.tree.Forest.add_node()=networkx.tree.Forest-class.html#add_node,Method networkx.tree.Tree.add_node()=networkx.tree.Tree-class.html#add_node"><a title="networkx.digraph.DiGraph.add_node
+networkx.graph.Graph.add_node
+networkx.tree.Forest.add_node
+networkx.tree.Tree.add_node" class="py-name" href="#" onclick="return doclink('link-12', 'add_node', 'link-12');">add_node</a></tt><tt class="py-op">(</tt><tt class="py-name">n</tt><tt class="py-op">)</tt> </tt>
+<a name="L69"></a><tt class="py-lineno"> 69</tt>  <tt class="py-line">        <tt class="py-name">node_attr</tt><tt class="py-op">[</tt><tt class="py-name">n</tt><tt class="py-op">]</tt><tt class="py-op">=</tt><tt class="py-name">n</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt> </tt>
+<a name="L70"></a><tt class="py-lineno"> 70</tt>  <tt class="py-line"> </tt>
+<a name="L71"></a><tt class="py-lineno"> 71</tt>  <tt class="py-line">    <tt class="py-comment"># add edges, attributes attached to edge</tt> </tt>
+<a name="L72"></a><tt class="py-lineno"> 72</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">for</tt> <tt class="py-name">e</tt> <tt class="py-keyword">in</tt> <tt class="py-name">A</tt><tt class="py-op">.</tt><tt id="link-13" class="py-name" targets="Function networkx.function.edges()=networkx.function-module.html#edges,Method networkx.graph.Graph.edges()=networkx.graph.Graph-class.html#edges"><a title="networkx.function.edges
+networkx.graph.Graph.edges" class="py-name" href="#" onclick="return doclink('link-13', 'edges', 'link-13');">edges</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L73"></a><tt class="py-lineno"> 73</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">e</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-number">2</tt><tt class="py-op">:</tt> </tt>
+<a name="L74"></a><tt class="py-lineno"> 74</tt>  <tt class="py-line">            <tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">=</tt><tt class="py-name">e</tt> </tt>
+<a name="L75"></a><tt class="py-lineno"> 75</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L76"></a><tt class="py-lineno"> 76</tt>  <tt class="py-line">            <tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">,</tt><tt class="py-name">k</tt><tt class="py-op">=</tt><tt class="py-name">e</tt> </tt>
+<a name="L77"></a><tt class="py-lineno"> 77</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">,</tt><tt class="py-string">'allow_multiedges'</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-name">True</tt><tt class="py-op">:</tt> <tt class="py-comment"># XGraph</tt> </tt>
+<a name="L78"></a><tt class="py-lineno"> 78</tt>  <tt class="py-line">            <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-14" class="py-name" targets="Method networkx.digraph.DiGraph.add_edge()=networkx.digraph.DiGraph-class.html#add_edge,Method networkx.graph.Graph.add_edge()=networkx.graph.Graph-class.html#add_edge,Method networkx.tree.DirectedTree.add_edge()=networkx.tree.DirectedTree-class.html#add_edge,Method networkx.tree.Forest.add_edge()=networkx.tree.Forest-class.html#add_edge,Method networkx.tree.RootedTree.add_edge()=networkx.tree.RootedTree-class.html#add_edge,Method networkx.tree.Tree.add_edge()=networkx.tree.Tree-class.html#add_edge,Method networkx.xdigraph.XDiGraph.add_edge()=networkx.xdigraph.XDiGraph-class.html#add_edge,Method networkx.xgraph.XGraph.add_edge()=networkx.xgraph.XGraph-class.html#add_edge"><a title="networkx.digraph.DiGraph.add_edge
+networkx.graph.Graph.add_edge
+networkx.tree.DirectedTree.add_edge
+networkx.tree.Forest.add_edge
+networkx.tree.RootedTree.add_edge
+networkx.tree.Tree.add_edge
+networkx.xdigraph.XDiGraph.add_edge
+networkx.xgraph.XGraph.add_edge" class="py-name" href="#" onclick="return doclink('link-14', 'add_edge', 'link-14');">add_edge</a></tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">,</tt><tt class="py-name">e</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt><tt class="py-op">)</tt> </tt>
+<a name="L79"></a><tt class="py-lineno"> 79</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> <tt class="py-comment"># Graph</tt> </tt>
+<a name="L80"></a><tt class="py-lineno"> 80</tt>  <tt class="py-line">            <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-15" class="py-name"><a title="networkx.digraph.DiGraph.add_edge
+networkx.graph.Graph.add_edge
+networkx.tree.DirectedTree.add_edge
+networkx.tree.Forest.add_edge
+networkx.tree.RootedTree.add_edge
+networkx.tree.Tree.add_edge
+networkx.xdigraph.XDiGraph.add_edge
+networkx.xgraph.XGraph.add_edge" class="py-name" href="#" onclick="return doclink('link-15', 'add_edge', 'link-14');">add_edge</a></tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> </tt>
+<a name="L81"></a><tt class="py-lineno"> 81</tt>  <tt class="py-line">         </tt>
+<a name="L82"></a><tt class="py-lineno"> 82</tt>  <tt class="py-line">    <tt class="py-comment"># add default attributes for graph, nodes, and edges       </tt> </tt>
+<a name="L83"></a><tt class="py-lineno"> 83</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-comment"># hang them on N.graph_attr</tt> </tt>
+<a name="L84"></a><tt class="py-lineno"> 84</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">,</tt><tt class="py-string">'allow_multiedges'</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-name">True</tt><tt class="py-op">:</tt> <tt class="py-comment"># XGraph</tt> </tt>
+<a name="L85"></a><tt class="py-lineno"> 85</tt>  <tt class="py-line">        <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">=</tt><tt class="py-op">{</tt><tt class="py-op">}</tt> </tt>
+<a name="L86"></a><tt class="py-lineno"> 86</tt>  <tt class="py-line">        <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'graph'</tt><tt class="py-op">]</tt><tt class="py-op">=</tt><tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt> </tt>
+<a name="L87"></a><tt class="py-lineno"> 87</tt>  <tt class="py-line">        <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'node'</tt><tt class="py-op">]</tt><tt class="py-op">=</tt><tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">node_attr</tt> </tt>
+<a name="L88"></a><tt class="py-lineno"> 88</tt>  <tt class="py-line">        <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'edge'</tt><tt class="py-op">]</tt><tt class="py-op">=</tt><tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">edge_attr</tt> </tt>
+<a name="L89"></a><tt class="py-lineno"> 89</tt>  <tt class="py-line">        <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">node_attr</tt><tt class="py-op">=</tt><tt class="py-name">node_attr</tt> </tt>
+<a name="L90"></a><tt class="py-lineno"> 90</tt>  <tt class="py-line"> </tt>
+<a name="L91"></a><tt class="py-lineno"> 91</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">N</tt>         </tt>
+</div><a name="L92"></a><tt class="py-lineno"> 92</tt>  <tt class="py-line"> </tt>
+<a name="to_agraph"></a><div id="to_agraph-def"><a name="L93"></a><tt class="py-lineno"> 93</tt> <a class="py-toggle" href="#" id="to_agraph-toggle" onclick="return toggle('to_agraph');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#to_agraph">to_agraph</a><tt class="py-op">(</tt><tt class="py-param">N</tt><tt class="py-op">,</tt> <tt class="py-param">graph_attr</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">node_attr</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">edge_attr</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> </tt>
+<a name="L94"></a><tt class="py-lineno"> 94</tt>  <tt class="py-line">              <tt class="py-param">strict</tt><tt class="py-op">=</tt><tt class="py-name">True</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="to_agraph-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="to_agraph-expanded"><a name="L95"></a><tt class="py-lineno"> 95</tt>  <tt class="py-line">    <tt class="py-docstring">"""Return a pygraphviz graph from a NetworkX graph N.</tt> </tt>
+<a name="L96"></a><tt class="py-lineno"> 96</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L97"></a><tt class="py-lineno"> 97</tt>  <tt class="py-line"><tt class="py-docstring">    If N is a Graph or DiGraph, graphviz attributes can</tt> </tt>
+<a name="L98"></a><tt class="py-lineno"> 98</tt>  <tt class="py-line"><tt class="py-docstring">    be supplied through the arguments</tt> </tt>
+<a name="L99"></a><tt class="py-lineno"> 99</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L100"></a><tt class="py-lineno">100</tt>  <tt class="py-line"><tt class="py-docstring">    graph_attr:  dictionary with default attributes for graph, nodes, and edges</tt> </tt>
+<a name="L101"></a><tt class="py-lineno">101</tt>  <tt class="py-line"><tt class="py-docstring">                 keyed by 'graph', 'node', and 'edge' to attribute dictionaries</tt> </tt>
+<a name="L102"></a><tt class="py-lineno">102</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L103"></a><tt class="py-lineno">103</tt>  <tt class="py-line"><tt class="py-docstring">    node_attr: dictionary keyed by node to node attribute dictionary</tt> </tt>
+<a name="L104"></a><tt class="py-lineno">104</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L105"></a><tt class="py-lineno">105</tt>  <tt class="py-line"><tt class="py-docstring">    edge_attr: dictionary keyed by edge tuple to edge attribute dictionary</tt> </tt>
+<a name="L106"></a><tt class="py-lineno">106</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L107"></a><tt class="py-lineno">107</tt>  <tt class="py-line"><tt class="py-docstring">    If N is an XGraph or XDiGraph an attempt will be made first</tt> </tt>
+<a name="L108"></a><tt class="py-lineno">108</tt>  <tt class="py-line"><tt class="py-docstring">    to copy properties attached to the graph (see from_agraph)</tt> </tt>
+<a name="L109"></a><tt class="py-lineno">109</tt>  <tt class="py-line"><tt class="py-docstring">    and then updated with the calling arguments if any.</tt> </tt>
+<a name="L110"></a><tt class="py-lineno">110</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L111"></a><tt class="py-lineno">111</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L112"></a><tt class="py-lineno">112</tt>  <tt class="py-line">    <tt id="link-16" class="py-name" targets="Module networkx.generators.directed=networkx.generators.directed-module.html"><a title="networkx.generators.directed" class="py-name" href="#" onclick="return doclink('link-16', 'directed', 'link-16');">directed</a></tt><tt class="py-op">=</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-17" class="py-name" targets="Method networkx.digraph.DiGraph.is_directed()=networkx.digraph.DiGraph-class.html#is_directed,Function networkx.function.is_directed()=networkx.function-module.html#is_directed,Method networkx.graph.Graph.is_directed()=networkx.graph.Graph-class.html#is_directed"><a title="networkx.digraph.DiGraph.is_directed
+networkx.function.is_directed
+networkx.graph.Graph.is_directed" class="py-name" href="#" onclick="return doclink('link-17', 'is_directed', 'link-17');">is_directed</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt> </tt>
+<a name="L113"></a><tt class="py-lineno">113</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">,</tt><tt class="py-string">'allow_multiedges'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L114"></a><tt class="py-lineno">114</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">multiedges</tt><tt class="py-op">:</tt> </tt>
+<a name="L115"></a><tt class="py-lineno">115</tt>  <tt class="py-line">            <tt class="py-name">strict</tt><tt class="py-op">=</tt><tt class="py-name">False</tt> </tt>
+<a name="L116"></a><tt class="py-lineno">116</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">,</tt><tt class="py-string">'allow_selfloops'</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L117"></a><tt class="py-lineno">117</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">selfloops</tt><tt class="py-op">:</tt> </tt>
+<a name="L118"></a><tt class="py-lineno">118</tt>  <tt class="py-line">            <tt class="py-name">strict</tt><tt class="py-op">=</tt><tt class="py-name">False</tt> </tt>
+<a name="L119"></a><tt class="py-lineno">119</tt>  <tt class="py-line">    <tt class="py-name">A</tt><tt class="py-op">=</tt><tt class="py-name">pygraphviz</tt><tt class="py-op">.</tt><tt class="py-name">AGraph</tt><tt class="py-op">(</tt><tt id="link-18" class="py-name"><a title="networkx.release.name" class="py-name" href="#" onclick="return doclink('link-18', 'name', 'link-10');">name</a></tt><tt class="py-op">=</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-19" class="py-name"><a title="networkx.release.name" class="py-name" href="#" onclick="return doclink('link-19', 'name', 'link-10');">name</a></tt><tt class="py-op">,</tt><tt class="py-name">strict</tt><tt class="py-op">=</tt><tt class="py-name">strict</tt><tt class="py-op">,</tt><tt id="link-20" class="py-name"><a title="networkx.generators.directed" class="py-name" href="#" onclick="return doclink('link-20', 'directed', 'link-16');">directed</a></tt><tt class="py-op">=</tt><tt id="link-21" class="py-name"><a title="networkx.generators.directed" class="py-name" href="#" onclick="return doclink('link-21', 'directed', 'link-16');">directed</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L120"></a><tt class="py-lineno">120</tt>  <tt class="py-line"> </tt>
+<a name="L121"></a><tt class="py-lineno">121</tt>  <tt class="py-line">    <tt class="py-comment"># default graph attributes            </tt> </tt>
+<a name="L122"></a><tt class="py-lineno">122</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">try</tt><tt class="py-op">:</tt>              </tt>
+<a name="L123"></a><tt class="py-lineno">123</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">.</tt><tt id="link-22" class="py-name" targets="Method networkx.queues.BFS.update()=networkx.queues.BFS-class.html#update,Method networkx.queues.DFS.update()=networkx.queues.DFS-class.html#update,Method networkx.queues.RFS.update()=networkx.queues.RFS-class.html#update"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-22', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'graph'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L124"></a><tt class="py-lineno">124</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L125"></a><tt class="py-lineno">125</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+<a name="L126"></a><tt class="py-lineno">126</tt>  <tt class="py-line">    <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L127"></a><tt class="py-lineno">127</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">.</tt><tt id="link-23" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-23', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'graph'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L128"></a><tt class="py-lineno">128</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L129"></a><tt class="py-lineno">129</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+<a name="L130"></a><tt class="py-lineno">130</tt>  <tt class="py-line">    <tt class="py-comment"># default node attributes            </tt> </tt>
+<a name="L131"></a><tt class="py-lineno">131</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">try</tt><tt class="py-op">:</tt>         </tt>
+<a name="L132"></a><tt class="py-lineno">132</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">node_attr</tt><tt class="py-op">.</tt><tt id="link-24" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-24', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'node'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L133"></a><tt class="py-lineno">133</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L134"></a><tt class="py-lineno">134</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+<a name="L135"></a><tt class="py-lineno">135</tt>  <tt class="py-line">    <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L136"></a><tt class="py-lineno">136</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">node_attr</tt><tt class="py-op">.</tt><tt id="link-25" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-25', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'node'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L137"></a><tt class="py-lineno">137</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L138"></a><tt class="py-lineno">138</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+<a name="L139"></a><tt class="py-lineno">139</tt>  <tt class="py-line">    <tt class="py-comment"># default edge attributes            </tt> </tt>
+<a name="L140"></a><tt class="py-lineno">140</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">try</tt><tt class="py-op">:</tt>         </tt>
+<a name="L141"></a><tt class="py-lineno">141</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">edge_attr</tt><tt class="py-op">.</tt><tt id="link-26" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-26', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'edge'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L142"></a><tt class="py-lineno">142</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L143"></a><tt class="py-lineno">143</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+<a name="L144"></a><tt class="py-lineno">144</tt>  <tt class="py-line">    <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L145"></a><tt class="py-lineno">145</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">edge_attr</tt><tt class="py-op">.</tt><tt id="link-27" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-27', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">graph_attr</tt><tt class="py-op">[</tt><tt class="py-string">'edge'</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L146"></a><tt class="py-lineno">146</tt>  <tt class="py-line">    <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L147"></a><tt class="py-lineno">147</tt>  <tt class="py-line">        <tt class="py-keyword">pass</tt> </tt>
+<a name="L148"></a><tt class="py-lineno">148</tt>  <tt class="py-line"> </tt>
+<a name="L149"></a><tt class="py-lineno">149</tt>  <tt class="py-line">    <tt class="py-comment"># add nodes</tt> </tt>
+<a name="L150"></a><tt class="py-lineno">150</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">for</tt> <tt class="py-name">n</tt> <tt class="py-keyword">in</tt> <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-28" class="py-name" targets="Function networkx.function.nodes_iter()=networkx.function-module.html#nodes_iter,Method networkx.graph.Graph.nodes_iter()=networkx.graph.Graph-class.html#nodes_iter"><a title="networkx.function.nodes_iter
+networkx.graph.Graph.nodes_iter" class="py-name" href="#" onclick="return doclink('link-28', 'nodes_iter', 'link-28');">nodes_iter</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L151"></a><tt class="py-lineno">151</tt>  <tt class="py-line">        <tt class="py-name">A</tt><tt class="py-op">.</tt><tt id="link-29" class="py-name"><a title="networkx.digraph.DiGraph.add_node
+networkx.graph.Graph.add_node
+networkx.tree.Forest.add_node
+networkx.tree.Tree.add_node" class="py-name" href="#" onclick="return doclink('link-29', 'add_node', 'link-12');">add_node</a></tt><tt class="py-op">(</tt><tt class="py-name">n</tt><tt class="py-op">)</tt> </tt>
+<a name="L152"></a><tt class="py-lineno">152</tt>  <tt class="py-line">        <tt class="py-name">node</tt><tt class="py-op">=</tt><tt class="py-name">pygraphviz</tt><tt class="py-op">.</tt><tt class="py-name">Node</tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">,</tt><tt class="py-name">n</tt><tt class="py-op">)</tt> </tt>
+<a name="L153"></a><tt class="py-lineno">153</tt>  <tt class="py-line">        <tt class="py-comment"># try node attributes attached to graph</tt> </tt>
+<a name="L154"></a><tt class="py-lineno">154</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L155"></a><tt class="py-lineno">155</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">n</tt> <tt class="py-keyword">in</tt> <tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">node_attr</tt><tt class="py-op">:</tt> </tt>
+<a name="L156"></a><tt class="py-lineno">156</tt>  <tt class="py-line">                <tt class="py-name">node</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt><tt class="py-op">.</tt><tt id="link-30" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-30', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt class="py-name">node_attr</tt><tt class="py-op">[</tt><tt class="py-name">n</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L157"></a><tt class="py-lineno">157</tt>  <tt class="py-line">        <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L158"></a><tt class="py-lineno">158</tt>  <tt class="py-line">            <tt class="py-keyword">pass</tt> </tt>
+<a name="L159"></a><tt class="py-lineno">159</tt>  <tt class="py-line">        <tt class="py-comment"># update with attributes from calling parameters</tt> </tt>
+<a name="L160"></a><tt class="py-lineno">160</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L161"></a><tt class="py-lineno">161</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-name">n</tt> <tt class="py-keyword">in</tt> <tt class="py-name">node_attr</tt><tt class="py-op">:</tt> </tt>
+<a name="L162"></a><tt class="py-lineno">162</tt>  <tt class="py-line">                <tt class="py-name">node</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt><tt class="py-op">.</tt><tt id="link-31" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-31', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">node_attr</tt><tt class="py-op">[</tt><tt class="py-name">n</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L163"></a><tt class="py-lineno">163</tt>  <tt class="py-line">        <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L164"></a><tt class="py-lineno">164</tt>  <tt class="py-line">            <tt class="py-keyword">pass</tt> </tt>
+<a name="L165"></a><tt class="py-lineno">165</tt>  <tt class="py-line"> </tt>
+<a name="L166"></a><tt class="py-lineno">166</tt>  <tt class="py-line">    <tt class="py-comment"># loop over edges</tt> </tt>
+<a name="L167"></a><tt class="py-lineno">167</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-keyword">for</tt> <tt class="py-name">e</tt> <tt class="py-keyword">in</tt> <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-32" class="py-name" targets="Function networkx.function.edges_iter()=networkx.function-module.html#edges_iter,Method networkx.graph.Graph.edges_iter()=networkx.graph.Graph-class.html#edges_iter,Method networkx.xgraph.XGraph.edges_iter()=networkx.xgraph.XGraph-class.html#edges_iter"><a title="networkx.function.edges_iter
+networkx.graph.Graph.edges_iter
+networkx.xgraph.XGraph.edges_iter" class="py-name" href="#" onclick="return doclink('link-32', 'edges_iter', 'link-32');">edges_iter</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L168"></a><tt class="py-lineno">168</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">len</tt><tt class="py-op">(</tt><tt class="py-name">e</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-number">2</tt><tt class="py-op">:</tt> </tt>
+<a name="L169"></a><tt class="py-lineno">169</tt>  <tt class="py-line">            <tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt><tt class="py-op">=</tt><tt class="py-name">e</tt> </tt>
+<a name="L170"></a><tt class="py-lineno">170</tt>  <tt class="py-line">            <tt class="py-name">data</tt><tt class="py-op">=</tt><tt class="py-name">None</tt> </tt>
+<a name="L171"></a><tt class="py-lineno">171</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> </tt>
+<a name="L172"></a><tt class="py-lineno">172</tt>  <tt class="py-line">            <tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">,</tt><tt class="py-name">data</tt><tt class="py-op">)</tt><tt class="py-op">=</tt><tt class="py-name">e</tt> </tt>
+<a name="L173"></a><tt class="py-lineno">173</tt>  <tt class="py-line"> </tt>
+<a name="L174"></a><tt class="py-lineno">174</tt>  <tt class="py-line">        <tt class="py-keyword">if</tt> <tt class="py-name">data</tt> <tt class="py-keyword">is</tt> <tt class="py-name">None</tt><tt class="py-op">:</tt> <tt class="py-comment"># no data, just add edge</tt> </tt>
+<a name="L175"></a><tt class="py-lineno">175</tt>  <tt class="py-line">            <tt class="py-name">A</tt><tt class="py-op">.</tt><tt id="link-33" class="py-name"><a title="networkx.digraph.DiGraph.add_edge
+networkx.graph.Graph.add_edge
+networkx.tree.DirectedTree.add_edge
+networkx.tree.Forest.add_edge
+networkx.tree.RootedTree.add_edge
+networkx.tree.Tree.add_edge
+networkx.xdigraph.XDiGraph.add_edge
+networkx.xgraph.XGraph.add_edge" class="py-name" href="#" onclick="return doclink('link-33', 'add_edge', 'link-14');">add_edge</a></tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> </tt>
+<a name="L176"></a><tt class="py-lineno">176</tt>  <tt class="py-line">            <tt class="py-name">edge</tt><tt class="py-op">=</tt><tt class="py-name">pygraphviz</tt><tt class="py-op">.</tt><tt class="py-name">Edge</tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">,</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> </tt>
+<a name="L177"></a><tt class="py-lineno">177</tt>  <tt class="py-line">        <tt class="py-keyword">else</tt><tt class="py-op">:</tt> <tt class="py-comment"># could have list of edge data or single edge data</tt> </tt>
+<a name="L178"></a><tt class="py-lineno">178</tt>  <tt class="py-line">            <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L179"></a><tt class="py-lineno">179</tt>  <tt class="py-line">                <tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-34" class="py-name" targets="Method networkx.xdigraph.XDiGraph.allow_multiedges()=networkx.xdigraph.XDiGraph-class.html#allow_multiedges,Method networkx.xgraph.XGraph.allow_multiedges()=networkx.xgraph.XGraph-class.html#allow_multiedges"><a title="networkx.xdigraph.XDiGraph.allow_multiedges
+networkx.xgraph.XGraph.allow_multiedges" class="py-name" href="#" onclick="return doclink('link-34', 'allow_multiedges', 'link-34');">allow_multiedges</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">==</tt><tt class="py-name">True</tt> </tt>
+<a name="L180"></a><tt class="py-lineno">180</tt>  <tt class="py-line">                <tt class="py-name">dlist</tt><tt class="py-op">=</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-35" class="py-name" targets="Method networkx.graph.Graph.get_edge()=networkx.graph.Graph-class.html#get_edge,Method networkx.xdigraph.XDiGraph.get_edge()=networkx.xdigraph.XDiGraph-class.html#get_edge,Method networkx.xgraph.XGraph.get_edge()=networkx.xgraph.XGraph-class.html#get_edge"><a title="networkx.graph.Graph.get_edge
+networkx.xdigraph.XDiGraph.get_edge
+networkx.xgraph.XGraph.get_edge" class="py-name" href="#" onclick="return doclink('link-35', 'get_edge', 'link-35');">get_edge</a></tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> </tt>
+<a name="L181"></a><tt class="py-lineno">181</tt>  <tt class="py-line">            <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L182"></a><tt class="py-lineno">182</tt>  <tt class="py-line">                <tt class="py-name">dlist</tt><tt class="py-op">=</tt><tt class="py-op">[</tt><tt class="py-name">N</tt><tt class="py-op">.</tt><tt id="link-36" class="py-name"><a title="networkx.graph.Graph.get_edge
+networkx.xdigraph.XDiGraph.get_edge
+networkx.xgraph.XGraph.get_edge" class="py-name" href="#" onclick="return doclink('link-36', 'get_edge', 'link-35');">get_edge</a></tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt><tt class="py-op">]</tt> </tt>
+<a name="L183"></a><tt class="py-lineno">183</tt>  <tt class="py-line">            <tt class="py-keyword">for</tt> <tt class="py-name">d</tt> <tt class="py-keyword">in</tt> <tt class="py-name">dlist</tt><tt class="py-op">:</tt> </tt>
+<a name="L184"></a><tt class="py-lineno">184</tt>  <tt class="py-line">                <tt class="py-name">A</tt><tt class="py-op">.</tt><tt id="link-37" class="py-name"><a title="networkx.digraph.DiGraph.add_edge
+networkx.graph.Graph.add_edge
+networkx.tree.DirectedTree.add_edge
+networkx.tree.Forest.add_edge
+networkx.tree.RootedTree.add_edge
+networkx.tree.Tree.add_edge
+networkx.xdigraph.XDiGraph.add_edge
+networkx.xgraph.XGraph.add_edge" class="py-name" href="#" onclick="return doclink('link-37', 'add_edge', 'link-14');">add_edge</a></tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> </tt>
+<a name="L185"></a><tt class="py-lineno">185</tt>  <tt class="py-line">                <tt class="py-name">edge</tt><tt class="py-op">=</tt><tt class="py-name">pygraphviz</tt><tt class="py-op">.</tt><tt class="py-name">Edge</tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">,</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> </tt>
+<a name="L186"></a><tt class="py-lineno">186</tt>  <tt class="py-line">                <tt class="py-keyword">if</tt> <tt class="py-name">hasattr</tt><tt class="py-op">(</tt><tt class="py-name">d</tt><tt class="py-op">,</tt><tt class="py-string">"__getitem__"</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L187"></a><tt class="py-lineno">187</tt>  <tt class="py-line">                    <tt class="py-name">edge</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt><tt class="py-op">.</tt><tt id="link-38" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-38', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">d</tt><tt class="py-op">)</tt> </tt>
+<a name="L188"></a><tt class="py-lineno">188</tt>  <tt class="py-line">        <tt class="py-comment"># update from calling argument</tt> </tt>
+<a name="L189"></a><tt class="py-lineno">189</tt>  <tt class="py-line"><tt class="py-comment"></tt>        <tt class="py-keyword">try</tt><tt class="py-op">:</tt>  <tt class="py-comment"># e might not be hashable</tt> </tt>
+<a name="L190"></a><tt class="py-lineno">190</tt>  <tt class="py-line">            <tt class="py-keyword">if</tt> <tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt> <tt class="py-keyword">in</tt> <tt class="py-name">edge_attr</tt><tt class="py-op">:</tt> </tt>
+<a name="L191"></a><tt class="py-lineno">191</tt>  <tt class="py-line">                <tt class="py-name">edge</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt><tt class="py-op">.</tt><tt id="link-39" class="py-name"><a title="networkx.queues.BFS.update
+networkx.queues.DFS.update
+networkx.queues.RFS.update" class="py-name" href="#" onclick="return doclink('link-39', 'update', 'link-22');">update</a></tt><tt class="py-op">(</tt><tt class="py-name">edge_attr</tt><tt class="py-op">[</tt><tt class="py-op">(</tt><tt class="py-name">u</tt><tt class="py-op">,</tt><tt class="py-name">v</tt><tt class="py-op">)</tt><tt class="py-op">]</tt><tt class="py-op">)</tt> </tt>
+<a name="L192"></a><tt class="py-lineno">192</tt>  <tt class="py-line">        <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L193"></a><tt class="py-lineno">193</tt>  <tt class="py-line">            <tt class="py-keyword">pass</tt> </tt>
+<a name="L194"></a><tt class="py-lineno">194</tt>  <tt class="py-line"> </tt>
+<a name="L195"></a><tt class="py-lineno">195</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">A</tt> </tt>
+</div><a name="L196"></a><tt class="py-lineno">196</tt>  <tt class="py-line"> </tt>
+<a name="write_dot"></a><div id="write_dot-def"><a name="L197"></a><tt class="py-lineno">197</tt> <a class="py-toggle" href="#" id="write_dot-toggle" onclick="return toggle('write_dot');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#write_dot">write_dot</a><tt class="py-op">(</tt><tt class="py-param">G</tt><tt class="py-op">,</tt><tt class="py-param">path</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="write_dot-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="write_dot-expanded"><a name="L198"></a><tt class="py-lineno">198</tt>  <tt class="py-line">    <tt class="py-docstring">"""Write NetworkX graph G to Graphviz dot format on path.</tt> </tt>
+<a name="L199"></a><tt class="py-lineno">199</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L200"></a><tt class="py-lineno">200</tt>  <tt class="py-line"><tt class="py-docstring">    Path can be a string or a file handle.</tt> </tt>
+<a name="L201"></a><tt class="py-lineno">201</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L202"></a><tt class="py-lineno">202</tt>  <tt class="py-line">    <tt class="py-name">A</tt><tt class="py-op">=</tt><tt id="link-40" class="py-name" targets="Function networkx.drawing.nx_agraph.to_agraph()=networkx.drawing.nx_agraph-module.html#to_agraph"><a title="networkx.drawing.nx_agraph.to_agraph" class="py-name" href="#" onclick="return doclink('link-40', 'to_agraph', 'link-40');">to_agraph</a></tt><tt class="py-op">(</tt><tt class="py-name">G</tt><tt class="py-op">)</tt> </tt>
+<a name="L203"></a><tt class="py-lineno">203</tt>  <tt class="py-line">    <tt class="py-name">A</tt><tt class="py-op">.</tt><tt class="py-name">write</tt><tt class="py-op">(</tt><tt id="link-41" class="py-name" targets="Module networkx.path=networkx.path-module.html,Method networkx.search_class.Predecessor.path()=networkx.search_class.Predecessor-class.html#path"><a title="networkx.path
+networkx.search_class.Predecessor.path" class="py-name" href="#" onclick="return doclink('link-41', 'path', 'link-41');">path</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L204"></a><tt class="py-lineno">204</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> </tt>
+</div><a name="L205"></a><tt class="py-lineno">205</tt>  <tt class="py-line"> </tt>
+<a name="read_dot"></a><div id="read_dot-def"><a name="L206"></a><tt class="py-lineno">206</tt> <a class="py-toggle" href="#" id="read_dot-toggle" onclick="return toggle('read_dot');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#read_dot">read_dot</a><tt class="py-op">(</tt><tt class="py-param">path</tt><tt class="py-op">,</tt><tt class="py-param">create_using</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="read_dot-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="read_dot-expanded"><a name="L207"></a><tt class="py-lineno">207</tt>  <tt class="py-line">    <tt class="py-docstring">"""Return a NetworkX XGraph or XdiGraph from a dot file on path.</tt> </tt>
+<a name="L208"></a><tt class="py-lineno">208</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L209"></a><tt class="py-lineno">209</tt>  <tt class="py-line"><tt class="py-docstring">    Path can be a string or a file handle.</tt> </tt>
+<a name="L210"></a><tt class="py-lineno">210</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L211"></a><tt class="py-lineno">211</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L212"></a><tt class="py-lineno">212</tt>  <tt class="py-line">    <tt class="py-name">A</tt><tt class="py-op">=</tt><tt class="py-name">pygraphviz</tt><tt class="py-op">.</tt><tt class="py-name">AGraph</tt><tt class="py-op">(</tt><tt class="py-name">file</tt><tt class="py-op">=</tt><tt id="link-42" class="py-name"><a title="networkx.path
+networkx.search_class.Predecessor.path" class="py-name" href="#" onclick="return doclink('link-42', 'path', 'link-41');">path</a></tt><tt class="py-op">)</tt> </tt>
+<a name="L213"></a><tt class="py-lineno">213</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-43" class="py-name" targets="Function networkx.drawing.nx_agraph.from_agraph()=networkx.drawing.nx_agraph-module.html#from_agraph"><a title="networkx.drawing.nx_agraph.from_agraph" class="py-name" href="#" onclick="return doclink('link-43', 'from_agraph', 'link-43');">from_agraph</a></tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L214"></a><tt class="py-lineno">214</tt>  <tt class="py-line"> </tt>
+<a name="L215"></a><tt class="py-lineno">215</tt>  <tt class="py-line"> </tt>
+<a name="graphviz_layout"></a><div id="graphviz_layout-def"><a name="L216"></a><tt class="py-lineno">216</tt> <a class="py-toggle" href="#" id="graphviz_layout-toggle" onclick="return toggle('graphviz_layout');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#graphviz_layout">graphviz_layout</a><tt class="py-op">(</tt><tt class="py-param">G</tt><tt class="py-op">,</tt><tt class="py-param">prog</tt><tt class="py-op">=</tt><tt class="py-string">'neato'</tt><tt class="py-op">,</tt><tt class="py-param">root</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">args</tt><tt class="py-op">=</tt><tt class="py-string">''</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="graphviz_layout-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="graphviz_layout-expanded"><a name="L217"></a><tt class="py-lineno">217</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L218"></a><tt class="py-lineno">218</tt>  <tt class="py-line"><tt class="py-docstring">    Create layout using graphviz.</tt> </tt>
+<a name="L219"></a><tt class="py-lineno">219</tt>  <tt class="py-line"><tt class="py-docstring">    Returns a dictionary of positions keyed by node.</tt> </tt>
+<a name="L220"></a><tt class="py-lineno">220</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L221"></a><tt class="py-lineno">221</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from networkx import *</tt> </tt>
+<a name="L222"></a><tt class="py-lineno">222</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; G=petersen_graph()</tt> </tt>
+<a name="L223"></a><tt class="py-lineno">223</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; pos=graphviz_layout(G)</tt> </tt>
+<a name="L224"></a><tt class="py-lineno">224</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; pos=graphviz_layout(G,prog='dot')</tt> </tt>
+<a name="L225"></a><tt class="py-lineno">225</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L226"></a><tt class="py-lineno">226</tt>  <tt class="py-line"><tt class="py-docstring">    This is a wrapper for pygraphviz_layout.</tt> </tt>
+<a name="L227"></a><tt class="py-lineno">227</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L228"></a><tt class="py-lineno">228</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L229"></a><tt class="py-lineno">229</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt id="link-44" class="py-name" targets="Function networkx.drawing.nx_agraph.pygraphviz_layout()=networkx.drawing.nx_agraph-module.html#pygraphviz_layout,Function networkx.drawing.nx_pygraphviz.pygraphviz_layout()=networkx.drawing.nx_pygraphviz-module.html#pygraphviz_layout"><a title="networkx.drawing.nx_agraph.pygraphviz_layout
+networkx.drawing.nx_pygraphviz.pygraphviz_layout" class="py-name" href="#" onclick="return doclink('link-44', 'pygraphviz_layout', 'link-44');">pygraphviz_layout</a></tt><tt class="py-op">(</tt><tt class="py-name">G</tt><tt class="py-op">,</tt><tt class="py-name">prog</tt><tt class="py-op">=</tt><tt class="py-name">prog</tt><tt class="py-op">,</tt><tt class="py-name">root</tt><tt class="py-op">=</tt><tt class="py-name">root</tt><tt class="py-op">,</tt><tt class="py-name">args</tt><tt class="py-op">=</tt><tt class="py-name">args</tt><tt class="py-op">)</tt> </tt>
+</div><a name="L230"></a><tt class="py-lineno">230</tt>  <tt class="py-line"> </tt>
+<a name="pygraphviz_layout"></a><div id="pygraphviz_layout-def"><a name="L231"></a><tt class="py-lineno">231</tt> <a class="py-toggle" href="#" id="pygraphviz_layout-toggle" onclick="return toggle('pygraphviz_layout');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#pygraphviz_layout">pygraphviz_layout</a><tt class="py-op">(</tt><tt class="py-param">G</tt><tt class="py-op">,</tt><tt class="py-param">prog</tt><tt class="py-op">=</tt><tt class="py-string">'neato'</tt><tt class="py-op">,</tt><tt class="py-param">root</tt><tt class="py-op">=</tt><tt class="py-name">None</tt><tt class="py-op">,</tt> <tt class="py-param">args</tt><tt class="py-op">=</tt><tt class="py-string">''</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="pygraphviz_layout-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="pygraphviz_layout-expanded"><a name="L232"></a><tt class="py-lineno">232</tt>  <tt class="py-line">    <tt class="py-docstring">"""</tt> </tt>
+<a name="L233"></a><tt class="py-lineno">233</tt>  <tt class="py-line"><tt class="py-docstring">    Create layout using pygraphviz and graphviz.</tt> </tt>
+<a name="L234"></a><tt class="py-lineno">234</tt>  <tt class="py-line"><tt class="py-docstring">    Returns a dictionary of positions keyed by node.</tt> </tt>
+<a name="L235"></a><tt class="py-lineno">235</tt>  <tt class="py-line"><tt class="py-docstring"></tt> </tt>
+<a name="L236"></a><tt class="py-lineno">236</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; from networkx import *</tt> </tt>
+<a name="L237"></a><tt class="py-lineno">237</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; G=petersen_graph()</tt> </tt>
+<a name="L238"></a><tt class="py-lineno">238</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; pos=pygraphviz_layout(G)</tt> </tt>
+<a name="L239"></a><tt class="py-lineno">239</tt>  <tt class="py-line"><tt class="py-docstring">    &gt;&gt;&gt; pos=pygraphviz_layout(G,prog='dot')</tt> </tt>
+<a name="L240"></a><tt class="py-lineno">240</tt>  <tt class="py-line"><tt class="py-docstring">    </tt> </tt>
+<a name="L241"></a><tt class="py-lineno">241</tt>  <tt class="py-line"><tt class="py-docstring">    """</tt> </tt>
+<a name="L242"></a><tt class="py-lineno">242</tt>  <tt class="py-line">    <tt class="py-name">A</tt><tt class="py-op">=</tt><tt id="link-45" class="py-name"><a title="networkx.drawing.nx_agraph.to_agraph" class="py-name" href="#" onclick="return doclink('link-45', 'to_agraph', 'link-40');">to_agraph</a></tt><tt class="py-op">(</tt><tt class="py-name">G</tt><tt class="py-op">)</tt> </tt>
+<a name="L243"></a><tt class="py-lineno">243</tt>  <tt class="py-line">    <tt class="py-name">A</tt><tt class="py-op">.</tt><tt id="link-46" class="py-name" targets="Module networkx.drawing.layout=networkx.drawing.layout-module.html"><a title="networkx.drawing.layout" class="py-name" href="#" onclick="return doclink('link-46', 'layout', 'link-46');">layout</a></tt><tt class="py-op">(</tt><tt class="py-name">prog</tt><tt class="py-op">=</tt><tt class="py-name">prog</tt><tt class="py-op">,</tt><tt class="py-name">args</tt><tt class="py-op">=</tt><tt class="py-name">args</tt><tt class="py-op">)</tt> </tt>
+<a name="L244"></a><tt class="py-lineno">244</tt>  <tt class="py-line">    <tt class="py-name">node_pos</tt><tt class="py-op">=</tt><tt class="py-op">{</tt><tt class="py-op">}</tt> </tt>
+<a name="L245"></a><tt class="py-lineno">245</tt>  <tt class="py-line">    <tt class="py-keyword">for</tt> <tt class="py-name">n</tt> <tt class="py-keyword">in</tt> <tt class="py-name">G</tt><tt class="py-op">.</tt><tt id="link-47" class="py-name"><a title="networkx.function.nodes
+networkx.graph.Graph.nodes" class="py-name" href="#" onclick="return doclink('link-47', 'nodes', 'link-11');">nodes</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L246"></a><tt class="py-lineno">246</tt>  <tt class="py-line">        <tt class="py-name">node</tt><tt class="py-op">=</tt><tt class="py-name">pygraphviz</tt><tt class="py-op">.</tt><tt class="py-name">Node</tt><tt class="py-op">(</tt><tt class="py-name">A</tt><tt class="py-op">,</tt><tt class="py-name">n</tt><tt class="py-op">)</tt> </tt>
+<a name="L247"></a><tt class="py-lineno">247</tt>  <tt class="py-line">        <tt class="py-keyword">try</tt><tt class="py-op">:</tt> </tt>
+<a name="L248"></a><tt class="py-lineno">248</tt>  <tt class="py-line">            <tt class="py-name">xx</tt><tt class="py-op">,</tt><tt class="py-name">yy</tt><tt class="py-op">=</tt><tt class="py-name">node</tt><tt class="py-op">.</tt><tt class="py-name">attr</tt><tt class="py-op">[</tt><tt class="py-string">"pos"</tt><tt class="py-op">]</tt><tt class="py-op">.</tt><tt class="py-name">split</tt><tt class="py-op">(</tt><tt class="py-string">','</tt><tt class="py-op">)</tt> </tt>
+<a name="L249"></a><tt class="py-lineno">249</tt>  <tt class="py-line">            <tt class="py-name">node_pos</tt><tt class="py-op">[</tt><tt class="py-name">n</tt><tt class="py-op">]</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">xx</tt><tt class="py-op">)</tt><tt class="py-op">,</tt><tt class="py-name">float</tt><tt class="py-op">(</tt><tt class="py-name">yy</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L250"></a><tt class="py-lineno">250</tt>  <tt class="py-line">        <tt class="py-keyword">except</tt><tt class="py-op">:</tt> </tt>
+<a name="L251"></a><tt class="py-lineno">251</tt>  <tt class="py-line">            <tt class="py-keyword">print</tt> <tt class="py-string">"no position for node"</tt><tt class="py-op">,</tt><tt class="py-name">n</tt> </tt>
+<a name="L252"></a><tt class="py-lineno">252</tt>  <tt class="py-line">            <tt class="py-name">node_pos</tt><tt class="py-op">[</tt><tt class="py-name">n</tt><tt class="py-op">]</tt><tt class="py-op">=</tt><tt class="py-op">(</tt><tt class="py-number">0.0</tt><tt class="py-op">,</tt><tt class="py-number">0.0</tt><tt class="py-op">)</tt> </tt>
+<a name="L253"></a><tt class="py-lineno">253</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">node_pos</tt> </tt>
+</div><a name="L254"></a><tt class="py-lineno">254</tt>  <tt class="py-line"> </tt>
+<a name="L255"></a><tt class="py-lineno">255</tt>  <tt class="py-line"> </tt>
+<a name="_test_suite"></a><div id="_test_suite-def"><a name="L256"></a><tt class="py-lineno">256</tt> <a class="py-toggle" href="#" id="_test_suite-toggle" onclick="return toggle('_test_suite');">-</a><tt class="py-line"><tt class="py-keyword">def</tt> <a class="py-def-name" href="networkx.drawing.nx_agraph-module.html#_test_suite">_test_suite</a><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+</div><div id="_test_suite-collapsed" style="display:none;" pad="+++" indent="++++"></div><div id="_test_suite-expanded"><a name="L257"></a><tt class="py-lineno">257</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">doctest</tt> </tt>
+<a name="L258"></a><tt class="py-lineno">258</tt>  <tt class="py-line">    <tt class="py-name">suite</tt> <tt class="py-op">=</tt> <tt class="py-name">doctest</tt><tt class="py-op">.</tt><tt class="py-name">DocFileSuite</tt><tt class="py-op">(</tt><tt class="py-string">'tests/drawing/nx_agraph.txt'</tt><tt class="py-op">,</tt><tt class="py-name">package</tt><tt class="py-op">=</tt><tt class="py-string">'networkx'</tt><tt class="py-op">)</tt> </tt>
+<a name="L259"></a><tt class="py-lineno">259</tt>  <tt class="py-line">    <tt class="py-keyword">return</tt> <tt class="py-name">suite</tt> </tt>
+</div><a name="L260"></a><tt class="py-lineno">260</tt>  <tt class="py-line"> </tt>
+<a name="L261"></a><tt class="py-lineno">261</tt>  <tt class="py-line"> </tt>
+<a name="L262"></a><tt class="py-lineno">262</tt>  <tt class="py-line"> </tt>
+<a name="L263"></a><tt class="py-lineno">263</tt>  <tt class="py-line"> </tt>
+<a name="L264"></a><tt class="py-lineno">264</tt>  <tt class="py-line"><tt class="py-keyword">if</tt> <tt class="py-name">__name__</tt> <tt class="py-op">==</tt> <tt class="py-string">"__main__"</tt><tt class="py-op">:</tt> </tt>
+<a name="L265"></a><tt class="py-lineno">265</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">os</tt> </tt>
+<a name="L266"></a><tt class="py-lineno">266</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">sys</tt> </tt>
+<a name="L267"></a><tt class="py-lineno">267</tt>  <tt class="py-line">    <tt class="py-keyword">import</tt> <tt class="py-name">unittest</tt> </tt>
+<a name="L268"></a><tt class="py-lineno">268</tt>  <tt class="py-line">    <tt class="py-keyword">if</tt> <tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">version_info</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-number">2</tt><tt class="py-op">]</tt> <tt class="py-op">&lt;</tt> <tt class="py-op">(</tt><tt class="py-number">2</tt><tt class="py-op">,</tt> <tt class="py-number">4</tt><tt class="py-op">)</tt><tt class="py-op">:</tt> </tt>
+<a name="L269"></a><tt class="py-lineno">269</tt>  <tt class="py-line">        <tt class="py-keyword">print</tt> <tt class="py-string">"Python version 2.4 or later required for tests (%d.%d detected)."</tt> <tt class="py-op">%</tt>  <tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">version_info</tt><tt class="py-op">[</tt><tt class="py-op">:</tt><tt class="py-number">2</tt><tt class="py-op">]</tt> </tt>
+<a name="L270"></a><tt class="py-lineno">270</tt>  <tt class="py-line">        <tt class="py-name">sys</tt><tt class="py-op">.</tt><tt class="py-name">exit</tt><tt class="py-op">(</tt><tt class="py-op">-</tt><tt class="py-number">1</tt><tt class="py-op">)</tt> </tt>
+<a name="L271"></a><tt class="py-lineno">271</tt>  <tt class="py-line">    <tt class="py-comment"># directory of networkx package (relative to this)</tt> </tt>
+<a name="L272"></a><tt class="py-lineno">272</tt>  <tt class="py-line"><tt class="py-comment"></tt>    <tt class="py-name">nxbase</tt><tt class="py-op">=</tt><tt class="py-name">sys</tt><tt class="py-op">.</tt><tt id="link-48" class="py-name"><a title="networkx.path
+networkx.search_class.Predecessor.path" class="py-name" href="#" onclick="return doclink('link-48', 'path', 'link-41');">path</a></tt><tt class="py-op">[</tt><tt class="py-number">0</tt><tt class="py-op">]</tt><tt class="py-op">+</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">sep</tt><tt class="py-op">+</tt><tt class="py-name">os</tt><tt class="py-op">.</tt><tt class="py-name">pardir</tt> </tt>
+<a name="L273"></a><tt class="py-lineno">273</tt>  <tt class="py-line">    <tt class="py-name">sys</tt><tt class="py-op">.</tt><tt id="link-49" class="py-name"><a title="networkx.path
+networkx.search_class.Predecessor.path" class="py-name" href="#" onclick="return doclink('link-49', 'path', 'link-41');">path</a></tt><tt class="py-op">.</tt><tt class="py-name">insert</tt><tt class="py-op">(</tt><tt class="py-number">0</tt><tt class="py-op">,</tt><tt class="py-name">nxbase</tt><tt class="py-op">)</tt> <tt class="py-comment"># prepend to search path</tt> </tt>
+<a name="L274"></a><tt class="py-lineno">274</tt>  <tt class="py-line">    <tt class="py-name">unittest</tt><tt class="py-op">.</tt><tt class="py-name">TextTestRunner</tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">.</tt><tt id="link-50" class="py-name" targets="Method networkx.tests.benchmark.Benchmark.run()=networkx.tests.benchmark.Benchmark-class.html#run,Function networkx.tests.test.run()=networkx.tests.test-module.html#run"><a title="networkx.tests.benchmark.Benchmark.run
+networkx.tests.test.run" class="py-name" href="#" onclick="return doclink('link-50', 'run', 'link-50');">run</a></tt><tt class="py-op">(</tt><tt id="link-51" class="py-name" targets="Function networkx.centrality._test_suite()=networkx.centrality-module.html#_test_suite,Function networkx.cliques._test_suite()=networkx.cliques-module.html#_test_suite,Function networkx.cluster._test_suite()=networkx.cluster-module.html#_test_suite,Function networkx.component._test_suite()=networkx.component-module.html#_test_suite,Function networkx.convert._test_suite()=networkx.convert-module.html#_test_suite,Function networkx.cores._test_suite()=networkx.cores-module.html#_test_suite,Function networkx.dag._test_suite()=networkx.dag-module.html#_test_suite,Function networkx.digraph._test_suite()=networkx.digraph-module.html#_test_suite,Function networkx.distance._test_suite()=networkx.distance-module.html#_test_suite,Function networkx.drawing.layout._test_suite()=networkx.drawing.layout-module.html#_test_suite,Function networkx.drawing.nx_agraph._test_suite()=networkx.drawing.nx_agraph-module.html#_test_suite,Function networkx.drawing.nx_pydot._test_suite()=networkx.drawing.nx_pydot-module.html#_test_suite,Function networkx.drawing.nx_pygraphviz._test_suite()=networkx.drawing.nx_pygraphviz-module.html#_test_suite,Function networkx.drawing.nx_pylab._test_suite()=networkx.drawing.nx_pylab-module.html#_test_suite,Function networkx.drawing.nx_vtk._test_suite()=networkx.drawing.nx_vtk-module.html#_test_suite,Function networkx.exception._test_suite()=networkx.exception-module.html#_test_suite,Function networkx.function._test_suite()=networkx.function-module.html#_test_suite,Function networkx.generators.atlas._test_suite()=networkx.generators.atlas-module.html#_test_suite,Function networkx.generators.bipartite._test_suite()=networkx.generators.bipartite-module.html#_test_suite,Function networkx.generators.classic._test_suite()=networkx.generators.classic-module.html#_test_suite,Function networkx.generators.degree_seq._test_suite()=networkx.generators.degree_seq-module.html#_test_suite,Function networkx.generators.directed._test_suite()=networkx.generators.directed-module.html#_test_suite,Function networkx.generators.geometric._test_suite()=networkx.generators.geometric-module.html#_test_suite,Function networkx.generators.random_graphs._test_suite()=networkx.generators.random_graphs-module.html#_test_suite,Function networkx.generators.small._test_suite()=networkx.generators.small-module.html#_test_suite,Function networkx.graph._test_suite()=networkx.graph-module.html#_test_suite,Function networkx.hybrid._test_suite()=networkx.hybrid-module.html#_test_suite,Function networkx.io._test_suite()=networkx.io-module.html#_test_suite,Function networkx.isomorph._test_suite()=networkx.isomorph-module.html#_test_suite,Function networkx.isomorphvf2._test_suite()=networkx.isomorphvf2-module.html#_test_suite,Function networkx.operators._test_suite()=networkx.operators-module.html#_test_suite,Function networkx.path._test_suite()=networkx.path-module.html#_test_suite,Function networkx.queues._test_suite()=networkx.queues-module.html#_test_suite,Function networkx.readwrite.adjlist._test_suite()=networkx.readwrite.adjlist-module.html#_test_suite,Function networkx.readwrite.edgelist._test_suite()=networkx.readwrite.edgelist-module.html#_test_suite,Function networkx.readwrite.gml._test_suite()=networkx.readwrite.gml-module.html#_test_suite,Function networkx.readwrite.gpickle._test_suite()=networkx.readwrite.gpickle-module.html#_test_suite,Function networkx.readwrite.graphml._test_suite()=networkx.readwrite.graphml-module.html#_test_suite,Function networkx.readwrite.leda._test_suite()=networkx.readwrite.leda-module.html#_test_suite,Function networkx.readwrite.nx_yaml._test_suite()=networkx.readwrite.nx_yaml-module.html#_test_suite,Function networkx.readwrite.sparsegraph6._test_suite()=networkx.readwrite.sparsegraph6-module.html#_test_suite,Function networkx.search._test_suite()=networkx.search-module.html#_test_suite,Function networkx.search_class._test_suite()=networkx.search_class-module.html#_test_suite,Function networkx.spectrum._test_suite()=networkx.spectrum-module.html#_test_suite,Function networkx.threshold._test_suite()=networkx.threshold-module.html#_test_suite,Function networkx.tree._test_suite()=networkx.tree-module.html#_test_suite,Function networkx.utils._test_suite()=networkx.utils-module.html#_test_suite,Function networkx.xdigraph._test_suite()=networkx.xdigraph-module.html#_test_suite,Function networkx.xgraph._test_suite()=networkx.xgraph-module.html#_test_suite"><a title="networkx.centrality._test_suite
+networkx.cliques._test_suite
+networkx.cluster._test_suite
+networkx.component._test_suite
+networkx.convert._test_suite
+networkx.cores._test_suite
+networkx.dag._test_suite
+networkx.digraph._test_suite
+networkx.distance._test_suite
+networkx.drawing.layout._test_suite
+networkx.drawing.nx_agraph._test_suite
+networkx.drawing.nx_pydot._test_suite
+networkx.drawing.nx_pygraphviz._test_suite
+networkx.drawing.nx_pylab._test_suite
+networkx.drawing.nx_vtk._test_suite
+networkx.exception._test_suite
+networkx.function._test_suite
+networkx.generators.atlas._test_suite
+networkx.generators.bipartite._test_suite
+networkx.generators.classic._test_suite
+networkx.generators.degree_seq._test_suite
+networkx.generators.directed._test_suite
+networkx.generators.geometric._test_suite
+networkx.generators.random_graphs._test_suite
+networkx.generators.small._test_suite
+networkx.graph._test_suite
+networkx.hybrid._test_suite
+networkx.io._test_suite
+networkx.isomorph._test_suite
+networkx.isomorphvf2._test_suite
+networkx.operators._test_suite
+networkx.path._test_suite
+networkx.queues._test_suite
+networkx.readwrite.adjlist._test_suite
+networkx.readwrite.edgelist._test_suite
+networkx.readwrite.gml._test_suite
+networkx.readwrite.gpickle._test_suite
+networkx.readwrite.graphml._test_suite
+networkx.readwrite.leda._test_suite
+networkx.readwrite.nx_yaml._test_suite
+networkx.readwrite.sparsegraph6._test_suite
+networkx.search._test_suite
+networkx.search_class._test_suite
+networkx.spectrum._test_suite
+networkx.threshold._test_suite
+networkx.tree._test_suite
+networkx.utils._test_suite
+networkx.xdigraph._test_suite
+networkx.xgraph._test_suite" class="py-name" href="#" onclick="return doclink('link-51', '_test_suite', 'link-51');">_test_suite</a></tt><tt class="py-op">(</tt><tt class="py-op">)</tt><tt class="py-op">)</tt> </tt>
+<a name="L275"></a><tt class="py-lineno">275</tt>  <tt class="py-line"> </tt><script type="text/javascript">
+<!--
+expandto(location.href);
+// -->
+</script>
+</pre>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="networkx-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+      <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0beta1 on Sun Aug 17 12:04:50 2008
+    </td>
+    <td align="right" class="footer">
+      <a href="http://epydoc.sourceforge.net">http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie()
+  // -->
+</script>
+  
+</body>
+</html>

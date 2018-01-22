@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>networkx.algorithms.approximation.clique &mdash; NetworkX 1.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/networkx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  false
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 1.8.1 documentation"
+          href="../../../../_static/opensearch.xml"/>
+    <link rel="top" title="NetworkX 1.8.1 documentation" href="../../../../index.html" />
+    <link rel="up" title="networkx" href="../../../networkx.html" /> 
+  </head>
+  <body>
+<div style="color: black;background-color: white; font-size: 3.2em; text-align: left; padding: 15px 10px 10px 15px">
+NetworkX
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" accesskey="U">networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for networkx.algorithms.approximation.clique</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Cliques.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c">#   Copyright (C) 2011-2012 by</span>
+<span class="c">#   Nicholas Mancuso &lt;nick.mancuso@gmail.com&gt;</span>
+<span class="c">#   All rights reserved.</span>
+<span class="c">#   BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.approximation</span> <span class="kn">import</span> <span class="n">ramsey</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;Nicholas Mancuso (nick.mancuso@gmail.com)&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;clique_removal&quot;</span><span class="p">,</span><span class="s">&quot;max_clique&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="max_clique"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.approximation.clique.max_clique.html#networkx.algorithms.approximation.clique.max_clique">[docs]</a><span class="k">def</span> <span class="nf">max_clique</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Find the Maximum Clique</span>
+
+<span class="sd">    Finds the `O(|V|/(log|V|)^2)` apx of maximum clique/independent set</span>
+<span class="sd">    in the worst case.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Undirected graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    clique : set</span>
+<span class="sd">        The apx-maximum clique of the graph</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    A clique in an undirected graph G = (V, E) is a subset of the vertex set</span>
+<span class="sd">    `C \subseteq V`, such that for every two vertices in C, there exists an edge</span>
+<span class="sd">    connecting the two. This is equivalent to saying that the subgraph</span>
+<span class="sd">    induced by C is complete (in some cases, the term clique may also refer</span>
+<span class="sd">    to the subgraph).</span>
+
+<span class="sd">    A maximum clique is a clique of the largest possible size in a given graph.</span>
+<span class="sd">    The clique number `\omega(G)` of a graph G is the number of</span>
+<span class="sd">    vertices in a maximum clique in G. The intersection number of</span>
+<span class="sd">    G is the smallest number of cliques that together cover all edges of G.</span>
+
+<span class="sd">    http://en.wikipedia.org/wiki/Maximum_clique</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Boppana, R., &amp; Halldórsson, M. M. (1992).</span>
+<span class="sd">        Approximating maximum independent sets by excluding subgraphs.</span>
+<span class="sd">        BIT Numerical Mathematics, 32(2), 180–196. Springer.</span>
+<span class="sd">        doi:10.1007/BF01994876</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Expected NetworkX graph!&quot;</span><span class="p">)</span>
+
+    <span class="c"># finding the maximum clique in a graph is equivalent to finding</span>
+    <span class="c"># the independent set in the complementary graph</span>
+    <span class="n">cgraph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">iset</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">clique_removal</span><span class="p">(</span><span class="n">cgraph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">iset</span>
+</div>
+<div class="viewcode-block" id="clique_removal"><a class="viewcode-back" href="../../../../reference/generated/networkx.algorithms.approximation.clique.clique_removal.html#networkx.algorithms.approximation.clique.clique_removal">[docs]</a><span class="k">def</span> <span class="nf">clique_removal</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Repeatedly remove cliques from the graph.</span>
+
+<span class="sd">    Results in a `O(|V|/(\log |V|)^2)` approximation of maximum clique</span>
+<span class="sd">    &amp; independent set. Returns the largest independent set found, along</span>
+<span class="sd">    with found maximal cliques.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Undirected graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    max_ind_cliques : (set, list) tuple</span>
+<span class="sd">        Maximal independent set and list of maximal cliques (sets) in the graph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Boppana, R., &amp; Halldórsson, M. M. (1992).</span>
+<span class="sd">        Approximating maximum independent sets by excluding subgraphs.</span>
+<span class="sd">        BIT Numerical Mathematics, 32(2), 180–196. Springer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">c_i</span><span class="p">,</span> <span class="n">i_i</span> <span class="o">=</span> <span class="n">ramsey</span><span class="o">.</span><span class="n">ramsey_R2</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">cliques</span> <span class="o">=</span> <span class="p">[</span><span class="n">c_i</span><span class="p">]</span>
+    <span class="n">isets</span> <span class="o">=</span> <span class="p">[</span><span class="n">i_i</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">graph</span><span class="p">:</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">c_i</span><span class="p">)</span>
+        <span class="n">c_i</span><span class="p">,</span> <span class="n">i_i</span> <span class="o">=</span> <span class="n">ramsey</span><span class="o">.</span><span class="n">ramsey_R2</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">c_i</span><span class="p">:</span>
+            <span class="n">cliques</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c_i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i_i</span><span class="p">:</span>
+            <span class="n">isets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i_i</span><span class="p">)</span>
+
+    <span class="n">maxiset</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">isets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">maxiset</span><span class="p">,</span> <span class="n">cliques</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="http://networkx.github.com/">NetworkX Home </a> |&nbsp;</li>
+        <li><a href="http://networkx.github.com/documentation.html">Documentation </a>|&nbsp;</li>
+        <li><a href="http://networkx.github.com/download.html">Download </a> |&nbsp;</li>
+        <li><a href="http://github.com/networkx">Developer (Github)</a></li>
+
+
+
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../networkx.html" >networkx</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NetworkX Developers.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
