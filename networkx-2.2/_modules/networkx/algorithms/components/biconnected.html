@@ -1,0 +1,628 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.components.biconnected &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.components.biconnected</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.components.biconnected</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#    Copyright (C) 2011-2018 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Jordi Torrents (jtorrents@milnou.net)</span>
+<span class="c1">#          Dan Schult (dschult@colgate.edu)</span>
+<span class="c1">#          Aric Hagberg (aric.hagberg@gmail.com)</span>
+<span class="sd">&quot;&quot;&quot;Biconnected components and articulation points.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils.decorators</span> <span class="k">import</span> <span class="n">not_implemented_for</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;biconnected_components&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;biconnected_component_edges&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;biconnected_component_subgraphs&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_biconnected&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;articulation_points&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="is_biconnected"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.components.is_biconnected.html#networkx.algorithms.components.is_biconnected">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_biconnected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if the graph is biconnected, False otherwise.</span>
+
+<span class="sd">    A graph is biconnected if, and only if, it cannot be disconnected by</span>
+<span class="sd">    removing only one node (and all edges incident on that node).  If</span>
+<span class="sd">    removing a node increases the number of disconnected components</span>
+<span class="sd">    in the graph, that node is called an articulation point, or cut</span>
+<span class="sd">    vertex.  A biconnected graph has no articulation points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    biconnected : bool</span>
+<span class="sd">        True if the graph is biconnected, False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented :</span>
+<span class="sd">        If the input graph is not undirected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0, 3)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    biconnected_components</span>
+<span class="sd">    articulation_points</span>
+<span class="sd">    biconnected_component_edges</span>
+<span class="sd">    is_strongly_connected</span>
+<span class="sd">    is_weakly_connected</span>
+<span class="sd">    is_connected</span>
+<span class="sd">    is_semiconnected</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm to find articulation points and biconnected</span>
+<span class="sd">    components is implemented using a non-recursive depth-first-search</span>
+<span class="sd">    (DFS) that keeps track of the highest level that back edges reach</span>
+<span class="sd">    in the DFS tree.  A node `n` is an articulation point if, and only</span>
+<span class="sd">    if, there exists a subtree rooted at `n` such that there is no</span>
+<span class="sd">    back edge from any successor of `n` that links to a predecessor of</span>
+<span class="sd">    `n` in the DFS tree.  By keeping track of all the edges traversed</span>
+<span class="sd">    by the DFS we can obtain the biconnected components because all</span>
+<span class="sd">    edges of a bicomponent will be traversed consecutively between</span>
+<span class="sd">    articulation points.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Hopcroft, J.; Tarjan, R. (1973).</span>
+<span class="sd">       &quot;Efficient algorithms for graph manipulation&quot;.</span>
+<span class="sd">       Communications of the ACM 16: 372–378. doi:10.1145/362248.362272</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bcc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">biconnected_components</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bcc</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">bcc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Multiple bicomponents or No bicomponents (empty graph?)</span></div>
+<span class="c1">#    if len(bcc) == 0:  # No bicomponents (it could be an empty graph)</span>
+<span class="c1">#        return False</span>
+<span class="c1">#    return len(bcc[0]) == len(G)</span>
+
+
+<div class="viewcode-block" id="biconnected_component_edges"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.components.biconnected_component_edges.html#networkx.algorithms.components.biconnected_component_edges">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">biconnected_component_edges</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a generator of lists of edges, one list for each biconnected</span>
+<span class="sd">    component of the input graph.</span>
+
+<span class="sd">    Biconnected components are maximal subgraphs such that the removal of a</span>
+<span class="sd">    node (and all edges incident on that node) will not disconnect the</span>
+<span class="sd">    subgraph.  Note that nodes may be part of more than one biconnected</span>
+<span class="sd">    component.  Those nodes are articulation points, or cut vertices.</span>
+<span class="sd">    However, each edge belongs to one, and only one, biconnected component.</span>
+
+<span class="sd">    Notice that by convention a dyad is considered a biconnected component.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    edges : generator of lists</span>
+<span class="sd">        Generator of lists of edges, one list for each bicomponent.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented :</span>
+<span class="sd">        If the input graph is not undirected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.barbell_graph(4, 2)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; bicomponents_edges = list(nx.biconnected_component_edges(G))</span>
+<span class="sd">    &gt;&gt;&gt; len(bicomponents_edges)</span>
+<span class="sd">    5</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(2, 8)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; bicomponents_edges = list(nx.biconnected_component_edges(G))</span>
+<span class="sd">    &gt;&gt;&gt; len(bicomponents_edges)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_biconnected,</span>
+<span class="sd">    biconnected_components,</span>
+<span class="sd">    articulation_points,</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm to find articulation points and biconnected</span>
+<span class="sd">    components is implemented using a non-recursive depth-first-search</span>
+<span class="sd">    (DFS) that keeps track of the highest level that back edges reach</span>
+<span class="sd">    in the DFS tree.  A node `n` is an articulation point if, and only</span>
+<span class="sd">    if, there exists a subtree rooted at `n` such that there is no</span>
+<span class="sd">    back edge from any successor of `n` that links to a predecessor of</span>
+<span class="sd">    `n` in the DFS tree.  By keeping track of all the edges traversed</span>
+<span class="sd">    by the DFS we can obtain the biconnected components because all</span>
+<span class="sd">    edges of a bicomponent will be traversed consecutively between</span>
+<span class="sd">    articulation points.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Hopcroft, J.; Tarjan, R. (1973).</span>
+<span class="sd">           &quot;Efficient algorithms for graph manipulation&quot;.</span>
+<span class="sd">           Communications of the ACM 16: 372–378. doi:10.1145/362248.362272</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">_biconnected_dfs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">components</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">comp</span></div>
+
+
+<div class="viewcode-block" id="biconnected_components"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.components.biconnected_components.html#networkx.algorithms.components.biconnected_components">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">biconnected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a generator of sets of nodes, one set for each biconnected</span>
+<span class="sd">    component of the graph</span>
+
+<span class="sd">    Biconnected components are maximal subgraphs such that the removal of a</span>
+<span class="sd">    node (and all edges incident on that node) will not disconnect the</span>
+<span class="sd">    subgraph. Note that nodes may be part of more than one biconnected</span>
+<span class="sd">    component.  Those nodes are articulation points, or cut vertices.  The</span>
+<span class="sd">    removal of articulation points will increase the number of connected</span>
+<span class="sd">    components of the graph.</span>
+
+<span class="sd">    Notice that by convention a dyad is considered a biconnected component.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        An undirected graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes : generator</span>
+<span class="sd">        Generator of sets of nodes, one set for each biconnected component.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented :</span>
+<span class="sd">        If the input graph is not undirected.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    k_components : this function is a special case where k=2</span>
+<span class="sd">    bridge_components : similar to this function, but is defined using</span>
+<span class="sd">        2-edge-connectivity instead of 2-node-connectivity.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.lollipop_graph(5, 1)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; bicomponents = list(nx.biconnected_components(G))</span>
+<span class="sd">    &gt;&gt;&gt; len(bicomponents)</span>
+<span class="sd">    2</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0, 5)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; bicomponents = list(nx.biconnected_components(G))</span>
+<span class="sd">    &gt;&gt;&gt; len(bicomponents)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    You can generate a sorted list of biconnected components, largest</span>
+<span class="sd">    first, using sort.</span>
+
+<span class="sd">    &gt;&gt;&gt; G.remove_edge(0, 5)</span>
+<span class="sd">    &gt;&gt;&gt; [len(c) for c in sorted(nx.biconnected_components(G), key=len, reverse=True)]</span>
+<span class="sd">    [5, 2]</span>
+
+<span class="sd">    If you only want the largest connected component, it&#39;s more</span>
+<span class="sd">    efficient to use max instead of sort.</span>
+
+<span class="sd">    &gt;&gt;&gt; Gc = max(nx.biconnected_components(G), key=len)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_biconnected</span>
+<span class="sd">    articulation_points</span>
+<span class="sd">    biconnected_component_edges</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm to find articulation points and biconnected</span>
+<span class="sd">    components is implemented using a non-recursive depth-first-search</span>
+<span class="sd">    (DFS) that keeps track of the highest level that back edges reach</span>
+<span class="sd">    in the DFS tree.  A node `n` is an articulation point if, and only</span>
+<span class="sd">    if, there exists a subtree rooted at `n` such that there is no</span>
+<span class="sd">    back edge from any successor of `n` that links to a predecessor of</span>
+<span class="sd">    `n` in the DFS tree.  By keeping track of all the edges traversed</span>
+<span class="sd">    by the DFS we can obtain the biconnected components because all</span>
+<span class="sd">    edges of a bicomponent will be traversed consecutively between</span>
+<span class="sd">    articulation points.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Hopcroft, J.; Tarjan, R. (1973).</span>
+<span class="sd">           &quot;Efficient algorithms for graph manipulation&quot;.</span>
+<span class="sd">           Communications of the ACM 16: 372–378. doi:10.1145/362248.362272</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">_biconnected_dfs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">components</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="nb">set</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">comp</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="biconnected_component_subgraphs"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.components.biconnected_component_subgraphs.html#networkx.algorithms.components.biconnected_component_subgraphs">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">biconnected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;DEPRECATED: Use ``(G.subgraph(c) for c in biconnected_components(G))``</span>
+
+<span class="sd">           Or ``(G.subgraph(c).copy() for c in biconnected_components(G))``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;connected_component_subgraphs is deprecated and will be removed&quot;</span> \
+        <span class="s2">&quot;in 2.2. Use (G.subgraph(c).copy() for c in biconnected_components(G))&quot;</span>
+    <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">biconnected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="articulation_points"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.components.articulation_points.html#networkx.algorithms.components.articulation_points">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">articulation_points</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield the articulation points, or cut vertices, of a graph.</span>
+
+<span class="sd">    An articulation point or cut vertex is any node whose removal (along with</span>
+<span class="sd">    all its incident edges) increases the number of connected components of</span>
+<span class="sd">    a graph.  An undirected connected graph without articulation points is</span>
+<span class="sd">    biconnected. Articulation points belong to more than one biconnected</span>
+<span class="sd">    component of a graph.</span>
+
+<span class="sd">    Notice that by convention a dyad is considered a biconnected component.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        An undirected graph.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    node</span>
+<span class="sd">        An articulation point in the graph.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented :</span>
+<span class="sd">        If the input graph is not undirected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.barbell_graph(4, 2)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; len(list(nx.articulation_points(G)))</span>
+<span class="sd">    4</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(2, 8)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.is_biconnected(G))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; len(list(nx.articulation_points(G)))</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_biconnected</span>
+<span class="sd">    biconnected_components</span>
+<span class="sd">    biconnected_component_edges</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The algorithm to find articulation points and biconnected</span>
+<span class="sd">    components is implemented using a non-recursive depth-first-search</span>
+<span class="sd">    (DFS) that keeps track of the highest level that back edges reach</span>
+<span class="sd">    in the DFS tree.  A node `n` is an articulation point if, and only</span>
+<span class="sd">    if, there exists a subtree rooted at `n` such that there is no</span>
+<span class="sd">    back edge from any successor of `n` that links to a predecessor of</span>
+<span class="sd">    `n` in the DFS tree.  By keeping track of all the edges traversed</span>
+<span class="sd">    by the DFS we can obtain the biconnected components because all</span>
+<span class="sd">    edges of a bicomponent will be traversed consecutively between</span>
+<span class="sd">    articulation points.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Hopcroft, J.; Tarjan, R. (1973).</span>
+<span class="sd">           &quot;Efficient algorithms for graph manipulation&quot;.</span>
+<span class="sd">           Communications of the ACM 16: 372–378. doi:10.1145/362248.362272</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">articulation</span> <span class="ow">in</span> <span class="n">_biconnected_dfs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">components</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">articulation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">articulation</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">articulation</span></div>
+
+
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_biconnected_dfs</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">components</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1"># depth-first search algorithm to generate articulation points</span>
+    <span class="c1"># and biconnected components</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">discovery</span> <span class="o">=</span> <span class="p">{</span><span class="n">start</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>  <span class="c1"># time of first discovery of node during search</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="p">{</span><span class="n">start</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">root_children</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">edge_stack</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">start</span><span class="p">]))]</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="n">grandparent</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">grandparent</span> <span class="o">==</span> <span class="n">child</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">discovery</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">discovery</span><span class="p">[</span><span class="n">parent</span><span class="p">]:</span>  <span class="c1"># back edge</span>
+                        <span class="n">low</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">low</span><span class="p">[</span><span class="n">parent</span><span class="p">],</span> <span class="n">discovery</span><span class="p">[</span><span class="n">child</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                            <span class="n">edge_stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">low</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="n">discovery</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">discovery</span><span class="p">)</span>
+                    <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">child</span><span class="p">])))</span>
+                    <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="n">edge_stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">low</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">discovery</span><span class="p">[</span><span class="n">grandparent</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                            <span class="n">ind</span> <span class="o">=</span> <span class="n">edge_stack</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">grandparent</span><span class="p">,</span> <span class="n">parent</span><span class="p">))</span>
+                            <span class="k">yield</span> <span class="n">edge_stack</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+                            <span class="n">edge_stack</span> <span class="o">=</span> <span class="n">edge_stack</span><span class="p">[:</span><span class="n">ind</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">yield</span> <span class="n">grandparent</span>
+                    <span class="n">low</span><span class="p">[</span><span class="n">grandparent</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">low</span><span class="p">[</span><span class="n">parent</span><span class="p">],</span> <span class="n">low</span><span class="p">[</span><span class="n">grandparent</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">stack</span><span class="p">:</span>  <span class="c1"># length 1 so grandparent is root</span>
+                    <span class="n">root_children</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">components</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">edge_stack</span><span class="o">.</span><span class="n">index</span><span class="p">((</span><span class="n">grandparent</span><span class="p">,</span> <span class="n">parent</span><span class="p">))</span>
+                        <span class="k">yield</span> <span class="n">edge_stack</span><span class="p">[</span><span class="n">ind</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">components</span><span class="p">:</span>
+            <span class="c1"># root node is articulation point if it has more than 1 child</span>
+            <span class="k">if</span> <span class="n">root_children</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">start</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

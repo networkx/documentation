@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.community.modularity_max &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.community.modularity_max</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.community.modularity_max</h1><div class="highlight"><pre>
+<span></span><span class="c1"># modularity_max.py - functions for finding communities based on modularity</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2018 Edward L. Platt</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of NetworkX</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed under a BSD license; see LICENSE.txt for more</span>
+<span class="c1"># information.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors:</span>
+<span class="c1">#   Edward L. Platt &lt;ed@elplatt.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># TODO:</span>
+<span class="c1">#   - Alter equations for weighted case</span>
+<span class="c1">#   - Write tests for weighted case</span>
+<span class="sd">&quot;&quot;&quot;Functions for detecting communities based on modularity.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.community.quality</span> <span class="k">import</span> <span class="n">modularity</span>
+
+<span class="kn">from</span> <span class="nn">networkx.utils.mapped_queue</span> <span class="k">import</span> <span class="n">MappedQueue</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;greedy_modularity_communities&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;_naive_greedy_modularity_communities&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="greedy_modularity_communities"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.modularity_max.greedy_modularity_communities.html#networkx.algorithms.community.modularity_max.greedy_modularity_communities">[docs]</a><span class="k">def</span> <span class="nf">greedy_modularity_communities</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find communities in graph using Clauset-Newman-Moore greedy modularity</span>
+<span class="sd">    maximization. This method currently supports the Graph class and does not</span>
+<span class="sd">    consider edge weights.</span>
+
+<span class="sd">    Greedy modularity maximization begins with each node in its own community</span>
+<span class="sd">    and joins the pair of communities that most increases modularity until no</span>
+<span class="sd">    such pair exists.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Yields sets of nodes, one for each community.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms.community import greedy_modularity_communities</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.karate_club_graph()</span>
+<span class="sd">    &gt;&gt;&gt; c = list(greedy_modularity_communities(G))</span>
+<span class="sd">    &gt;&gt;&gt; sorted(c[0])</span>
+<span class="sd">    [8, 14, 15, 18, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J Newman &#39;Networks: An Introduction&#39;, page 224</span>
+<span class="sd">       Oxford University Press 2011.</span>
+<span class="sd">    .. [2] Clauset, A., Newman, M. E., &amp; Moore, C.</span>
+<span class="sd">       &quot;Finding community structure in very large networks.&quot;</span>
+<span class="sd">       Physical Review E 70(6), 2004.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Count nodes and edges</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
+    <span class="n">q0</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="c1"># Map node labels to contiguous integers</span>
+    <span class="n">label_for_node</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()))</span>
+    <span class="n">node_for_label</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">label_for_node</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+
+    <span class="c1"># Calculate degrees</span>
+    <span class="n">k_for_label</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="p">[</span><span class="n">k_for_label</span><span class="p">[</span><span class="n">label_for_node</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+
+    <span class="c1"># Initialize community and merge lists</span>
+    <span class="n">communities</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">i</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+    <span class="n">merges</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Initial modularity</span>
+    <span class="n">partition</span> <span class="o">=</span> <span class="p">[[</span><span class="n">label_for_node</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">communities</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">q_cnm</span> <span class="o">=</span> <span class="n">modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">)</span>
+
+    <span class="c1"># Initialize data structures</span>
+    <span class="c1"># CNM Eq 8-9 (Eq 8 was missing a factor of 2 (from A_ij + A_ji)</span>
+    <span class="c1"># a[i]: fraction of edges within community i</span>
+    <span class="c1"># dq_dict[i][j]: dQ for merging community i, j</span>
+    <span class="c1"># dq_heap[i][n] : (-dq, i, j) for communitiy i nth largest dQ</span>
+    <span class="c1"># H[n]: (-dq, i, j) for community with nth largest max_j(dQ_ij)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">q0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+    <span class="n">dq_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">q0</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">k</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">q0</span><span class="o">*</span><span class="n">q0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="n">node_for_label</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">label_for_node</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+    <span class="n">dq_heap</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">MappedQueue</span><span class="p">([</span>
+            <span class="p">(</span><span class="o">-</span><span class="n">dq</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">dq</span> <span class="ow">in</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">MappedQueue</span><span class="p">([</span>
+        <span class="n">dq_heap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Merge communities until we can&#39;t improve modularity</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">H</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Find best merge</span>
+        <span class="c1"># Remove from heap of row maxes</span>
+        <span class="c1"># Ties will be broken by choosing the pair with lowest min community id</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dq</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">dq</span> <span class="o">=</span> <span class="o">-</span><span class="n">dq</span>
+        <span class="c1"># Remove best merge from row i heap</span>
+        <span class="n">dq_heap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="c1"># Push new row max onto H</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># If this element was also at the root of row j, we need to remove the</span>
+        <span class="c1"># duplicate entry from H</span>
+        <span class="k">if</span> <span class="n">dq_heap</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="n">dq</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="o">-</span><span class="n">dq</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+            <span class="c1"># Remove best merge from row j heap</span>
+            <span class="n">dq_heap</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="o">-</span><span class="n">dq</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+            <span class="c1"># Push new row max onto H</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">H</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Duplicate wasn&#39;t in H, just remove from row j heap</span>
+            <span class="n">dq_heap</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="o">-</span><span class="n">dq</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+        <span class="c1"># Stop when change is non-positive</span>
+        <span class="k">if</span> <span class="n">dq</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="c1"># Perform merge</span>
+        <span class="n">communities</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">communities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">|</span> <span class="n">communities</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="k">del</span> <span class="n">communities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">merges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">dq</span><span class="p">))</span>
+        <span class="c1"># New modularity</span>
+        <span class="n">q_cnm</span> <span class="o">+=</span> <span class="n">dq</span>
+        <span class="c1"># Get list of communities connected to merged communities</span>
+        <span class="n">i_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dq_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">j_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dq_dict</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">all_set</span> <span class="o">=</span> <span class="p">(</span><span class="n">i_set</span> <span class="o">|</span> <span class="n">j_set</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+        <span class="n">both_set</span> <span class="o">=</span> <span class="n">i_set</span> <span class="o">&amp;</span> <span class="n">j_set</span>
+        <span class="c1"># Merge i into j and update dQ</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">all_set</span><span class="p">:</span>
+            <span class="c1"># Calculate new dq value</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">both_set</span><span class="p">:</span>
+                <span class="n">dq_jk</span> <span class="o">=</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">j_set</span><span class="p">:</span>
+                <span class="n">dq_jk</span> <span class="o">=</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># k in i_set</span>
+                <span class="n">dq_jk</span> <span class="o">=</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="c1"># Update rows j and k</span>
+            <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">)]:</span>
+                <span class="c1"># Save old value for finding heap index</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">j_set</span><span class="p">:</span>
+                    <span class="n">d_old</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">dq_dict</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">],</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">d_old</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="c1"># Update dict for j,k only (i is removed below)</span>
+                <span class="n">dq_dict</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">dq_jk</span>
+                <span class="c1"># Save old max of per-row heap</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">d_oldmax</span> <span class="o">=</span> <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">d_oldmax</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="c1"># Add/update heaps</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">dq_jk</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">d_old</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># We&#39;re creating a new nonzero element, add to heap</span>
+                    <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Update existing element in per-row heap</span>
+                    <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d_old</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+                <span class="c1"># Update heap of row maxes if necessary</span>
+                <span class="k">if</span> <span class="n">d_oldmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># No entries previously in this row, push new max</span>
+                    <span class="n">H</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># We&#39;ve updated an entry in this row, has the max changed?</span>
+                    <span class="k">if</span> <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">d_oldmax</span><span class="p">:</span>
+                        <span class="n">H</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d_oldmax</span><span class="p">,</span> <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Remove row/col i from matrix</span>
+        <span class="n">i_neighbors</span> <span class="o">=</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">i_neighbors</span><span class="p">:</span>
+            <span class="c1"># Remove from dict</span>
+            <span class="n">dq_old</span> <span class="o">=</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="c1"># Remove from heaps if we haven&#39;t already</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+                <span class="c1"># Remove both row and column</span>
+                <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">)]:</span>
+                    <span class="c1"># Check if replaced dq is row max</span>
+                    <span class="n">d_old</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">dq_old</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">d_old</span><span class="p">:</span>
+                        <span class="c1"># Update per-row heap and heap of row maxes</span>
+                        <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">d_old</span><span class="p">)</span>
+                        <span class="n">H</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">d_old</span><span class="p">)</span>
+                        <span class="c1"># Update row max</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">H</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Only update per-row heap</span>
+                        <span class="n">dq_heap</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">d_old</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="n">dq_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># Mark row i as deleted, but keep placeholder</span>
+        <span class="n">dq_heap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">MappedQueue</span><span class="p">()</span>
+        <span class="c1"># Merge i into j and update a</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">communities</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="nb">frozenset</span><span class="p">([</span><span class="n">label_for_node</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">c</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">communities</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">communities</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_naive_greedy_modularity_communities</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find communities in graph using the greedy modularity maximization.</span>
+<span class="sd">    This implementation is O(n^4), much slower than alternatives, but it is</span>
+<span class="sd">    provided as an easy-to-understand reference implementation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># First create one community for each node</span>
+    <span class="n">communities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="nb">frozenset</span><span class="p">([</span><span class="n">u</span><span class="p">])</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()])</span>
+    <span class="c1"># Track merges</span>
+    <span class="n">merges</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Greedily merge communities until no improvement is possible</span>
+    <span class="n">old_modularity</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">new_modularity</span> <span class="o">=</span> <span class="n">modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">old_modularity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">new_modularity</span> <span class="o">&gt;</span> <span class="n">old_modularity</span><span class="p">:</span>
+        <span class="c1"># Save modularity for comparison</span>
+        <span class="n">old_modularity</span> <span class="o">=</span> <span class="n">new_modularity</span>
+        <span class="c1"># Find best pair to merge</span>
+        <span class="n">trial_communities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span>
+        <span class="n">to_merge</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">communities</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">communities</span><span class="p">):</span>
+                <span class="c1"># Skip i=j and empty communities</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="c1"># Merge communities u and v</span>
+                <span class="n">trial_communities</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span> <span class="o">|</span> <span class="n">v</span>
+                <span class="n">trial_communities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([])</span>
+                <span class="n">trial_modularity</span> <span class="o">=</span> <span class="n">modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">trial_communities</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">trial_modularity</span> <span class="o">&gt;=</span> <span class="n">new_modularity</span><span class="p">:</span>
+                    <span class="c1"># Check if strictly better or tie</span>
+                    <span class="k">if</span> <span class="n">trial_modularity</span> <span class="o">&gt;</span> <span class="n">new_modularity</span><span class="p">:</span>
+                        <span class="c1"># Found new best, save modularity and group indexes</span>
+                        <span class="n">new_modularity</span> <span class="o">=</span> <span class="n">trial_modularity</span>
+                        <span class="n">to_merge</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">new_modularity</span> <span class="o">-</span> <span class="n">old_modularity</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="p">(</span>
+                        <span class="n">to_merge</span> <span class="ow">and</span>
+                        <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">to_merge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">to_merge</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="p">):</span>
+                        <span class="c1"># Break ties by choosing pair with lowest min id</span>
+                        <span class="n">new_modularity</span> <span class="o">=</span> <span class="n">trial_modularity</span>
+                        <span class="n">to_merge</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">new_modularity</span> <span class="o">-</span> <span class="n">old_modularity</span><span class="p">)</span>
+                <span class="c1"># Un-merge</span>
+                <span class="n">trial_communities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+                <span class="n">trial_communities</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">if</span> <span class="n">to_merge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If the best merge improves modularity, use it</span>
+            <span class="n">merges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">to_merge</span><span class="p">)</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">dq</span> <span class="o">=</span> <span class="n">to_merge</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">communities</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">communities</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">communities</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span> <span class="o">|</span> <span class="n">v</span>
+            <span class="n">communities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([])</span>
+    <span class="c1"># Remove empty communities and sort</span>
+    <span class="n">communities</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">communities</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">com</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">communities</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">com</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

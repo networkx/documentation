@@ -1,0 +1,577 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.tournament &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.tournament</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.tournament</h1><div class="highlight"><pre>
+<span></span><span class="c1"># tournament.py - functions for tournament graphs</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2015 NetworkX developers.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of NetworkX.</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed under a BSD license; see LICENSE.txt for more</span>
+<span class="c1"># information.</span>
+<span class="sd">&quot;&quot;&quot;Functions concerning tournament graphs.</span>
+
+<span class="sd">A `tournament graph`_ is a complete oriented graph. In other words, it</span>
+<span class="sd">is a directed graph in which there is exactly one directed edge joining</span>
+<span class="sd">each pair of distinct nodes. For each function in this module that</span>
+<span class="sd">accepts a graph as input, you must provide a tournament graph. The</span>
+<span class="sd">responsibility is on the caller to ensure that the graph is a tournament</span>
+<span class="sd">graph.</span>
+
+<span class="sd">To access the functions in this module, you must access them through the</span>
+<span class="sd">:mod:`networkx.algorithms.tournament` module::</span>
+
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import tournament</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph([(0, 1), (1, 2), (2, 0)])</span>
+<span class="sd">    &gt;&gt;&gt; tournament.is_tournament(G)</span>
+<span class="sd">    True</span>
+
+<span class="sd">.. _tournament graph: https://en.wikipedia.org/wiki/Tournament_%28graph_theory%29</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.simple_paths</span> <span class="k">import</span> <span class="n">is_simple_path</span> <span class="k">as</span> <span class="n">is_path</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">arbitrary_element</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">not_implemented_for</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hamiltonian_path&#39;</span><span class="p">,</span> <span class="s1">&#39;is_reachable&#39;</span><span class="p">,</span> <span class="s1">&#39;is_strongly_connected&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;is_tournament&#39;</span><span class="p">,</span> <span class="s1">&#39;random_tournament&#39;</span><span class="p">,</span> <span class="s1">&#39;score_sequence&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">index_satisfying</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the index of the first element in `iterable` that</span>
+<span class="sd">    satisfies the given condition.</span>
+
+<span class="sd">    If no such element is found (that is, when the iterable is</span>
+<span class="sd">    exhausted), this returns the length of the iterable (that is, one</span>
+<span class="sd">    greater than the last index of the iterable).</span>
+
+<span class="sd">    `iterable` must not be empty. If `iterable` is empty, this</span>
+<span class="sd">    function raises :exc:`ValueError`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Pre-condition: iterable must not be empty.</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">i</span>
+    <span class="c1"># If we reach the end of the iterable without finding an element</span>
+    <span class="c1"># that satisfies the condition, return the length of the iterable,</span>
+    <span class="c1"># which is one greater than the index of its last element. If the</span>
+    <span class="c1"># iterable was empty, `i` will not be defined, so we raise an</span>
+    <span class="c1"># exception.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;iterable must be non-empty&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="is_tournament"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.tournament.is_tournament.html#networkx.algorithms.tournament.is_tournament">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_tournament</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if and only if `G` is a tournament.</span>
+
+<span class="sd">    A tournament is a directed graph, with neither self-loops nor</span>
+<span class="sd">    multi-edges, in which there is exactly one directed edge joining</span>
+<span class="sd">    each pair of distinct nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A directed graph representing a tournament.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Whether the given graph is a tournament graph.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Some definitions require a self-loop on each node, but that is not</span>
+<span class="sd">    the convention used here.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># In a tournament, there is exactly one directed edge joining each pair.</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nb">all</span><span class="p">((</span><span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="ow">and</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">number_of_selfloops</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hamiltonian_path"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.tournament.hamiltonian_path.html#networkx.algorithms.tournament.hamiltonian_path">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hamiltonian_path</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a Hamiltonian path in the given tournament graph.</span>
+
+<span class="sd">    Each tournament has a Hamiltonian path. If furthermore, the</span>
+<span class="sd">    tournament is strongly connected, then the returned Hamiltonian path</span>
+<span class="sd">    is a Hamiltonian cycle (by joining the endpoints of the path).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A directed graph representing a tournament.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Whether the given graph is a tournament graph.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a recursive implementation with an asymptotic running time</span>
+<span class="sd">    of $O(n^2)$, ignoring multiplicative polylogarithmic factors, where</span>
+<span class="sd">    $n$ is the number of nodes in the graph.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">)]</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">hampath</span> <span class="o">=</span> <span class="n">hamiltonian_path</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">}))</span>
+    <span class="c1"># Get the index of the first node in the path that does *not* have</span>
+    <span class="c1"># an edge to `v`, then insert `v` before that node.</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">index_satisfying</span><span class="p">(</span><span class="n">hampath</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+    <span class="n">hampath</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hampath</span></div>
+
+
+<div class="viewcode-block" id="random_tournament"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.tournament.random_tournament.html#networkx.algorithms.tournament.random_tournament">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_tournament</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a random tournament graph on `n` nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes in the returned graph.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Whether the given graph is a tournament graph.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm adds, for each pair of distinct nodes, an edge with</span>
+<span class="sd">    uniformly random orientation. In other words, `\binom{n}{2}` flips</span>
+<span class="sd">    of an unbiased coin decide the orientations of the edges in the</span>
+<span class="sd">    graph.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Flip an unbiased coin for each pair of distinct nodes.</span>
+    <span class="n">coins</span> <span class="o">=</span> <span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">((</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mf">0.5</span> <span class="k">else</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">coins</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="score_sequence"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.tournament.score_sequence.html#networkx.algorithms.tournament.score_sequence">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">score_sequence</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the score sequence for the given tournament graph.</span>
+
+<span class="sd">    The score sequence is the sorted list of the out-degrees of the</span>
+<span class="sd">    nodes of the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A directed graph representing a tournament.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        A sorted list of the out-degrees of the nodes of `G`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">())</span></div>
+
+
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">tournament_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the tournament matrix for the given tournament graph.</span>
+
+<span class="sd">    This function requires SciPy.</span>
+
+<span class="sd">    The *tournament matrix* of a tournament graph with edge set *E* is</span>
+<span class="sd">    the matrix *T* defined by</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       T_{i j} =</span>
+<span class="sd">       \begin{cases}</span>
+<span class="sd">       +1 &amp; \text{if } (i, j) \in E \\</span>
+<span class="sd">       -1 &amp; \text{if } (j, i) \in E \\</span>
+<span class="sd">       0 &amp; \text{if } i == j.</span>
+<span class="sd">       \end{cases}</span>
+
+<span class="sd">    An equivalent definition is `T = A - A^T`, where *A* is the</span>
+<span class="sd">    adjacency matrix of the graph `G`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A directed graph representing a tournament.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SciPy sparse matrix</span>
+<span class="sd">        The tournament matrix of the tournament graph `G`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ImportError</span>
+<span class="sd">        If SciPy is not available.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">adjacency_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">A</span> <span class="o">-</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span>
+
+
+<div class="viewcode-block" id="is_reachable"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.tournament.is_reachable.html#networkx.algorithms.tournament.is_reachable">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_reachable</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decides whether there is a path from `s` to `t` in the</span>
+<span class="sd">    tournament.</span>
+
+<span class="sd">    This function is more theoretically efficient than the reachability</span>
+<span class="sd">    checks than the shortest path algorithms in</span>
+<span class="sd">    :mod:`networkx.algorithms.shortest_paths`.</span>
+
+<span class="sd">    The given graph **must** be a tournament, otherwise this function&#39;s</span>
+<span class="sd">    behavior is undefined.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A directed graph representing a tournament.</span>
+
+<span class="sd">    s : node</span>
+<span class="sd">        A node in the graph.</span>
+
+<span class="sd">    t : node</span>
+<span class="sd">        A node in the graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Whether there is a path from `s` to `t` in `G`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Although this function is more theoretically efficient than the</span>
+<span class="sd">    generic shortest path functions, a speedup requires the use of</span>
+<span class="sd">    parallelism. Though it may in the future, the current implementation</span>
+<span class="sd">    does not use parallelism, thus you may not see much of a speedup.</span>
+
+<span class="sd">    This algorithm comes from [1].</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Tantau, Till.</span>
+<span class="sd">           &quot;A note on the complexity of the reachability problem for</span>
+<span class="sd">           tournaments.&quot;</span>
+<span class="sd">           *Electronic Colloquium on Computational Complexity*. 2001.</span>
+<span class="sd">           &lt;http://eccc.hpi-web.de/report/2001/092/&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">two_neighborhood</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the set of nodes at distance at most two from `v`.</span>
+
+<span class="sd">        `G` must be a graph and `v` a node in that graph.</span>
+
+<span class="sd">        The returned set includes the nodes at distance zero (that is,</span>
+<span class="sd">        the node `v` itself), the nodes at distance one (that is, the</span>
+<span class="sd">        out-neighbors of `v`), and the nodes at distance two.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO This is trivially parallelizable.</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">v</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">or</span>
+                <span class="nb">any</span><span class="p">(</span><span class="n">is_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">G</span><span class="p">)}</span>
+
+    <span class="k">def</span> <span class="nf">is_closed</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decides whether the given set of nodes is closed.</span>
+
+<span class="sd">        A set *S* of nodes is *closed* if for each node *u* in the graph</span>
+<span class="sd">        not in *S* and for each node *v* in *S*, there is an edge from</span>
+<span class="sd">        *u* to *v*.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO This is trivially parallelizable.</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">nodes</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
+
+    <span class="c1"># TODO This is trivially parallelizable.</span>
+    <span class="n">neighborhoods</span> <span class="o">=</span> <span class="p">[</span><span class="n">two_neighborhood</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">is_closed</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">S</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">S</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">S</span> <span class="ow">in</span> <span class="n">neighborhoods</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="is_strongly_connected"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.tournament.is_strongly_connected.html#networkx.algorithms.tournament.is_strongly_connected">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decides whether the given tournament is strongly connected.</span>
+
+<span class="sd">    This function is more theoretically efficient than the</span>
+<span class="sd">    :func:`~networkx.algorithms.components.is_strongly_connected`</span>
+<span class="sd">    function.</span>
+
+<span class="sd">    The given graph **must** be a tournament, otherwise this function&#39;s</span>
+<span class="sd">    behavior is undefined.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A directed graph representing a tournament.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Whether the tournament is strongly connected.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Although this function is more theoretically efficient than the</span>
+<span class="sd">    generic strong connectivity function, a speedup requires the use of</span>
+<span class="sd">    parallelism. Though it may in the future, the current implementation</span>
+<span class="sd">    does not use parallelism, thus you may not see much of a speedup.</span>
+
+<span class="sd">    This algorithm comes from [1].</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Tantau, Till.</span>
+<span class="sd">           &quot;A note on the complexity of the reachability problem for</span>
+<span class="sd">           tournaments.&quot;</span>
+<span class="sd">           *Electronic Colloquium on Computational Complexity*. 2001.</span>
+<span class="sd">           &lt;http://eccc.hpi-web.de/report/2001/092/&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO This is trivially parallelizable.</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_reachable</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

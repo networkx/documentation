@@ -1,0 +1,512 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.generators.joint_degree_seq &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.generators.joint_degree_seq</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.generators.joint_degree_seq</h1><div class="highlight"><pre>
+<span></span><span class="c1">#    Copyright (C) 2016-2018 by</span>
+<span class="c1">#    Minas Gjoka</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Author:  Minas Gjoka (minas.gjoka@gmail.com)</span>
+<span class="sd">&quot;&quot;&quot;Generate graphs with a given joint degree &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;is_valid_joint_degree&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;joint_degree_graph&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="is_valid_joint_degree"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.joint_degree_seq.is_valid_joint_degree.html#networkx.generators.joint_degree_seq.is_valid_joint_degree">[docs]</a><span class="k">def</span> <span class="nf">is_valid_joint_degree</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Checks whether the given joint degree dictionary is realizable</span>
+<span class="sd">    as a simple graph.</span>
+
+<span class="sd">    A *joint degree dictionary* is a dictionary of dictionaries, in</span>
+<span class="sd">    which entry ``joint_degrees[k][l]`` is an integer representing the</span>
+<span class="sd">    number of edges joining nodes of degree *k* with nodes of degree</span>
+<span class="sd">    *l*. Such a dictionary is realizable as a simple graph if and only</span>
+<span class="sd">    if the following conditions are satisfied.</span>
+
+<span class="sd">    - each entry must be an integer,</span>
+<span class="sd">    - the total number of nodes of degree *k*, computed by</span>
+<span class="sd">      ``sum(joint_degrees[k].values()) / k``, must be an integer,</span>
+<span class="sd">    - the total number of edges joining nodes of degree *k* with</span>
+<span class="sd">       nodes of degree *l* cannot exceed the total number of possible edges,</span>
+<span class="sd">    - each diagonal entry ``joint_degrees[k][k]`` must be even (this is</span>
+<span class="sd">      a convention assumed by the :func:`joint_degree_graph` function).</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    joint_degrees :  dictionary of dictionary of integers</span>
+<span class="sd">        A joint degree dictionary in which entry ``joint_degrees[k][l]``</span>
+<span class="sd">        is the number of edges joining nodes of degree *k* with nodes of</span>
+<span class="sd">        degree *l*.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        Whether the given joint degree dictionary is realizable as a</span>
+<span class="sd">        simple graph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. Gjoka, M. Kurant, A. Markopoulou, &quot;2.5K Graphs: from Sampling</span>
+<span class="sd">       to Generation&quot;, IEEE Infocom, 2013.</span>
+<span class="sd">    .. [2] I. Stanton, A. Pinar, &quot;Constructing and sampling graphs with a</span>
+<span class="sd">       prescribed joint degree distribution&quot;, Journal of Experimental</span>
+<span class="sd">       Algorithmics, 2012.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">degree_count</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">joint_degrees</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">k_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="n">k</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k_size</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">degree_count</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">k_size</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">joint_degrees</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">float</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">])</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">!=</span> <span class="n">l</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">]</span> <span class="o">&gt;</span>
+                             <span class="n">degree_count</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">degree_count</span><span class="p">[</span><span class="n">l</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">degree_count</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">degree_count</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># if all above conditions have been satisfied then the input</span>
+    <span class="c1"># joint degree is realizable as a simple graph.</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="k">def</span> <span class="nf">_neighbor_switch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">unsat</span><span class="p">,</span> <span class="n">h_node_residual</span><span class="p">,</span> <span class="n">avoid_node_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Releases one free stub for saturated node ``w``, while preserving</span>
+<span class="sd">    joint degree in graph G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Graph in which the neighbor switch will take place.</span>
+<span class="sd">    w : integer</span>
+<span class="sd">        Node id for which we will execute this neighbor switch.</span>
+<span class="sd">    unsat : set of integers</span>
+<span class="sd">        Set of unsaturated node ids that have the same degree as w.</span>
+<span class="sd">    h_node_residual: dictionary of integers</span>
+<span class="sd">        Keeps track of the remaining stubs  for a given node.</span>
+<span class="sd">    avoid_node_id: integer</span>
+<span class="sd">        Node id to avoid when selecting w_prime.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    First, it selects *w_prime*, an  unsaturated node that has the same degree</span>
+<span class="sd">    as ``w``. Second, it selects *switch_node*, a neighbor node of ``w`` that</span>
+<span class="sd">    is not  connected to *w_prime*. Then it executes an edge swap i.e. removes</span>
+<span class="sd">    (``w``,*switch_node*) and adds (*w_prime*,*switch_node*). Gjoka et. al. [1]</span>
+<span class="sd">    prove that such an edge swap is always possible.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. Gjoka, B. Tillman, A. Markopoulou, &quot;Construction of Simple</span>
+<span class="sd">       Graphs with a Target Joint Degree Matrix and Beyond&quot;, IEEE Infocom, &#39;15</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">avoid_node_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">h_node_residual</span><span class="p">[</span><span class="n">avoid_node_id</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># select unsatured node w_prime that has the same degree as w</span>
+        <span class="n">w_prime</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">unsat</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># assume that the node pair (v,w) has been selected for connection. if</span>
+        <span class="c1"># - neighbor_switch is called for node w,</span>
+        <span class="c1"># - nodes v and w have the same degree,</span>
+        <span class="c1"># - node v=avoid_node_id has only one stub left,</span>
+        <span class="c1"># then prevent v=avoid_node_id from being selected as w_prime.</span>
+
+        <span class="n">iter_var</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">unsat</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">w_prime</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iter_var</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">w_prime</span> <span class="o">!=</span> <span class="n">avoid_node_id</span><span class="p">:</span>
+                <span class="k">break</span>
+
+    <span class="c1"># select switch_node, a neighbor of w, that is not connected to w_prime</span>
+    <span class="n">w_prime_neighbs</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="n">w_prime</span><span class="p">]</span>  <span class="c1"># slightly faster declaring this variable</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">w</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">w_prime_neighbs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="n">w_prime</span><span class="p">):</span>
+            <span class="n">switch_node</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">break</span>
+
+    <span class="c1"># remove edge (w,switch_node), add edge (w_prime,switch_node) and update</span>
+    <span class="c1"># data structures</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">switch_node</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">w_prime</span><span class="p">,</span> <span class="n">switch_node</span><span class="p">)</span>
+    <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w_prime</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w_prime</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">unsat</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">w_prime</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="joint_degree_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.joint_degree_seq.joint_degree_graph.html#networkx.generators.joint_degree_seq.joint_degree_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">joint_degree_graph</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Generates a random simple graph with the given joint degree dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    joint_degrees :  dictionary of dictionary of integers</span>
+<span class="sd">        A joint degree dictionary in which entry ``joint_degrees[k][l]`` is the</span>
+<span class="sd">        number of edges joining nodes of degree *k* with nodes of degree *l*.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : Graph</span>
+<span class="sd">        A graph with the specified joint degree dictionary.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If *joint_degrees* dictionary is not realizable.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In each iteration of the &quot;while loop&quot; the algorithm picks two disconnected</span>
+<span class="sd">    nodes *v* and *w*, of degree *k* and *l* correspondingly,  for which</span>
+<span class="sd">    ``joint_degrees[k][l]`` has not reached its target yet. It then adds</span>
+<span class="sd">    edge (*v*, *w*) and increases the number of edges in graph G by one.</span>
+
+<span class="sd">    The intelligence of the algorithm lies in the fact that  it is always</span>
+<span class="sd">    possible to add an edge between such disconnected nodes *v* and *w*,</span>
+<span class="sd">    even if one or both nodes do not have free stubs. That is made possible by</span>
+<span class="sd">    executing a &quot;neighbor switch&quot;, an edge rewiring move that releases</span>
+<span class="sd">    a free stub while keeping the joint degree of G the same.</span>
+
+<span class="sd">    The algorithm continues for E (number of edges) iterations of</span>
+<span class="sd">    the &quot;while loop&quot;, at the which point all entries of the given</span>
+<span class="sd">    ``joint_degrees[k][l]`` have reached their target values and the</span>
+<span class="sd">    construction is complete.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ..  [1] M. Gjoka, B. Tillman, A. Markopoulou, &quot;Construction of Simple</span>
+<span class="sd">        Graphs with a Target Joint Degree Matrix and Beyond&quot;, IEEE Infocom, &#39;15.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; joint_degrees = {1: {4: 1},</span>
+<span class="sd">    ...                      2: {2: 2, 3: 2, 4: 2},</span>
+<span class="sd">    ...                      3: {2: 2, 4: 1},</span>
+<span class="sd">    ...                      4: {1: 1, 2: 2, 3: 1}}</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.joint_degree_graph(joint_degrees)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_joint_degree</span><span class="p">(</span><span class="n">joint_degrees</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Input joint degree dict not realizable as a simple graph&#39;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># compute degree count from joint_degrees</span>
+    <span class="n">degree_count</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">//</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">joint_degrees</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
+
+    <span class="c1"># start with empty N-node graph</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degree_count</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+
+    <span class="c1"># for a given degree group, keep the list of all node ids</span>
+    <span class="n">h_degree_nodelist</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># for a given node, keep track of the remaining stubs</span>
+    <span class="n">h_node_residual</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># populate h_degree_nodelist and h_node_residual</span>
+    <span class="n">nodeid</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">degree</span><span class="p">,</span> <span class="n">num_nodes</span> <span class="ow">in</span> <span class="n">degree_count</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">h_degree_nodelist</span><span class="p">[</span><span class="n">degree</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nodeid</span><span class="p">,</span> <span class="n">nodeid</span> <span class="o">+</span> <span class="n">num_nodes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">h_degree_nodelist</span><span class="p">[</span><span class="n">degree</span><span class="p">]:</span>
+            <span class="n">h_node_residual</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">degree</span>
+        <span class="n">nodeid</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_nodes</span><span class="p">)</span>
+
+    <span class="c1"># iterate over every degree pair (k,l) and add the number of edges given</span>
+    <span class="c1"># for each pair</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">joint_degrees</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+
+            <span class="c1"># n_edges_add is the number of edges to add for the</span>
+            <span class="c1"># degree pair (k,l)</span>
+            <span class="n">n_edges_add</span> <span class="o">=</span> <span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">n_edges_add</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">k</span> <span class="o">&gt;=</span> <span class="n">l</span><span class="p">):</span>
+
+                <span class="c1"># number of nodes with degree k and l</span>
+                <span class="n">k_size</span> <span class="o">=</span> <span class="n">degree_count</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">l_size</span> <span class="o">=</span> <span class="n">degree_count</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+
+                <span class="c1"># k_nodes and l_nodes consist of all nodes of degree k and l</span>
+                <span class="n">k_nodes</span> <span class="o">=</span> <span class="n">h_degree_nodelist</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">l_nodes</span> <span class="o">=</span> <span class="n">h_degree_nodelist</span><span class="p">[</span><span class="n">l</span><span class="p">]</span>
+
+                <span class="c1"># k_unsat and l_unsat consist of nodes of degree k and l that</span>
+                <span class="c1"># are unsaturated i.e. nodes that have at least 1 available stub</span>
+                <span class="n">k_unsat</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">k_nodes</span> <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">l</span><span class="p">:</span>
+                    <span class="n">l_unsat</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">l_nodes</span> <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">l_unsat</span> <span class="o">=</span> <span class="n">k_unsat</span>
+                    <span class="n">n_edges_add</span> <span class="o">=</span> <span class="n">joint_degrees</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">l</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+
+                <span class="k">while</span> <span class="n">n_edges_add</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+                    <span class="c1"># randomly pick nodes v and w that have degrees k and l</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">k_nodes</span><span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">k_size</span><span class="p">)]</span>
+                    <span class="n">w</span> <span class="o">=</span> <span class="n">l_nodes</span><span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">l_size</span><span class="p">)]</span>
+
+                    <span class="c1"># if nodes v and w are disconnected then attempt to connect</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="n">w</span><span class="p">):</span>
+
+                        <span class="c1"># if node v has no free stubs then do neighbor switch</span>
+                        <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">_neighbor_switch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k_unsat</span><span class="p">,</span> <span class="n">h_node_residual</span><span class="p">)</span>
+
+                        <span class="c1"># if node w has no free stubs then do neighbor switch</span>
+                        <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">l</span><span class="p">:</span>
+                                <span class="n">_neighbor_switch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">l_unsat</span><span class="p">,</span> <span class="n">h_node_residual</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">_neighbor_switch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">l_unsat</span><span class="p">,</span> <span class="n">h_node_residual</span><span class="p">,</span>
+                                                 <span class="n">avoid_node_id</span><span class="o">=</span><span class="n">v</span><span class="p">)</span>
+
+                        <span class="c1"># add edge (v, w) and update data structures</span>
+                        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+                        <span class="n">h_node_residual</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="n">n_edges_add</span> <span class="o">-=</span> <span class="mi">1</span>
+
+                        <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">k_unsat</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">h_node_residual</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">l_unsat</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

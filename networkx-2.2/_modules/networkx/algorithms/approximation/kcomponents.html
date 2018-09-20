@@ -1,0 +1,595 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.approximation.kcomponents &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.approximation.kcomponents</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.approximation.kcomponents</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Fast approximation for k-component structure</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#    Copyright (C) 2015 by</span>
+<span class="c1">#    Jordi Torrents &lt;jtorrents@milnou.net&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="k">import</span> <span class="n">NetworkXError</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">not_implemented_for</span>
+
+<span class="kn">from</span> <span class="nn">networkx.algorithms.approximation</span> <span class="k">import</span> <span class="n">local_node_connectivity</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.connectivity</span> <span class="k">import</span> \
+    <span class="n">local_node_connectivity</span> <span class="k">as</span> <span class="n">exact_local_node_connectivity</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;k_components&#39;</span><span class="p">]</span>
+
+
+<span class="n">not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="k_components"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.approximation.kcomponents.k_components.html#networkx.algorithms.approximation.kcomponents.k_components">[docs]</a><span class="k">def</span> <span class="nf">k_components</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">min_density</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the approximate k-component structure of a graph G.</span>
+
+<span class="sd">    A `k`-component is a maximal subgraph of a graph G that has, at least,</span>
+<span class="sd">    node connectivity `k`: we need to remove at least `k` nodes to break it</span>
+<span class="sd">    into more components. `k`-components have an inherent hierarchical</span>
+<span class="sd">    structure because they are nested in terms of connectivity: a connected</span>
+<span class="sd">    graph can contain several 2-components, each of which can contain</span>
+<span class="sd">    one or more 3-components, and so forth.</span>
+
+<span class="sd">    This implementation is based on the fast heuristics to approximate</span>
+<span class="sd">    the `k`-component structure of a graph [1]_. Which, in turn, it is based on</span>
+<span class="sd">    a fast approximation algorithm for finding good lower bounds of the number</span>
+<span class="sd">    of node independent paths between two nodes [2]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Undirected graph</span>
+
+<span class="sd">    min_density : Float</span>
+<span class="sd">        Density relaxation threshold. Default value 0.95</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    k_components : dict</span>
+<span class="sd">        Dictionary with connectivity level `k` as key and a list of</span>
+<span class="sd">        sets of nodes that form a k-component of level `k` as values.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # Petersen graph has 10 nodes and it is triconnected, thus all</span>
+<span class="sd">    &gt;&gt;&gt; # nodes are in a single component on all three connectivity levels</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms import approximation as apxa</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.petersen_graph()</span>
+<span class="sd">    &gt;&gt;&gt; k_components = apxa.k_components(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The logic of the approximation algorithm for computing the `k`-component</span>
+<span class="sd">    structure [1]_ is based on repeatedly applying simple and fast algorithms</span>
+<span class="sd">    for `k`-cores and biconnected components in order to narrow down the</span>
+<span class="sd">    number of pairs of nodes over which we have to compute White and Newman&#39;s</span>
+<span class="sd">    approximation algorithm for finding node independent paths [2]_. More</span>
+<span class="sd">    formally, this algorithm is based on Whitney&#39;s theorem, which states</span>
+<span class="sd">    an inclusion relation among node connectivity, edge connectivity, and</span>
+<span class="sd">    minimum degree for any graph G. This theorem implies that every</span>
+<span class="sd">    `k`-component is nested inside a `k`-edge-component, which in turn,</span>
+<span class="sd">    is contained in a `k`-core. Thus, this algorithm computes node independent</span>
+<span class="sd">    paths among pairs of nodes in each biconnected part of each `k`-core,</span>
+<span class="sd">    and repeats this procedure for each `k` from 3 to the maximal core number</span>
+<span class="sd">    of a node in the input graph.</span>
+
+<span class="sd">    Because, in practice, many nodes of the core of level `k` inside a</span>
+<span class="sd">    bicomponent actually are part of a component of level k, the auxiliary</span>
+<span class="sd">    graph needed for the algorithm is likely to be very dense. Thus, we use</span>
+<span class="sd">    a complement graph data structure (see `AntiGraph`) to save memory.</span>
+<span class="sd">    AntiGraph only stores information of the edges that are *not* present</span>
+<span class="sd">    in the actual auxiliary graph. When applying algorithms to this</span>
+<span class="sd">    complement graph data structure, it behaves as if it were the dense</span>
+<span class="sd">    version.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    k_components</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]  Torrents, J. and F. Ferraro (2015) Structural Cohesion:</span>
+<span class="sd">            Visualization and Heuristics for Fast Computation.</span>
+<span class="sd">            https://arxiv.org/pdf/1503.04476v1</span>
+
+<span class="sd">    .. [2]  White, Douglas R., and Mark Newman (2001) A Fast Algorithm for</span>
+<span class="sd">            Node-Independent Paths. Santa Fe Institute Working Paper #01-07-035</span>
+<span class="sd">            http://eclectic.ss.uci.edu/~drwhite/working.pdf</span>
+
+<span class="sd">    .. [3]  Moody, J. and D. White (2003). Social cohesion and embeddedness:</span>
+<span class="sd">            A hierarchical conception of social groups.</span>
+<span class="sd">            American Sociological Review 68(1), 103--28.</span>
+<span class="sd">            http://www2.asanet.org/journals/ASRFeb03MoodyWhite.pdf</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Dictionary with connectivity level (k) as keys and a list of</span>
+    <span class="c1"># sets of nodes that form a k-component as values</span>
+    <span class="n">k_components</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># make a few functions local for speed</span>
+    <span class="n">node_connectivity</span> <span class="o">=</span> <span class="n">local_node_connectivity</span>
+    <span class="n">k_core</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">k_core</span>
+    <span class="n">core_number</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">core_number</span>
+    <span class="n">biconnected_components</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">biconnected_components</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">density</span>
+    <span class="n">combinations</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span>
+    <span class="c1"># Exact solution for k = {1,2}</span>
+    <span class="c1"># There is a linear time algorithm for triconnectivity, if we had an</span>
+    <span class="c1"># implementation available we could start from k = 4.</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="c1"># isolated nodes have connectivity 0</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">k_components</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">bicomponent</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">biconnected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="c1"># avoid considering dyads as bicomponents</span>
+        <span class="n">bicomp</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">bicomponent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bicomp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">k_components</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bicomp</span><span class="p">)</span>
+    <span class="c1"># There is no k-component of k &gt; maximum core number</span>
+    <span class="c1"># \kappa(G) &lt;= \lambda(G) &lt;= \delta(G)</span>
+    <span class="n">g_cnumber</span> <span class="o">=</span> <span class="n">core_number</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">max_core</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">g_cnumber</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_core</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">k_core</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">core_number</span><span class="o">=</span><span class="n">g_cnumber</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">biconnected_components</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+            <span class="c1"># Build a subgraph SG induced by the nodes that are part of</span>
+            <span class="c1"># each biconnected component of the k-core subgraph C.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">SG</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="c1"># Build auxiliary graph</span>
+            <span class="n">H</span> <span class="o">=</span> <span class="n">_AntiGraph</span><span class="p">()</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">SG</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">SG</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="n">node_connectivity</span><span class="p">(</span><span class="n">SG</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">K</span><span class="p">:</span>
+                    <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">h_nodes</span> <span class="ow">in</span> <span class="n">biconnected_components</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">h_nodes</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">SH</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">h_nodes</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">Gc</span> <span class="ow">in</span> <span class="n">_cliques_heuristic</span><span class="p">(</span><span class="n">SG</span><span class="p">,</span> <span class="n">SH</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">min_density</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k_nodes</span> <span class="ow">in</span> <span class="n">biconnected_components</span><span class="p">(</span><span class="n">Gc</span><span class="p">):</span>
+                        <span class="n">Gk</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">SG</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">k_nodes</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Gk</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="n">k_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">Gk</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">k_components</span></div>
+
+
+<span class="k">def</span> <span class="nf">_cliques_heuristic</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">min_density</span><span class="p">):</span>
+    <span class="n">h_cnumber</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c_value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">h_cnumber</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
+        <span class="n">cands</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">h_cnumber</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="n">c_value</span><span class="p">)</span>
+        <span class="c1"># Skip checking for overlap for the highest core value</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
+                <span class="nb">set</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">H</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cands</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cands</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">overlap</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
+            <span class="n">SH</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">cands</span> <span class="o">|</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">SH</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">cands</span><span class="p">)</span>
+        <span class="n">sh_cnumber</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">SH</span><span class="p">)</span>
+        <span class="n">SG</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">SH</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">_same</span><span class="p">(</span><span class="n">sh_cnumber</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nx</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">SH</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">min_density</span><span class="p">):</span>
+            <span class="c1">#!! This subgraph must be writable =&gt; .copy()</span>
+            <span class="n">SH</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">SG</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">SH</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">sh_cnumber</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">core_number</span><span class="p">(</span><span class="n">SH</span><span class="p">)</span>
+            <span class="n">sh_deg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">SH</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+            <span class="n">min_deg</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">sh_deg</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">SH</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sh_deg</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="n">min_deg</span><span class="p">)</span>
+            <span class="n">SG</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">SH</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">SG</span>
+
+
+<span class="k">def</span> <span class="nf">_same</span><span class="p">(</span><span class="n">measure</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">measure</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">vals</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">class</span> <span class="nc">_AntiGraph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for complement graphs.</span>
+
+<span class="sd">    The main goal is to be able to work with big and dense graphs with</span>
+<span class="sd">    a low memory foodprint.</span>
+
+<span class="sd">    In this class you add the edges that *do not exist* in the dense graph,</span>
+<span class="sd">    the report methods of the class return the neighbors, the edges and</span>
+<span class="sd">    the degree as if it was the dense graph. Thus it&#39;s possible to use</span>
+<span class="sd">    an instance of this class with some of NetworkX functions. In this</span>
+<span class="sd">    case we only use k-core, connected_components, and biconnected_components.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">all_edge_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">single_edge_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span>
+    <span class="n">edge_attr_dict_factory</span> <span class="o">=</span> <span class="n">single_edge_dict</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dict of neighbors of node n in the dense graph.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : node</span>
+<span class="sd">           A node in the graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adj_dict : dictionary</span>
+<span class="sd">           The adjacency dictionary for nodes connected to n.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_edge_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">all_edge_dict</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span>
+                <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">])}</span>
+
+    <span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterator over all neighbors of node n in the</span>
+<span class="sd">           dense graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the graph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span>
+
+    <span class="k">class</span> <span class="nc">AntiAtlasView</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An adjacency inner dict for AntiGraph&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_atlas</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_node</span> <span class="o">=</span> <span class="n">node</span>
+
+        <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atlas</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atlas</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbr</span><span class="p">):</span>
+            <span class="n">nbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atlas</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_node</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">all_edge_dict</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">AntiAdjacencyView</span><span class="p">(</span><span class="n">AntiAtlasView</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An adjacency outer dict for AntiGraph&quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_atlas</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_adj</span>
+
+        <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atlas</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">AntiAtlasView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">AntiAdjacencyView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This subgraph method returns a full AntiGraph. Not a View&quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">_AntiGraph</span><span class="p">()</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">Gnbrs</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">adjlist_inner_dict_factory</span><span class="p">()</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">Gnbrs</span>
+            <span class="k">for</span> <span class="n">nbr</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">:</span>
+                    <span class="n">Gnbrs</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">nbr</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="k">class</span> <span class="nc">AntiDegreeView</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">reportviews</span><span class="o">.</span><span class="n">DegreeView</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">all_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">:</span>
+                <span class="n">nbrs</span> <span class="o">=</span> <span class="n">all_nodes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">])</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">nbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">])</span>
+            <span class="c1"># AntiGraph is a ThinGraph so all edges have weight 1</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterator for (node, degree) and degree for single node.</span>
+
+<span class="sd">        The node degree is the number of edges adjacent to the node.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nbunch : iterable container, optional (default=all nodes)</span>
+<span class="sd">            A container of nodes.  The container will be iterated</span>
+<span class="sd">            through once.</span>
+
+<span class="sd">        weight : string or None, optional (default=None)</span>
+<span class="sd">           The edge attribute that holds the numerical value used</span>
+<span class="sd">           as a weight.  If None, then each edge has weight 1.</span>
+<span class="sd">           The degree is the sum of the edge weights adjacent to the node.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deg:</span>
+<span class="sd">            Degree of the node, if a single node is passed as argument.</span>
+<span class="sd">        nd_iter : an iterator</span>
+<span class="sd">            The iterator returns two-tuples of (node, degree).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        degree</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">        &gt;&gt;&gt; G.degree(0) # node 0 with degree 1</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; list(G.degree([0,1]))</span>
+<span class="sd">        [(0, 1), (1, 2)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">AntiDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an iterator of (node, adjacency set) tuples for all nodes</span>
+<span class="sd">           in the dense graph.</span>
+
+<span class="sd">        This is the fastest way to look at every edge.</span>
+<span class="sd">        For directed graphs, only outgoing adjacencies are included.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        adj_iter : iterator</span>
+<span class="sd">           An iterator of (node, adjacency set) for all nodes in</span>
+<span class="sd">           the graph.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

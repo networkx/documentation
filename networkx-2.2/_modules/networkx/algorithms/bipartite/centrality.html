@@ -1,0 +1,496 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.bipartite.centrality &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.bipartite.centrality</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.bipartite.centrality</h1><div class="highlight"><pre>
+<span></span><span class="c1">#-*- coding: utf-8 -*-</span>
+<span class="c1">#    Copyright (C) 2011 by</span>
+<span class="c1">#    Jordi Torrents &lt;jtorrents@milnou.net&gt;</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;degree_centrality&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;betweenness_centrality&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;closeness_centrality&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="degree_centrality"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.bipartite.centrality.degree_centrality.html#networkx.algorithms.bipartite.centrality.degree_centrality">[docs]</a><span class="k">def</span> <span class="nf">degree_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the degree centrality for nodes in a bipartite network.</span>
+
+<span class="sd">    The degree centrality for a node `v` is the fraction of nodes</span>
+<span class="sd">    connected to it.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A bipartite network</span>
+
+<span class="sd">    nodes : list or container</span>
+<span class="sd">      Container with all nodes in one bipartite node set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    centrality : dictionary</span>
+<span class="sd">       Dictionary keyed by node with bipartite degree centrality as the value.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    betweenness_centrality,</span>
+<span class="sd">    closeness_centrality,</span>
+<span class="sd">    sets,</span>
+<span class="sd">    is_bipartite</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The nodes input parameter must contain all nodes in one bipartite node set,</span>
+<span class="sd">    but the dictionary returned contains all nodes from both bipartite node</span>
+<span class="sd">    sets. See :mod:`bipartite documentation &lt;networkx.algorithms.bipartite&gt;`</span>
+<span class="sd">    for further details on how bipartite graphs are handled in NetworkX.</span>
+
+<span class="sd">    For unipartite networks, the degree centrality values are</span>
+<span class="sd">    normalized by dividing by the maximum possible degree (which is</span>
+<span class="sd">    `n-1` where `n` is the number of nodes in G).</span>
+
+<span class="sd">    In the bipartite case, the maximum possible degree of a node in a</span>
+<span class="sd">    bipartite node set is the number of nodes in the opposite node set</span>
+<span class="sd">    [1]_.  The degree centrality for a node `v` in the bipartite</span>
+<span class="sd">    sets `U` with `n` nodes and `V` with `m` nodes is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        d_{v} = \frac{deg(v)}{m}, \mbox{for} v \in U ,</span>
+
+<span class="sd">        d_{v} = \frac{deg(v)}{n}, \mbox{for} v \in V ,</span>
+
+
+<span class="sd">    where `deg(v)` is the degree of node `v`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Borgatti, S.P. and Halgin, D. In press. &quot;Analyzing Affiliation</span>
+<span class="sd">        Networks&quot;. In Carrington, P. and Scott, J. (eds) The Sage Handbook</span>
+<span class="sd">        of Social Network Analysis. Sage Publications.</span>
+<span class="sd">        http://www.steveborgatti.com/research/publications/bhaffiliations.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">bottom</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">top</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">)</span>
+    <span class="n">centrality</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+    <span class="n">centrality</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">bottom</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">centrality</span></div>
+
+
+<div class="viewcode-block" id="betweenness_centrality"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.bipartite.centrality.betweenness_centrality.html#networkx.algorithms.bipartite.centrality.betweenness_centrality">[docs]</a><span class="k">def</span> <span class="nf">betweenness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute betweenness centrality for nodes in a bipartite network.</span>
+
+<span class="sd">    Betweenness centrality of a node `v` is the sum of the</span>
+<span class="sd">    fraction of all-pairs shortest paths that pass through `v`.</span>
+
+<span class="sd">    Values of betweenness are normalized by the maximum possible</span>
+<span class="sd">    value which for bipartite graphs is limited by the relative size</span>
+<span class="sd">    of the two node sets [1]_.</span>
+
+<span class="sd">    Let `n` be the number of nodes in the node set `U` and</span>
+<span class="sd">    `m` be the number of nodes in the node set `V`, then</span>
+<span class="sd">    nodes in `U` are normalized by dividing by</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \frac{1}{2} [m^2 (s + 1)^2 + m (s + 1)(2t - s - 1) - t (2s - t + 3)] ,</span>
+
+<span class="sd">    where</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        s = (n - 1) \div m , t = (n - 1) \mod m ,</span>
+
+<span class="sd">    and nodes in `V` are normalized by dividing by</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \frac{1}{2} [n^2 (p + 1)^2 + n (p + 1)(2r - p - 1) - r (2p - r + 3)] ,</span>
+
+<span class="sd">    where,</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        p = (m - 1) \div n , r = (m - 1) \mod n .</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        A bipartite graph</span>
+
+<span class="sd">    nodes : list or container</span>
+<span class="sd">        Container with all nodes in one bipartite node set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    betweenness : dictionary</span>
+<span class="sd">        Dictionary keyed by node with bipartite betweenness centrality</span>
+<span class="sd">        as the value.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    degree_centrality,</span>
+<span class="sd">    closeness_centrality,</span>
+<span class="sd">    sets,</span>
+<span class="sd">    is_bipartite</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The nodes input parameter must contain all nodes in one bipartite node set,</span>
+<span class="sd">    but the dictionary returned contains all nodes from both node sets.</span>
+<span class="sd">    See :mod:`bipartite documentation &lt;networkx.algorithms.bipartite&gt;`</span>
+<span class="sd">    for further details on how bipartite graphs are handled in NetworkX.</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Borgatti, S.P. and Halgin, D. In press. &quot;Analyzing Affiliation</span>
+<span class="sd">        Networks&quot;. In Carrington, P. and Scott, J. (eds) The Sage Handbook</span>
+<span class="sd">        of Social Network Analysis. Sage Publications.</span>
+<span class="sd">        http://www.steveborgatti.com/research/publications/bhaffiliations.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">bottom</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">top</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">m</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">m</span>
+    <span class="n">bet_max_top</span> <span class="o">=</span> <span class="p">(((</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">s</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span>
+                   <span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">-</span> <span class="n">s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
+                   <span class="p">(</span><span class="n">t</span> <span class="o">*</span> <span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)))</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="n">bet_max_bot</span> <span class="o">=</span> <span class="p">(((</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span>
+                   <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span> <span class="o">-</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
+                   <span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)))</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">betweenness</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">betweenness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                            <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">top</span><span class="p">:</span>
+        <span class="n">betweenness</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">/=</span> <span class="n">bet_max_top</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bottom</span><span class="p">:</span>
+        <span class="n">betweenness</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">/=</span> <span class="n">bet_max_bot</span>
+    <span class="k">return</span> <span class="n">betweenness</span></div>
+
+
+<div class="viewcode-block" id="closeness_centrality"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.bipartite.centrality.closeness_centrality.html#networkx.algorithms.bipartite.centrality.closeness_centrality">[docs]</a><span class="k">def</span> <span class="nf">closeness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the closeness centrality for nodes in a bipartite network.</span>
+
+<span class="sd">    The closeness of a node is the distance to all other nodes in the</span>
+<span class="sd">    graph or in the case that the graph is not connected to all other nodes</span>
+<span class="sd">    in the connected component containing that node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        A bipartite network</span>
+
+<span class="sd">    nodes : list or container</span>
+<span class="sd">        Container with all nodes in one bipartite node set.</span>
+
+<span class="sd">    normalized : bool, optional</span>
+<span class="sd">      If True (default) normalize by connected component size.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    closeness : dictionary</span>
+<span class="sd">        Dictionary keyed by node with bipartite closeness centrality</span>
+<span class="sd">        as the value.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    betweenness_centrality,</span>
+<span class="sd">    degree_centrality</span>
+<span class="sd">    sets,</span>
+<span class="sd">    is_bipartite</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The nodes input parameter must contain all nodes in one bipartite node set,</span>
+<span class="sd">    but the dictionary returned contains all nodes from both node sets.</span>
+<span class="sd">    See :mod:`bipartite documentation &lt;networkx.algorithms.bipartite&gt;`</span>
+<span class="sd">    for further details on how bipartite graphs are handled in NetworkX.</span>
+
+
+<span class="sd">    Closeness centrality is normalized by the minimum distance possible.</span>
+<span class="sd">    In the bipartite case the minimum distance for a node in one bipartite</span>
+<span class="sd">    node set is 1 from all nodes in the other node set and 2 from all</span>
+<span class="sd">    other nodes in its own set [1]_. Thus the closeness centrality</span>
+<span class="sd">    for node `v`  in the two bipartite sets `U` with</span>
+<span class="sd">    `n` nodes and `V` with `m` nodes is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        c_{v} = \frac{m + 2(n - 1)}{d}, \mbox{for} v \in U,</span>
+
+<span class="sd">        c_{v} = \frac{n + 2(m - 1)}{d}, \mbox{for} v \in V,</span>
+
+<span class="sd">    where `d` is the sum of the distances from `v` to all</span>
+<span class="sd">    other nodes.</span>
+
+<span class="sd">    Higher values of closeness  indicate higher centrality.</span>
+
+<span class="sd">    As in the unipartite case, setting normalized=True causes the</span>
+<span class="sd">    values to normalized further to n-1 / size(G)-1 where n is the</span>
+<span class="sd">    number of nodes in the connected part of graph containing the</span>
+<span class="sd">    node.  If the graph is not completely connected, this algorithm</span>
+<span class="sd">    computes the closeness centrality for each connected part</span>
+<span class="sd">    separately.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Borgatti, S.P. and Halgin, D. In press. &quot;Analyzing Affiliation</span>
+<span class="sd">        Networks&quot;. In Carrington, P. and Scott, J. (eds) The Sage Handbook</span>
+<span class="sd">        of Social Network Analysis. Sage Publications.</span>
+<span class="sd">        http://www.steveborgatti.com/research/publications/bhaffiliations.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">closeness</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">path_length</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">bottom</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">top</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">top</span><span class="p">:</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
+        <span class="n">totsp</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">totsp</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">closeness</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">totsp</span>
+            <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">closeness</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">closeness</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bottom</span><span class="p">:</span>
+        <span class="n">sp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
+        <span class="n">totsp</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">totsp</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">closeness</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">totsp</span>
+            <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">closeness</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">closeness</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">closeness</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

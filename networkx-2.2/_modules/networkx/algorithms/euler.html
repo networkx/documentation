@@ -1,0 +1,480 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.euler &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.euler</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.euler</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1">#    Copyright (C) 2010 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors:</span>
+<span class="c1">#   Nima Mohammadi &lt;nima.irt@gmail.com&gt;</span>
+<span class="c1">#   Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#   Mike Trenfield &lt;william.trenfield@utsouthwestern.edu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Eulerian circuits and graphs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="k">import</span> <span class="n">arbitrary_element</span><span class="p">,</span> <span class="n">not_implemented_for</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;is_eulerian&#39;</span><span class="p">,</span> <span class="s1">&#39;eulerian_circuit&#39;</span><span class="p">,</span> <span class="s1">&#39;eulerize&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="is_eulerian"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.euler.is_eulerian.html#networkx.algorithms.euler.is_eulerian">[docs]</a><span class="k">def</span> <span class="nf">is_eulerian</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if and only if `G` is Eulerian.</span>
+
+<span class="sd">    A graph is *Eulerian* if it has an Eulerian circuit. An *Eulerian</span>
+<span class="sd">    circuit* is a closed walk that includes each edge of a graph exactly</span>
+<span class="sd">    once.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph, either directed or undirected.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_eulerian(nx.DiGraph({0: [3], 1: [2], 2: [3], 3: [0, 1]}))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_eulerian(nx.complete_graph(5))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_eulerian(nx.petersen_graph())</span>
+<span class="sd">    False</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If the graph is not connected (or not strongly connected, for</span>
+<span class="sd">    directed graphs), this function returns False.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="c1"># Every node must have equal in degree and out degree and the</span>
+        <span class="c1"># graph must be strongly connected</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">==</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="c1"># An undirected Eulerian graph has no vertices of odd degree and</span>
+    <span class="c1"># must be connected.</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span> <span class="ow">and</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_simplegraph_eulerian_circuit</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">out_edges</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span>
+    <span class="n">vertex_stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">last_vertex</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">while</span> <span class="n">vertex_stack</span><span class="p">:</span>
+        <span class="n">current_vertex</span> <span class="o">=</span> <span class="n">vertex_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">degree</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">last_vertex</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">last_vertex</span><span class="p">,</span> <span class="n">current_vertex</span><span class="p">)</span>
+            <span class="n">last_vertex</span> <span class="o">=</span> <span class="n">current_vertex</span>
+            <span class="n">vertex_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">next_vertex</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">edges</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">))</span>
+            <span class="n">vertex_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_vertex</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">,</span> <span class="n">next_vertex</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multigraph_eulerian_circuit</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">out_edges</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">degree</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span>
+    <span class="n">vertex_stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">source</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
+    <span class="n">last_vertex</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">while</span> <span class="n">vertex_stack</span><span class="p">:</span>
+        <span class="n">current_vertex</span><span class="p">,</span> <span class="n">current_key</span> <span class="o">=</span> <span class="n">vertex_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">degree</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">last_vertex</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">last_vertex</span><span class="p">,</span> <span class="n">current_vertex</span><span class="p">,</span> <span class="n">last_key</span><span class="p">)</span>
+            <span class="n">last_vertex</span><span class="p">,</span> <span class="n">last_key</span> <span class="o">=</span> <span class="n">current_vertex</span><span class="p">,</span> <span class="n">current_key</span>
+            <span class="n">vertex_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">next_vertex</span><span class="p">,</span> <span class="n">next_key</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">edges</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="n">vertex_stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">next_vertex</span><span class="p">,</span> <span class="n">next_key</span><span class="p">))</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">current_vertex</span><span class="p">,</span> <span class="n">next_vertex</span><span class="p">,</span> <span class="n">next_key</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="eulerian_circuit"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.euler.eulerian_circuit.html#networkx.algorithms.euler.eulerian_circuit">[docs]</a><span class="k">def</span> <span class="nf">eulerian_circuit</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns an iterator over the edges of an Eulerian circuit in `G`.</span>
+
+<span class="sd">    An *Eulerian circuit* is a closed walk that includes each edge of a</span>
+<span class="sd">    graph exactly once.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph, either directed or undirected.</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Starting node for circuit.</span>
+
+<span class="sd">    keys : bool</span>
+<span class="sd">       If False, edges generated by this function will be of the form</span>
+<span class="sd">       ``(u, v)``. Otherwise, edges will be of the form ``(u, v, k)``.</span>
+<span class="sd">       This option is ignored unless `G` is a multigraph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    edges : iterator</span>
+<span class="sd">       An iterator over edges in the Eulerian circuit.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">       If the graph is not Eulerian.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_eulerian</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a linear time implementation of an algorithm adapted from [1]_.</span>
+
+<span class="sd">    For general information about Euler tours, see [2]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] J. Edmonds, E. L. Johnson.</span>
+<span class="sd">       Matching, Euler tours and the Chinese postman.</span>
+<span class="sd">       Mathematical programming, Volume 5, Issue 1 (1973), 111-114.</span>
+<span class="sd">    .. [2] https://en.wikipedia.org/wiki/Eulerian_path</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    To get an Eulerian circuit in an undirected graph::</span>
+
+<span class="sd">        &gt;&gt;&gt; G = nx.complete_graph(3)</span>
+<span class="sd">        &gt;&gt;&gt; list(nx.eulerian_circuit(G))</span>
+<span class="sd">        [(0, 2), (2, 1), (1, 0)]</span>
+<span class="sd">        &gt;&gt;&gt; list(nx.eulerian_circuit(G, source=1))</span>
+<span class="sd">        [(1, 2), (2, 0), (0, 1)]</span>
+
+<span class="sd">    To get the sequence of vertices in an Eulerian circuit::</span>
+
+<span class="sd">        &gt;&gt;&gt; [u for u, v in nx.eulerian_circuit(G)]</span>
+<span class="sd">        [0, 2, 1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_eulerian</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;G is not Eulerian.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_multigraph_eulerian_circuit</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_simplegraph_eulerian_circuit</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span></div>
+
+
+<div class="viewcode-block" id="eulerize"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.euler.eulerize.html#networkx.algorithms.euler.eulerize">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">eulerize</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transforms a graph into an Eulerian graph</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       An undirected graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX multigraph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">       If the graph is not connected.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_eulerian, eulerian_circuit</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] J. Edmonds, E. L. Johnson.</span>
+<span class="sd">       Matching, Euler tours and the Chinese postman.</span>
+<span class="sd">       Mathematical programming, Volume 5, Issue 1 (1973), 111-114.</span>
+<span class="sd">       [2] https://en.wikipedia.org/wiki/Eulerian_path</span>
+<span class="sd">    .. [3] http://web.math.princeton.edu/math_alive/5/Notes1.pdf</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.complete_graph(10)</span>
+<span class="sd">        &gt;&gt;&gt; H = nx.eulerize(G)</span>
+<span class="sd">        &gt;&gt;&gt; nx.is_eulerian(H)</span>
+<span class="sd">        True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;Cannot Eulerize null graph&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;G is not connected&quot;</span><span class="p">)</span>
+    <span class="n">odd_degree_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">odd_degree_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="c1"># get all shortest paths between vertices of odd degree</span>
+    <span class="n">odd_deg_pairs_paths</span> <span class="o">=</span> <span class="p">[(</span><span class="n">m</span><span class="p">,</span>
+                            <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">n</span><span class="p">)}</span>
+                            <span class="p">)</span>
+                           <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">odd_degree_nodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+
+    <span class="c1"># use inverse path lengths as edge-weights in a new graph</span>
+    <span class="c1"># store the paths in the graph for easy indexing later</span>
+    <span class="n">Gp</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">Ps</span> <span class="ow">in</span> <span class="n">odd_deg_pairs_paths</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">P</span> <span class="ow">in</span> <span class="n">Ps</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+                <span class="n">Gp</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">path</span><span class="o">=</span><span class="n">P</span><span class="p">)</span>
+
+    <span class="c1"># find the minimum weight matching of edges in the weighted graph</span>
+    <span class="n">best_matching</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">max_weight_matching</span><span class="p">(</span><span class="n">Gp</span><span class="p">)))</span>
+
+    <span class="c1"># duplicate each edge along each path in the set of paths in Gp</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">best_matching</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Gp</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">n</span><span class="p">][</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">pairwise</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

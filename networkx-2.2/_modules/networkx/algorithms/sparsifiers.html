@@ -1,0 +1,514 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.sparsifiers &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.sparsifiers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.sparsifiers</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2018</span>
+<span class="c1"># Robert Gmyr &lt;robert@gmyr.net&gt;</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1"># BSD license.</span>
+<span class="sd">&quot;&quot;&quot;Functions for computing sparsifiers of graphs.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">not_implemented_for</span><span class="p">,</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;spanner&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="spanner"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.sparsifiers.spanner.html#networkx.algorithms.sparsifiers.spanner">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">spanner</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">stretch</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a spanner of the given graph with the given stretch.</span>
+
+<span class="sd">    A spanner of a graph G = (V, E) with stretch t is a subgraph</span>
+<span class="sd">    H = (V, E_S) such that E_S is a subset of E and the distance between</span>
+<span class="sd">    any pair of nodes in H is at most t times the distance between the</span>
+<span class="sd">    nodes in G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        An undirected simple graph.</span>
+
+<span class="sd">    stretch : float</span>
+<span class="sd">        The stretch of the spanner.</span>
+
+<span class="sd">    weight : object</span>
+<span class="sd">        The edge attribute to use as distance.</span>
+
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkX graph</span>
+<span class="sd">        A spanner of the given graph with the given stretch.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a stretch less than 1 is given.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function implements the spanner algorithm by Baswana and Sen,</span>
+<span class="sd">    see [1].</span>
+
+<span class="sd">    This algorithm is a randomized las vegas algorithm: The expected</span>
+<span class="sd">    running time is O(km) where k = (stretch + 1) // 2 and m is the</span>
+<span class="sd">    number of edges in G. The returned graph is always a spanner of the</span>
+<span class="sd">    given graph with the specified stretch. For weighted graphs the</span>
+<span class="sd">    number of edges in the spanner is O(k * n^(1 + 1 / k)) where k is</span>
+<span class="sd">    defined as above and n is the number of nodes in G. For unweighted</span>
+<span class="sd">    graphs the number of edges is O(n^(1 + 1 / k) + kn).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    [1] S. Baswana, S. Sen. A Simple and Linear Time Randomized</span>
+<span class="sd">    Algorithm for Computing Sparse Spanners in Weighted Graphs.</span>
+<span class="sd">    Random Struct. Algorithms 30(4): 532-563 (2007).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">stretch</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;stretch must be at least 1&#39;</span><span class="p">)</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="n">stretch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="c1"># initialize spanner H with empty edge set</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">()</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="c1"># phase 1: forming the clusters</span>
+    <span class="c1"># the residual graph has V&#39; from the paper as its node set</span>
+    <span class="c1"># and E&#39; from the paper as its edge set</span>
+    <span class="n">residual_graph</span> <span class="o">=</span> <span class="n">_setup_residual_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+    <span class="c1"># clustering is a dictionary that maps nodes in a cluster to the</span>
+    <span class="c1"># cluster center</span>
+    <span class="n">clustering</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
+    <span class="n">sample_prob</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">(),</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">k</span><span class="p">)</span>
+    <span class="n">size_limit</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">(),</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">k</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># step 1: sample centers</span>
+        <span class="n">sampled_centers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">center</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">sample_prob</span><span class="p">:</span>
+                <span class="n">sampled_centers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+
+        <span class="c1"># combined loop for steps 2 and 3</span>
+        <span class="n">edges_to_add</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">edges_to_remove</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">new_clustering</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">residual_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">clustering</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">in</span> <span class="n">sampled_centers</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># step 2: find neighboring (sampled) clusters and</span>
+            <span class="c1"># lightest edges to them</span>
+            <span class="n">lightest_edge_neighbor</span><span class="p">,</span> <span class="n">lightest_edge_weight</span> <span class="o">=</span>\
+                <span class="n">_lightest_edge_dicts</span><span class="p">(</span><span class="n">residual_graph</span><span class="p">,</span> <span class="n">clustering</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">neighboring_sampled_centers</span> <span class="o">=</span>\
+                <span class="nb">set</span><span class="p">(</span><span class="n">lightest_edge_weight</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="n">sampled_centers</span>
+
+            <span class="c1"># step 3: add edges to spanner</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">neighboring_sampled_centers</span><span class="p">:</span>
+                <span class="c1"># connect to each neighboring center via lightest edge</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">lightest_edge_neighbor</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">edges_to_add</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">))</span>
+                <span class="c1"># remove all incident edges</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">residual_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="n">edges_to_remove</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">))</span>
+
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># there is a neighboring sampled center</span>
+                <span class="n">closest_center</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">neighboring_sampled_centers</span><span class="p">,</span>
+                                     <span class="n">key</span><span class="o">=</span><span class="n">lightest_edge_weight</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+                <span class="n">closest_center_weight</span> <span class="o">=</span> <span class="n">lightest_edge_weight</span><span class="p">[</span><span class="n">closest_center</span><span class="p">]</span>
+                <span class="n">closest_center_neighbor</span> <span class="o">=</span>\
+                    <span class="n">lightest_edge_neighbor</span><span class="p">[</span><span class="n">closest_center</span><span class="p">]</span>
+
+                <span class="n">edges_to_add</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">closest_center_neighbor</span><span class="p">))</span>
+                <span class="n">new_clustering</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">closest_center</span>
+
+                <span class="c1"># connect to centers with edge weight less than</span>
+                <span class="c1"># closest_center_weight</span>
+                <span class="k">for</span> <span class="n">center</span><span class="p">,</span> <span class="n">edge_weight</span> <span class="ow">in</span> <span class="n">lightest_edge_weight</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">edge_weight</span> <span class="o">&lt;</span> <span class="n">closest_center_weight</span><span class="p">:</span>
+                        <span class="n">neighbor</span> <span class="o">=</span> <span class="n">lightest_edge_neighbor</span><span class="p">[</span><span class="n">center</span><span class="p">]</span>
+                        <span class="n">edges_to_add</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">))</span>
+
+                <span class="c1"># remove edges to centers with edge weight less than</span>
+                <span class="c1"># closest_center_weight</span>
+                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">residual_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="n">neighbor_cluster</span> <span class="o">=</span> <span class="n">clustering</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span>
+                    <span class="n">neighbor_weight</span> <span class="o">=</span> <span class="n">lightest_edge_weight</span><span class="p">[</span><span class="n">neighbor_cluster</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">neighbor_cluster</span> <span class="o">==</span> <span class="n">closest_center</span> <span class="ow">or</span> <span class="n">neighbor_weight</span> <span class="o">&lt;</span> <span class="n">closest_center_weight</span><span class="p">:</span>
+                        <span class="n">edges_to_remove</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">))</span>
+
+        <span class="c1"># check whether iteration added too many edges to spanner,</span>
+        <span class="c1"># if so repeat</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges_to_add</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">size_limit</span><span class="p">:</span>
+            <span class="c1"># an iteration is repeated O(1) times on expectation</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># iteration succeeded</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># actually add edges to spanner</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges_to_add</span><span class="p">:</span>
+            <span class="n">_add_edge_to_spanner</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">residual_graph</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+        <span class="c1"># actually delete edges from residual graph</span>
+        <span class="n">residual_graph</span><span class="o">.</span><span class="n">remove_edges_from</span><span class="p">(</span><span class="n">edges_to_remove</span><span class="p">)</span>
+
+        <span class="c1"># copy old clustering data to new_clustering</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">center</span> <span class="ow">in</span> <span class="n">clustering</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">center</span> <span class="ow">in</span> <span class="n">sampled_centers</span><span class="p">:</span>
+                <span class="n">new_clustering</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">center</span>
+        <span class="n">clustering</span> <span class="o">=</span> <span class="n">new_clustering</span>
+
+        <span class="c1"># step 4: remove intra-cluster edges</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">residual_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">residual_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">u</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">clustering</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">==</span> <span class="n">clustering</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="n">residual_graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># update residual graph node set</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">residual_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clustering</span><span class="p">:</span>
+                <span class="n">residual_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># phase 2: vertex-cluster joining</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">residual_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">lightest_edge_neighbor</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span>\
+            <span class="n">_lightest_edge_dicts</span><span class="p">(</span><span class="n">residual_graph</span><span class="p">,</span> <span class="n">clustering</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">lightest_edge_neighbor</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">_add_edge_to_spanner</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">residual_graph</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">H</span></div>
+
+
+<span class="k">def</span> <span class="nf">_setup_residual_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Setup residual graph as a copy of G with unique edges weights.</span>
+
+<span class="sd">    The node set of the residual graph corresponds to the set V&#39; from</span>
+<span class="sd">    the Baswana-Sen paper and the edge set corresponds to the set E&#39;</span>
+<span class="sd">    from the paper.</span>
+
+<span class="sd">    This function associates distinct weights to the edges of the</span>
+<span class="sd">    residual graph (even for unweighted input graphs), as required by</span>
+<span class="sd">    the algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        An undirected simple graph.</span>
+
+<span class="sd">    weight : object</span>
+<span class="sd">        The edge attribute to use as distance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkX graph</span>
+<span class="sd">        The residual graph used for the Baswana-Sen algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">residual_graph</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># establish unique edge weights, even for unweighted graphs</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">weight</span><span class="p">:</span>
+            <span class="n">residual_graph</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="nb">id</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">residual_graph</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">weight</span><span class="p">],</span> <span class="nb">id</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="nb">id</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">residual_graph</span>
+
+
+<span class="k">def</span> <span class="nf">_lightest_edge_dicts</span><span class="p">(</span><span class="n">residual_graph</span><span class="p">,</span> <span class="n">clustering</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the lightest edge to each cluster.</span>
+
+<span class="sd">    Searches for the minimum-weight edge to each cluster adjacent to</span>
+<span class="sd">    the given node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    residual_graph : NetworkX graph</span>
+<span class="sd">        The residual graph used by the Baswana-Sen algorithm.</span>
+
+<span class="sd">    clustering : dictionary</span>
+<span class="sd">        The current clustering of the nodes.</span>
+
+<span class="sd">    node : node</span>
+<span class="sd">        The node from which the search originates.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lightest_edge_neighbor, lightest_edge_weight : dictionary, dictionary</span>
+<span class="sd">        lightest_edge_neighbor is a dictionary that maps a center C to</span>
+<span class="sd">        a node v in the corresponding cluster such that the edge from</span>
+<span class="sd">        the given node to v is the lightest edge from the given node to</span>
+<span class="sd">        any node in cluster. lightest_edge_weight maps a center C to the</span>
+<span class="sd">        weight of the aforementioned edge.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a cluster has no node that is adjacent to the given node in the</span>
+<span class="sd">    residual graph then the center of the cluster is not a key in the</span>
+<span class="sd">    returned dictionaries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lightest_edge_neighbor</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">lightest_edge_weight</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">residual_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+        <span class="n">neighbor_center</span> <span class="o">=</span> <span class="n">clustering</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">residual_graph</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">neighbor</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">neighbor_center</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lightest_edge_weight</span> <span class="ow">or</span>\
+                <span class="n">weight</span> <span class="o">&lt;</span> <span class="n">lightest_edge_weight</span><span class="p">[</span><span class="n">neighbor_center</span><span class="p">]:</span>
+            <span class="n">lightest_edge_neighbor</span><span class="p">[</span><span class="n">neighbor_center</span><span class="p">]</span> <span class="o">=</span> <span class="n">neighbor</span>
+            <span class="n">lightest_edge_weight</span><span class="p">[</span><span class="n">neighbor_center</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span>
+    <span class="k">return</span> <span class="n">lightest_edge_neighbor</span><span class="p">,</span> <span class="n">lightest_edge_weight</span>
+
+
+<span class="k">def</span> <span class="nf">_add_edge_to_spanner</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">residual_graph</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add the edge {u, v} to the spanner H and take weight from</span>
+<span class="sd">    the residual graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    H : NetworkX graph</span>
+<span class="sd">        The spanner under construction.</span>
+
+<span class="sd">    residual_graph : NetworkX graph</span>
+<span class="sd">        The residual graph used by the Baswana-Sen algorithm. The weight</span>
+<span class="sd">        for the edge is taken from this graph.</span>
+
+<span class="sd">    u : node</span>
+<span class="sd">        One endpoint of the edge.</span>
+
+<span class="sd">    v : node</span>
+<span class="sd">        The other endpoint of the edge.</span>
+
+<span class="sd">    weight : object</span>
+<span class="sd">        The edge attribute to use as distance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">weight</span><span class="p">:</span>
+        <span class="n">H</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">weight</span><span class="p">]</span> <span class="o">=</span> <span class="n">residual_graph</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

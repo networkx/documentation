@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.centrality.load &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.centrality.load</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.centrality.load</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#    Copyright (C) 2004-2018 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Aric Hagberg (hagberg@lanl.gov)</span>
+<span class="c1">#          Pieter Swart (swart@lanl.gov)</span>
+<span class="c1">#          Sasha Gutfraind (ag362@cornell.edu)</span>
+<span class="sd">&quot;&quot;&quot;Load centrality.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;load_centrality&#39;</span><span class="p">,</span> <span class="s1">&#39;edge_load_centrality&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">newman_betweenness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                  <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute load centrality for nodes.</span>
+
+<span class="sd">    The load centrality of a node is the fraction of all shortest</span>
+<span class="sd">    paths that pass through that node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A networkx graph.</span>
+
+<span class="sd">    normalized : bool, optional (default=True)</span>
+<span class="sd">      If True the betweenness values are normalized by b=b/(n-1)(n-2) where</span>
+<span class="sd">      n is the number of nodes in G.</span>
+
+<span class="sd">    weight : None or string, optional (default=None)</span>
+<span class="sd">      If None, edge weights are ignored.</span>
+<span class="sd">      Otherwise holds the name of the edge attribute used as weight.</span>
+
+<span class="sd">    cutoff : bool, optional (default=None)</span>
+<span class="sd">      If specified, only consider paths of length &lt;= cutoff.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes : dictionary</span>
+<span class="sd">       Dictionary of nodes with centrality as the value.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    betweenness_centrality()</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Load centrality is slightly different than betweenness. It was originally</span>
+<span class="sd">    introduced by [2]_. For this load algorithm see [1]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Mark E. J. Newman:</span>
+<span class="sd">       Scientific collaboration networks. II.</span>
+<span class="sd">       Shortest paths, weighted networks, and centrality.</span>
+<span class="sd">       Physical Review E 64, 016132, 2001.</span>
+<span class="sd">       http://journals.aps.org/pre/abstract/10.1103/PhysRevE.64.016132</span>
+<span class="sd">    .. [2] Kwang-Il Goh, Byungnam Kahng and Doochul Kim</span>
+<span class="sd">       Universal behavior of Load Distribution in Scale-Free Networks.</span>
+<span class="sd">       Physical Review Letters 87(27):1–4, 2001.</span>
+<span class="sd">       http://phya.snu.ac.kr/~dkim/PRL87278701.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>   <span class="c1"># only one node</span>
+        <span class="n">betweenness</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">ubetween</span> <span class="o">=</span> <span class="n">_node_betweenness</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+            <span class="n">betweenness</span> <span class="o">+=</span> <span class="n">ubetween</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ubetween</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">betweenness</span>  <span class="c1"># no normalization b=0 for all nodes</span>
+            <span class="n">betweenness</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">((</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">order</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">betweenness</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">betweenness</span> <span class="o">=</span> <span class="p">{}</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">betweenness</span><span class="p">:</span>
+            <span class="n">ubetween</span> <span class="o">=</span> <span class="n">_node_betweenness</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">vk</span> <span class="ow">in</span> <span class="n">ubetween</span><span class="p">:</span>
+                <span class="n">betweenness</span><span class="p">[</span><span class="n">vk</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ubetween</span><span class="p">[</span><span class="n">vk</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">order</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">betweenness</span>  <span class="c1"># no normalization b=0 for all nodes</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">((</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">order</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">betweenness</span><span class="p">:</span>
+                <span class="n">betweenness</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>
+        <span class="k">return</span> <span class="n">betweenness</span>  <span class="c1"># all nodes</span>
+
+
+<span class="k">def</span> <span class="nf">_node_betweenness</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Node betweenness_centrality helper:</span>
+
+<span class="sd">    See betweenness_centrality for what you probably want.</span>
+<span class="sd">    This actually computes &quot;load&quot; and not betweenness.</span>
+<span class="sd">    See https://networkx.lanl.gov/ticket/103</span>
+
+<span class="sd">    This calculates the load of each node for paths from a single source.</span>
+<span class="sd">    (The fraction of number of shortests paths from source that go</span>
+<span class="sd">    through each node.)</span>
+
+<span class="sd">    To get the load for a node you need to do all-pairs shortest paths.</span>
+
+<span class="sd">    If weight is not None then use Dijkstra for finding shortest paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># get the predecessor and path length data</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span>
+                                        <span class="n">return_seen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dijkstra_predecessor_and_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+                                                              <span class="n">cutoff</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+    <span class="c1"># order the nodes by path length</span>
+    <span class="n">onodes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">l</span><span class="p">,</span> <span class="n">vert</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">vert</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="ow">in</span> <span class="n">length</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+    <span class="n">onodes</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">onodes</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="n">vert</span> <span class="k">for</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">vert</span><span class="p">)</span> <span class="ow">in</span> <span class="n">onodes</span> <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># initialize betweenness</span>
+    <span class="n">between</span> <span class="o">=</span> <span class="p">{}</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">onodes</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">onodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">:</span>
+            <span class="n">num_paths</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>  <span class="c1"># Discount betweenness if more than</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>         <span class="c1"># one shortest path.</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">source</span><span class="p">:</span>  <span class="c1"># stop if hit source because all remaining v</span>
+                    <span class="k">break</span>        <span class="c1"># also have pred[v]==[source]</span>
+                <span class="n">between</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+=</span> <span class="n">between</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_paths</span><span class="p">)</span>
+    <span class="c1">#  remove source</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">between</span><span class="p">:</span>
+        <span class="n">between</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="c1"># rescale to be between 0 and 1</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">between</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># scale by 1/the number of possible paths</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">((</span><span class="n">l</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">l</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">between</span><span class="p">:</span>
+                <span class="n">between</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span>
+    <span class="k">return</span> <span class="n">between</span>
+
+
+<span class="n">load_centrality</span> <span class="o">=</span> <span class="n">newman_betweenness_centrality</span>
+
+
+<div class="viewcode-block" id="edge_load_centrality"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.centrality.edge_load_centrality.html#networkx.algorithms.centrality.edge_load_centrality">[docs]</a><span class="k">def</span> <span class="nf">edge_load_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute edge load.</span>
+
+<span class="sd">    WARNING: This concept of edge load has not been analysed</span>
+<span class="sd">    or discussed outside of NetworkX that we know of.</span>
+<span class="sd">    It is based loosely on load_centrality in the sense that</span>
+<span class="sd">    it counts the number of shortest paths which cross each edge.</span>
+<span class="sd">    This function is for demonstration and testing purposes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        A networkx graph</span>
+
+<span class="sd">    cutoff : bool, optional (default=False)</span>
+<span class="sd">        If specified, only consider paths of length &lt;= cutoff.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A dict keyed by edge 2-tuple to the number of shortest paths</span>
+<span class="sd">    which use that edge. Where more than one path is shortest</span>
+<span class="sd">    the count is divided equally among paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">betweenness</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="n">betweenness</span><span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">betweenness</span><span class="p">[(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">ubetween</span> <span class="o">=</span> <span class="n">_edge_betweenness</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">ubetweenv</span> <span class="ow">in</span> <span class="n">ubetween</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">betweenness</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ubetweenv</span>  <span class="c1"># cumulative total</span>
+    <span class="k">return</span> <span class="n">betweenness</span></div>
+
+
+<span class="k">def</span> <span class="nf">_edge_betweenness</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Edge betweenness helper.&quot;&quot;&quot;</span>
+    <span class="c1"># get the predecessor data</span>
+    <span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="n">cutoff</span><span class="p">,</span> <span class="n">return_seen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># order the nodes by path length</span>
+    <span class="n">onodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">length</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">))]</span>
+    <span class="c1"># initialize betweenness, doesn&#39;t account for any edge weights</span>
+    <span class="n">between</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+        <span class="n">between</span><span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">between</span><span class="p">[(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="k">while</span> <span class="n">onodes</span><span class="p">:</span>           <span class="c1"># work through all paths</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">onodes</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">:</span>
+            <span class="c1"># Discount betweenness if more than one shortest path.</span>
+            <span class="n">num_paths</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">:</span>
+                    <span class="c1"># Discount betweenness, mult path</span>
+                    <span class="n">num_paths</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">w</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">[</span><span class="n">w</span><span class="p">]:</span>
+                        <span class="n">between</span><span class="p">[(</span><span class="n">w</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">between</span><span class="p">[(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)]</span> <span class="o">/</span> <span class="n">num_paths</span>
+                        <span class="n">between</span><span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">between</span><span class="p">[(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">)]</span> <span class="o">/</span> <span class="n">num_paths</span>
+    <span class="k">return</span> <span class="n">between</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

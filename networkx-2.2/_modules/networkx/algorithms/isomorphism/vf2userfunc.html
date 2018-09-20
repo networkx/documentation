@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.isomorphism.vf2userfunc &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.isomorphism.vf2userfunc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.isomorphism.vf2userfunc</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Module to simplify the specification of user-defined equality functions for</span>
+<span class="sd">    node and edge attributes during isomorphism checks.</span>
+
+<span class="sd">    During the construction of an isomorphism, the algorithm considers two</span>
+<span class="sd">    candidate nodes n1 in G1 and n2 in G2.  The graphs G1 and G2 are then</span>
+<span class="sd">    compared with respect to properties involving n1 and n2, and if the outcome</span>
+<span class="sd">    is good, then the candidate nodes are considered isomorphic. NetworkX</span>
+<span class="sd">    provides a simple mechanism for users to extend the comparisons to include</span>
+<span class="sd">    node and edge attributes.</span>
+
+<span class="sd">    Node attributes are handled by the node_match keyword. When considering</span>
+<span class="sd">    n1 and n2, the algorithm passes their node attribute dictionaries to</span>
+<span class="sd">    node_match, and if it returns False, then n1 and n2 cannot be</span>
+<span class="sd">    considered to be isomorphic.</span>
+
+<span class="sd">    Edge attributes are handled by the edge_match keyword. When considering</span>
+<span class="sd">    n1 and n2, the algorithm must verify that outgoing edges from n1 are</span>
+<span class="sd">    commensurate with the outgoing edges for n2. If the graph is directed,</span>
+<span class="sd">    then a similar check is also performed for incoming edges.</span>
+
+<span class="sd">    Focusing only on outgoing edges, we consider pairs of nodes (n1, v1) from</span>
+<span class="sd">    G1 and (n2, v2) from G2. For graphs and digraphs, there is only one edge</span>
+<span class="sd">    between (n1, v1) and only one edge between (n2, v2). Those edge attribute</span>
+<span class="sd">    dictionaries are passed to edge_match, and if it returns False, then</span>
+<span class="sd">    n1 and n2 cannot be considered isomorphic. For multigraphs and</span>
+<span class="sd">    multidigraphs, there can be multiple edges between (n1, v1) and also</span>
+<span class="sd">    multiple edges between (n2, v2).  Now, there must exist an isomorphism</span>
+<span class="sd">    from &quot;all the edges between (n1, v1)&quot; to &quot;all the edges between (n2, v2)&quot;.</span>
+<span class="sd">    So, all of the edge attribute dictionaries are passed to edge_match, and</span>
+<span class="sd">    it must determine if there is an isomorphism between the two sets of edges.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">isomorphvf2</span> <span class="k">as</span> <span class="n">vf2</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GraphMatcher&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;DiGraphMatcher&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;MultiGraphMatcher&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;MultiDiGraphMatcher&#39;</span><span class="p">,</span>
+           <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_semantic_feasibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1_node</span><span class="p">,</span> <span class="n">G2_node</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if mapping G1_node to G2_node is semantically feasible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Make sure the nodes match</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G1</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">G1_node</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">G2</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">G2_node</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nm</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Make sure the edges match</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="c1"># Cached lookups</span>
+        <span class="n">G1_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G1_adj</span>
+        <span class="n">G2_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G2_adj</span>
+        <span class="n">core_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_1</span>
+        <span class="n">edge_match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_match</span>
+
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">G1_adj</span><span class="p">[</span><span class="n">G1_node</span><span class="p">]:</span>
+            <span class="c1"># G1_node is not in core_1, so we must handle R_self separately</span>
+            <span class="k">if</span> <span class="n">neighbor</span> <span class="o">==</span> <span class="n">G1_node</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">edge_match</span><span class="p">(</span><span class="n">G1_adj</span><span class="p">[</span><span class="n">G1_node</span><span class="p">][</span><span class="n">G1_node</span><span class="p">],</span>
+                                  <span class="n">G2_adj</span><span class="p">[</span><span class="n">G2_node</span><span class="p">][</span><span class="n">G2_node</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">core_1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">edge_match</span><span class="p">(</span><span class="n">G1_adj</span><span class="p">[</span><span class="n">G1_node</span><span class="p">][</span><span class="n">neighbor</span><span class="p">],</span>
+                                  <span class="n">G2_adj</span><span class="p">[</span><span class="n">G2_node</span><span class="p">][</span><span class="n">core_1</span><span class="p">[</span><span class="n">neighbor</span><span class="p">]]):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># syntactic check has already verified that neighbors are symmetric</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">GraphMatcher</span><span class="p">(</span><span class="n">vf2</span><span class="o">.</span><span class="n">GraphMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;VF2 isomorphism checker for undirected graphs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="GraphMatcher.__init__"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.GraphMatcher.__init__.html#networkx.algorithms.isomorphism.GraphMatcher.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_match</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize graph matcher.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G1, G2: graph</span>
+<span class="sd">            The graphs to be tested.</span>
+
+<span class="sd">        node_match: callable</span>
+<span class="sd">            A function that returns True iff node n1 in G1 and n2 in G2</span>
+<span class="sd">            should be considered equal during the isomorphism test. The</span>
+<span class="sd">            function will be called like::</span>
+
+<span class="sd">               node_match(G1.nodes[n1], G2.nodes[n2])</span>
+
+<span class="sd">            That is, the function will receive the node attribute dictionaries</span>
+<span class="sd">            of the nodes under consideration. If None, then no attributes are</span>
+<span class="sd">            considered when testing for an isomorphism.</span>
+
+<span class="sd">        edge_match: callable</span>
+<span class="sd">            A function that returns True iff the edge attribute dictionary for</span>
+<span class="sd">            the pair of nodes (u1, v1) in G1 and (u2, v2) in G2 should be</span>
+<span class="sd">            considered equal during the isomorphism test. The function will be</span>
+<span class="sd">            called like::</span>
+
+<span class="sd">               edge_match(G1[u1][v1], G2[u2][v2])</span>
+
+<span class="sd">            That is, the function will receive the edge attribute dictionaries</span>
+<span class="sd">            of the edges under consideration. If None, then no attributes are</span>
+<span class="sd">            considered when testing for an isomorphism.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vf2</span><span class="o">.</span><span class="n">GraphMatcher</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_match</span> <span class="o">=</span> <span class="n">node_match</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_match</span> <span class="o">=</span> <span class="n">edge_match</span>
+
+        <span class="c1"># These will be modified during checks to minimize code repeat.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G1_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G1</span><span class="o">.</span><span class="n">adj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G2_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G2</span><span class="o">.</span><span class="n">adj</span></div>
+
+    <span class="n">semantic_feasibility</span> <span class="o">=</span> <span class="n">_semantic_feasibility</span>
+
+
+<span class="k">class</span> <span class="nc">DiGraphMatcher</span><span class="p">(</span><span class="n">vf2</span><span class="o">.</span><span class="n">DiGraphMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;VF2 isomorphism checker for directed graphs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DiGraphMatcher.__init__"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.DiGraphMatcher.__init__.html#networkx.algorithms.isomorphism.DiGraphMatcher.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_match</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize graph matcher.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G1, G2 : graph</span>
+<span class="sd">            The graphs to be tested.</span>
+
+<span class="sd">        node_match : callable</span>
+<span class="sd">            A function that returns True iff node n1 in G1 and n2 in G2</span>
+<span class="sd">            should be considered equal during the isomorphism test. The</span>
+<span class="sd">            function will be called like::</span>
+
+<span class="sd">               node_match(G1.nodes[n1], G2.nodes[n2])</span>
+
+<span class="sd">            That is, the function will receive the node attribute dictionaries</span>
+<span class="sd">            of the nodes under consideration. If None, then no attributes are</span>
+<span class="sd">            considered when testing for an isomorphism.</span>
+
+<span class="sd">        edge_match : callable</span>
+<span class="sd">            A function that returns True iff the edge attribute dictionary for</span>
+<span class="sd">            the pair of nodes (u1, v1) in G1 and (u2, v2) in G2 should be</span>
+<span class="sd">            considered equal during the isomorphism test. The function will be</span>
+<span class="sd">            called like::</span>
+
+<span class="sd">               edge_match(G1[u1][v1], G2[u2][v2])</span>
+
+<span class="sd">            That is, the function will receive the edge attribute dictionaries</span>
+<span class="sd">            of the edges under consideration. If None, then no attributes are</span>
+<span class="sd">            considered when testing for an isomorphism.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vf2</span><span class="o">.</span><span class="n">DiGraphMatcher</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_match</span> <span class="o">=</span> <span class="n">node_match</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_match</span> <span class="o">=</span> <span class="n">edge_match</span>
+
+        <span class="c1"># These will be modified during checks to minimize code repeat.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G1_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G1</span><span class="o">.</span><span class="n">adj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G2_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G2</span><span class="o">.</span><span class="n">adj</span></div>
+
+<div class="viewcode-block" id="DiGraphMatcher.semantic_feasibility"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.DiGraphMatcher.semantic_feasibility.html#networkx.algorithms.isomorphism.DiGraphMatcher.semantic_feasibility">[docs]</a>    <span class="k">def</span> <span class="nf">semantic_feasibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1_node</span><span class="p">,</span> <span class="n">G2_node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if mapping G1_node to G2_node is semantically feasible.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Test node_match and also test edge_match on successors</span>
+        <span class="n">feasible</span> <span class="o">=</span> <span class="n">_semantic_feasibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1_node</span><span class="p">,</span> <span class="n">G2_node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">feasible</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Test edge_match on predecessors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G1_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G1</span><span class="o">.</span><span class="n">pred</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G2_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G2</span><span class="o">.</span><span class="n">pred</span>
+        <span class="n">feasible</span> <span class="o">=</span> <span class="n">_semantic_feasibility</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G1_node</span><span class="p">,</span> <span class="n">G2_node</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G1_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G1</span><span class="o">.</span><span class="n">adj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G2_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G2</span><span class="o">.</span><span class="n">adj</span>
+
+        <span class="k">return</span> <span class="n">feasible</span></div>
+
+<span class="c1"># The &quot;semantics&quot; of edge_match are different for multi(di)graphs, but</span>
+<span class="c1"># the implementation is the same.  So, technically we do not need to</span>
+<span class="c1"># provide &quot;multi&quot; versions, but we do so to match NetworkX&#39;s base classes.</span>
+
+
+<span class="k">class</span> <span class="nc">MultiGraphMatcher</span><span class="p">(</span><span class="n">GraphMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;VF2 isomorphism checker for undirected multigraphs. &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">MultiDiGraphMatcher</span><span class="p">(</span><span class="n">DiGraphMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;VF2 isomorphism checker for directed multigraphs. &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

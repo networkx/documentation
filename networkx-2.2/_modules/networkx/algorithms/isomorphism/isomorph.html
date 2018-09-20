@@ -1,0 +1,461 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.isomorphism.isomorph &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.isomorphism.isomorph</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.isomorphism.isomorph</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Graph isomorphism functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="k">import</span> <span class="n">NetworkXError</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Aric Hagberg (hagberg@lanl.gov)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Christopher Ellison cellison@cse.ucdavis.edu)&#39;</span><span class="p">])</span>
+<span class="c1">#    Copyright (C) 2004-2018 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;could_be_isomorphic&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;fast_could_be_isomorphic&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;faster_could_be_isomorphic&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;is_isomorphic&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="could_be_isomorphic"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.could_be_isomorphic.html#networkx.algorithms.isomorphism.could_be_isomorphic">[docs]</a><span class="k">def</span> <span class="nf">could_be_isomorphic</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns False if graphs are definitely not isomorphic.</span>
+<span class="sd">    True does NOT guarantee isomorphism.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G1, G2 : graphs</span>
+<span class="sd">       The two graphs G1 and G2 must be the same type.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Checks for matching degree, triangle, and number of cliques sequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check global properties</span>
+    <span class="k">if</span> <span class="n">G1</span><span class="o">.</span><span class="n">order</span><span class="p">()</span> <span class="o">!=</span> <span class="n">G2</span><span class="o">.</span><span class="n">order</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check local properties</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">G1</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G1</span><span class="p">)</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">number_of_cliques</span><span class="p">(</span><span class="n">G1</span><span class="p">)</span>
+    <span class="n">props1</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">,</span> <span class="n">t1</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">c1</span><span class="p">[</span><span class="n">v</span><span class="p">]]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">d1</span><span class="p">]</span>
+    <span class="n">props1</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">G2</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G2</span><span class="p">)</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">number_of_cliques</span><span class="p">(</span><span class="n">G2</span><span class="p">)</span>
+    <span class="n">props2</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">,</span> <span class="n">t2</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">c2</span><span class="p">[</span><span class="n">v</span><span class="p">]]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">d2</span><span class="p">]</span>
+    <span class="n">props2</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">props1</span> <span class="o">!=</span> <span class="n">props2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># OK...</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="n">graph_could_be_isomorphic</span> <span class="o">=</span> <span class="n">could_be_isomorphic</span>
+
+
+<div class="viewcode-block" id="fast_could_be_isomorphic"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.fast_could_be_isomorphic.html#networkx.algorithms.isomorphism.fast_could_be_isomorphic">[docs]</a><span class="k">def</span> <span class="nf">fast_could_be_isomorphic</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns False if graphs are definitely not isomorphic.</span>
+
+<span class="sd">    True does NOT guarantee isomorphism.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G1, G2 : graphs</span>
+<span class="sd">       The two graphs G1 and G2 must be the same type.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Checks for matching degree and triangle sequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check global properties</span>
+    <span class="k">if</span> <span class="n">G1</span><span class="o">.</span><span class="n">order</span><span class="p">()</span> <span class="o">!=</span> <span class="n">G2</span><span class="o">.</span><span class="n">order</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check local properties</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="n">G1</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G1</span><span class="p">)</span>
+    <span class="n">props1</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">,</span> <span class="n">t1</span><span class="p">[</span><span class="n">v</span><span class="p">]]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">d1</span><span class="p">]</span>
+    <span class="n">props1</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">G2</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G2</span><span class="p">)</span>
+    <span class="n">props2</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="p">,</span> <span class="n">t2</span><span class="p">[</span><span class="n">v</span><span class="p">]]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">d2</span><span class="p">]</span>
+    <span class="n">props2</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">props1</span> <span class="o">!=</span> <span class="n">props2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># OK...</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="n">fast_graph_could_be_isomorphic</span> <span class="o">=</span> <span class="n">fast_could_be_isomorphic</span>
+
+
+<div class="viewcode-block" id="faster_could_be_isomorphic"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.faster_could_be_isomorphic.html#networkx.algorithms.isomorphism.faster_could_be_isomorphic">[docs]</a><span class="k">def</span> <span class="nf">faster_could_be_isomorphic</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns False if graphs are definitely not isomorphic.</span>
+
+<span class="sd">    True does NOT guarantee isomorphism.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G1, G2 : graphs</span>
+<span class="sd">       The two graphs G1 and G2 must be the same type.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Checks for matching degree sequences.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check global properties</span>
+    <span class="k">if</span> <span class="n">G1</span><span class="o">.</span><span class="n">order</span><span class="p">()</span> <span class="o">!=</span> <span class="n">G2</span><span class="o">.</span><span class="n">order</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check local properties</span>
+    <span class="n">d1</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G1</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G2</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">d1</span> <span class="o">!=</span> <span class="n">d2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># OK...</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="n">faster_graph_could_be_isomorphic</span> <span class="o">=</span> <span class="n">faster_could_be_isomorphic</span>
+
+
+<div class="viewcode-block" id="is_isomorphic"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.isomorphism.is_isomorphic.html#networkx.algorithms.isomorphism.is_isomorphic">[docs]</a><span class="k">def</span> <span class="nf">is_isomorphic</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_match</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if the graphs G1 and G2 are isomorphic and False otherwise.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G1, G2: graphs</span>
+<span class="sd">        The two graphs G1 and G2 must be the same type.</span>
+
+<span class="sd">    node_match : callable</span>
+<span class="sd">        A function that returns True if node n1 in G1 and n2 in G2 should</span>
+<span class="sd">        be considered equal during the isomorphism test.</span>
+<span class="sd">        If node_match is not specified then node attributes are not considered.</span>
+
+<span class="sd">        The function will be called like</span>
+
+<span class="sd">           node_match(G1.nodes[n1], G2.nodes[n2]).</span>
+
+<span class="sd">        That is, the function will receive the node attribute dictionaries</span>
+<span class="sd">        for n1 and n2 as inputs.</span>
+
+<span class="sd">    edge_match : callable</span>
+<span class="sd">        A function that returns True if the edge attribute dictionary</span>
+<span class="sd">        for the pair of nodes (u1, v1) in G1 and (u2, v2) in G2 should</span>
+<span class="sd">        be considered equal during the isomorphism test.  If edge_match is</span>
+<span class="sd">        not specified then edge attributes are not considered.</span>
+
+<span class="sd">        The function will be called like</span>
+
+<span class="sd">           edge_match(G1[u1][v1], G2[u2][v2]).</span>
+
+<span class="sd">        That is, the function will receive the edge attribute dictionaries</span>
+<span class="sd">        of the edges under consideration.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Uses the vf2 algorithm [1]_.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx.algorithms.isomorphism as iso</span>
+
+<span class="sd">    For digraphs G1 and G2, using &#39;weight&#39; edge attribute (default: 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; G1 = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G2 = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G1, [1,2,3,4], weight=1)</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G2, [10,20,30,40], weight=2)</span>
+<span class="sd">    &gt;&gt;&gt; em = iso.numerical_edge_match(&#39;weight&#39;, 1)</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_isomorphic(G1, G2)  # no weights considered</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_isomorphic(G1, G2, edge_match=em) # match weights</span>
+<span class="sd">    False</span>
+
+<span class="sd">    For multidigraphs G1 and G2, using &#39;fill&#39; node attribute (default: &#39;&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; G1 = nx.MultiDiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G2 = nx.MultiDiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G1.add_nodes_from([1,2,3], fill=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G2.add_nodes_from([10,20,30,40], fill=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G1, [1,2,3,4], weight=3, linewidth=2.5)</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G2, [10,20,30,40], weight=3)</span>
+<span class="sd">    &gt;&gt;&gt; nm = iso.categorical_node_match(&#39;fill&#39;, &#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_isomorphic(G1, G2, node_match=nm)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    For multidigraphs G1 and G2, using &#39;weight&#39; edge attribute (default: 7)</span>
+
+<span class="sd">    &gt;&gt;&gt; G1.add_edge(1,2, weight=7)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; G2.add_edge(10,20)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; em = iso.numerical_multiedge_match(&#39;weight&#39;, 7, rtol=1e-6)</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_isomorphic(G1, G2, edge_match=em)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    For multigraphs G1 and G2, using &#39;weight&#39; and &#39;linewidth&#39; edge attributes</span>
+<span class="sd">    with default values 7 and 2.5. Also using &#39;fill&#39; node attribute with</span>
+<span class="sd">    default value &#39;red&#39;.</span>
+
+<span class="sd">    &gt;&gt;&gt; em = iso.numerical_multiedge_match([&#39;weight&#39;, &#39;linewidth&#39;], [7, 2.5])</span>
+<span class="sd">    &gt;&gt;&gt; nm = iso.categorical_node_match(&#39;fill&#39;, &#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_isomorphic(G1, G2, edge_match=em, node_match=nm)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    numerical_node_match, numerical_edge_match, numerical_multiedge_match</span>
+<span class="sd">    categorical_node_match, categorical_edge_match, categorical_multiedge_match</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]  L. P. Cordella, P. Foggia, C. Sansone, M. Vento,</span>
+<span class="sd">       &quot;An Improved Algorithm for Matching Large Graphs&quot;,</span>
+<span class="sd">       3rd IAPR-TC15 Workshop  on Graph-based Representations in</span>
+<span class="sd">       Pattern Recognition, Cuen, pp. 149-159, 2001.</span>
+<span class="sd">       http://amalfi.dis.unina.it/graph/db/papers/vf-algorithm.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G1</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="ow">and</span> <span class="n">G2</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">GM</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">DiGraphMatcher</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">G1</span><span class="o">.</span><span class="n">is_directed</span><span class="p">())</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">G2</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()):</span>
+        <span class="n">GM</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">algorithms</span><span class="o">.</span><span class="n">isomorphism</span><span class="o">.</span><span class="n">GraphMatcher</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Graphs G1 and G2 are not of the same type.&quot;</span><span class="p">)</span>
+
+    <span class="n">gm</span> <span class="o">=</span> <span class="n">GM</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">node_match</span><span class="o">=</span><span class="n">node_match</span><span class="p">,</span> <span class="n">edge_match</span><span class="o">=</span><span class="n">edge_match</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gm</span><span class="o">.</span><span class="n">is_isomorphic</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

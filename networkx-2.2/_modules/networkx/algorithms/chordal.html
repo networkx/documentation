@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.chordal &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.chordal</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.chordal</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Algorithms for chordal graphs.</span>
+
+<span class="sd">A graph is chordal if every cycle of length at least 4 has a chord</span>
+<span class="sd">(an edge joining two nodes not adjacent in the cycle).</span>
+<span class="sd">https://en.wikipedia.org/wiki/Chordal_graph</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">arbitrary_element</span>
+
+<span class="n">__authors__</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Jesus Cerquides &lt;cerquide@iiia.csic.es&gt;&#39;</span><span class="p">])</span>
+<span class="c1">#    Copyright (C) 2010 by</span>
+<span class="c1">#    Jesus Cerquides &lt;cerquide@iiia.csic.es&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;is_chordal&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;find_induced_nodes&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;chordal_graph_cliques&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;chordal_graph_treewidth&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;NetworkXTreewidthBoundExceeded&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">NetworkXTreewidthBoundExceeded</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised when a treewidth bound has been provided and it has</span>
+<span class="sd">    been exceeded&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="is_chordal"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.chordal.is_chordal.html#networkx.algorithms.chordal.is_chordal">[docs]</a><span class="k">def</span> <span class="nf">is_chordal</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks whether G is a chordal graph.</span>
+
+<span class="sd">    A graph is chordal if every cycle of length at least 4 has a chord</span>
+<span class="sd">    (an edge joining two nodes not adjacent in the cycle).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A NetworkX graph.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    chordal : bool</span>
+<span class="sd">      True if G is a chordal graph and False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support DiGraph, MultiGraph and MultiDiGraph.</span>
+<span class="sd">        If the input graph is an instance of one of these classes, a</span>
+<span class="sd">        :exc:`NetworkXError` is raised.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; e=[(1,2),(1,3),(2,3),(2,4),(3,4),(3,5),(3,6),(4,5),(4,6),(5,6)]</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph(e)</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_chordal(G)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The routine tries to go through every node following maximum cardinality</span>
+<span class="sd">    search. It returns False when it finds that the separator for any node</span>
+<span class="sd">    is not a clique.  Based on the algorithms in [1]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] R. E. Tarjan and M. Yannakakis, Simple linear-time algorithms</span>
+<span class="sd">       to test chordality of graphs, test acyclicity of hypergraphs, and</span>
+<span class="sd">       selectively reduce acyclic hypergraphs, SIAM J. Comput., 13 (1984),</span>
+<span class="sd">       pp. 566–579.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;Directed graphs not supported&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;Multiply connected graphs not supported.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_find_chordality_breaker</span><span class="p">(</span><span class="n">G</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="find_induced_nodes"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.chordal.find_induced_nodes.html#networkx.algorithms.chordal.find_induced_nodes">[docs]</a><span class="k">def</span> <span class="nf">find_induced_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">treewidth_bound</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the set of induced nodes in the path from s to t.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A chordal NetworkX graph</span>
+<span class="sd">    s : node</span>
+<span class="sd">        Source node to look for induced nodes</span>
+<span class="sd">    t : node</span>
+<span class="sd">        Destination node to look for induced nodes</span>
+<span class="sd">    treewith_bound: float</span>
+<span class="sd">        Maximum treewidth acceptable for the graph H. The search</span>
+<span class="sd">        for induced nodes will end as soon as the treewidth_bound is exceeded.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    I : Set of nodes</span>
+<span class="sd">        The set of induced nodes in the path from s to t in G</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support DiGraph, MultiGraph and MultiDiGraph.</span>
+<span class="sd">        If the input graph is an instance of one of these classes, a</span>
+<span class="sd">        :exc:`NetworkXError` is raised.</span>
+<span class="sd">        The algorithm can only be applied to chordal graphs. If</span>
+<span class="sd">        the input graph is found to be non-chordal, a :exc:`NetworkXError` is raised.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.generators.classic.path_graph(10)</span>
+<span class="sd">    &gt;&gt;&gt; I = nx.find_induced_nodes(G,1,9,2)</span>
+<span class="sd">    &gt;&gt;&gt; list(I)</span>
+<span class="sd">    [1, 2, 3, 4, 5, 6, 7, 8, 9]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    G must be a chordal graph and (s,t) an edge that is not in G.</span>
+
+<span class="sd">    If a treewidth_bound is provided, the search for induced nodes will end</span>
+<span class="sd">    as soon as the treewidth_bound is exceeded.</span>
+
+<span class="sd">    The algorithm is inspired by Algorithm 4 in [1]_.</span>
+<span class="sd">    A formal definition of induced node can also be found on that reference.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Learning Bounded Treewidth Bayesian Networks.</span>
+<span class="sd">       Gal Elidan, Stephen Gould; JMLR, 9(Dec):2699--2731, 2008.</span>
+<span class="sd">       http://jmlr.csail.mit.edu/papers/volume9/elidan08a/elidan08a.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_chordal</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Input graph is not chordal.&quot;</span><span class="p">)</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">triplet</span> <span class="o">=</span> <span class="n">_find_chordality_breaker</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">treewidth_bound</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">triplet</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="n">triplet</span>
+        <span class="n">I</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">triplet</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">triplet</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">s</span><span class="p">:</span>
+                <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">triplet</span> <span class="o">=</span> <span class="n">_find_chordality_breaker</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">treewidth_bound</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">I</span><span class="p">:</span>
+        <span class="c1"># Add t and the second node in the induced path from s to t.</span>
+        <span class="n">I</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">s</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">I</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">I</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="k">break</span>
+    <span class="k">return</span> <span class="n">I</span></div>
+
+
+<div class="viewcode-block" id="chordal_graph_cliques"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.chordal.chordal_graph_cliques.html#networkx.algorithms.chordal.chordal_graph_cliques">[docs]</a><span class="k">def</span> <span class="nf">chordal_graph_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the set of maximal cliques of a chordal graph.</span>
+
+<span class="sd">    The algorithm breaks the graph in connected components and performs a</span>
+<span class="sd">    maximum cardinality search in each component to get the cliques.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cliques : A set containing the maximal cliques in G.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support DiGraph, MultiGraph and MultiDiGraph.</span>
+<span class="sd">        If the input graph is an instance of one of these classes, a</span>
+<span class="sd">        :exc:`NetworkXError` is raised.</span>
+<span class="sd">        The algorithm can only be applied to chordal graphs. If the</span>
+<span class="sd">        input graph is found to be non-chordal, a :exc:`NetworkXError` is raised.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; e= [(1,2),(1,3),(2,3),(2,4),(3,4),(3,5),(3,6),(4,5),(4,6),(5,6),(7,8)]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(e)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(9)</span>
+<span class="sd">    &gt;&gt;&gt; setlist = nx.chordal_graph_cliques(G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_chordal</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Input graph is not chordal.&quot;</span><span class="p">)</span>
+
+    <span class="n">cliques</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected</span><span class="o">.</span><span class="n">connected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="n">cliques</span> <span class="o">|=</span> <span class="n">_connected_chordal_graph_cliques</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cliques</span></div>
+
+
+<div class="viewcode-block" id="chordal_graph_treewidth"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.chordal.chordal_graph_treewidth.html#networkx.algorithms.chordal.chordal_graph_treewidth">[docs]</a><span class="k">def</span> <span class="nf">chordal_graph_treewidth</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the treewidth of the chordal graph G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A NetworkX graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    treewidth : int</span>
+<span class="sd">        The size of the largest clique in the graph minus one.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support DiGraph, MultiGraph and MultiDiGraph.</span>
+<span class="sd">        If the input graph is an instance of one of these classes, a</span>
+<span class="sd">        :exc:`NetworkXError` is raised.</span>
+<span class="sd">        The algorithm can only be applied to chordal graphs. If</span>
+<span class="sd">        the input graph is found to be non-chordal, a :exc:`NetworkXError` is raised.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; e = [(1,2),(1,3),(2,3),(2,4),(3,4),(3,5),(3,6),(4,5),(4,6),(5,6),(7,8)]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(e)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(9)</span>
+<span class="sd">    &gt;&gt;&gt; nx.chordal_graph_treewidth(G)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] https://en.wikipedia.org/wiki/Tree_decomposition#Treewidth</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_chordal</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Input graph is not chordal.&quot;</span><span class="p">)</span>
+
+    <span class="n">max_clique</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">clique</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">chordal_graph_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="n">max_clique</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_clique</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">clique</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">max_clique</span> <span class="o">-</span> <span class="mi">1</span></div>
+
+
+<span class="k">def</span> <span class="nf">_is_complete_graph</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if G is a complete graph.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">number_of_selfloops</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Self loop found in _is_complete_graph()&quot;</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span>
+    <span class="n">max_edges</span> <span class="o">=</span> <span class="p">((</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">e</span> <span class="o">==</span> <span class="n">max_edges</span>
+
+
+<span class="k">def</span> <span class="nf">_find_missing_edge</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given a non-complete graph G, returns a missing edge.&quot;&quot;&quot;</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">nodes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="p">[</span><span class="n">u</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">missing</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">_max_cardinality_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">choices</span><span class="p">,</span> <span class="n">wanna_connect</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a the node in choices that has more connections in G</span>
+<span class="sd">    to nodes in wanna_connect.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c1">#    max_number = None</span>
+    <span class="n">max_number</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">:</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">if</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">wanna_connect</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="n">max_number</span><span class="p">:</span>
+            <span class="n">max_number</span> <span class="o">=</span> <span class="n">number</span>
+            <span class="n">max_cardinality_node</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">return</span> <span class="n">max_cardinality_node</span>
+
+
+<span class="k">def</span> <span class="nf">_find_chordality_breaker</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">treewidth_bound</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given a graph G, starts a max cardinality search</span>
+<span class="sd">    (starting from s if s is given and from an arbitrary node otherwise)</span>
+<span class="sd">    trying to find a non-chordal cycle.</span>
+
+<span class="sd">    If it does find one, it returns (u,v,w) where u,v,w are the three</span>
+<span class="sd">    nodes that together with s are involved in the cycle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">unnumbered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">unnumbered</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">numbered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">s</span><span class="p">])</span>
+<span class="c1">#    current_treewidth = None</span>
+    <span class="n">current_treewidth</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">while</span> <span class="n">unnumbered</span><span class="p">:</span>  <span class="c1"># and current_treewidth &lt;= treewidth_bound:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">_max_cardinality_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">unnumbered</span><span class="p">,</span> <span class="n">numbered</span><span class="p">)</span>
+        <span class="n">unnumbered</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">numbered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">clique_wanna_be</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">numbered</span>
+        <span class="n">sg</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">clique_wanna_be</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_complete_graph</span><span class="p">(</span><span class="n">sg</span><span class="p">):</span>
+            <span class="c1"># The graph seems to be chordal by now. We update the treewidth</span>
+            <span class="n">current_treewidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">current_treewidth</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">clique_wanna_be</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">current_treewidth</span> <span class="o">&gt;</span> <span class="n">treewidth_bound</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXTreewidthBoundExceeded</span><span class="p">(</span>
+                    <span class="s2">&quot;treewidth_bound exceeded: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">current_treewidth</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># sg is not a clique,</span>
+            <span class="c1"># look for an edge that is not included in sg</span>
+            <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="n">_find_missing_edge</span><span class="p">(</span><span class="n">sg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_connected_chordal_graph_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the set of maximal cliques of a connected chordal graph.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cliques</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">unnumbered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="n">unnumbered</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">numbered</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="p">])</span>
+        <span class="n">clique_wanna_be</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span><span class="p">])</span>
+        <span class="k">while</span> <span class="n">unnumbered</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">_max_cardinality_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">unnumbered</span><span class="p">,</span> <span class="n">numbered</span><span class="p">)</span>
+            <span class="n">unnumbered</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">numbered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">new_clique_wanna_be</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">numbered</span>
+            <span class="n">sg</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">clique_wanna_be</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_is_complete_graph</span><span class="p">(</span><span class="n">sg</span><span class="p">):</span>
+                <span class="n">new_clique_wanna_be</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">new_clique_wanna_be</span> <span class="o">&gt;=</span> <span class="n">clique_wanna_be</span><span class="p">:</span>
+                    <span class="n">cliques</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">clique_wanna_be</span><span class="p">))</span>
+                <span class="n">clique_wanna_be</span> <span class="o">=</span> <span class="n">new_clique_wanna_be</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Input graph is not chordal.&quot;</span><span class="p">)</span>
+        <span class="n">cliques</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">clique_wanna_be</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cliques</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

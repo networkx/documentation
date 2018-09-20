@@ -1,0 +1,565 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.flow.mincost &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.flow.mincost</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.flow.mincost</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Minimum cost flow algorithms on directed connected graphs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Loïc Séguin-C. &lt;loicseguin@gmail.com&gt;&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2010 Loïc Séguin-C. &lt;loicseguin@gmail.com&gt;</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1"># BSD license.</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;min_cost_flow_cost&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;min_cost_flow&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;cost_of_flow&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;max_flow_min_cost&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+
+<div class="viewcode-block" id="min_cost_flow_cost"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.min_cost_flow_cost.html#networkx.algorithms.flow.min_cost_flow_cost">[docs]</a><span class="k">def</span> <span class="nf">min_cost_flow_cost</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">demand</span><span class="o">=</span><span class="s1">&#39;demand&#39;</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span>
+                       <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Find the cost of a minimum cost flow satisfying all demands in digraph G.</span>
+
+<span class="sd">    G is a digraph with edge costs and capacities and in which nodes</span>
+<span class="sd">    have demand, i.e., they want to send or receive some amount of</span>
+<span class="sd">    flow. A negative demand means that the node wants to send flow, a</span>
+<span class="sd">    positive demand means that the node want to receive flow. A flow on</span>
+<span class="sd">    the digraph G satisfies all demand if the net flow into each node</span>
+<span class="sd">    is equal to the demand of that node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        DiGraph on which a minimum cost flow satisfying all demands is</span>
+<span class="sd">        to be found.</span>
+
+<span class="sd">    demand : string</span>
+<span class="sd">        Nodes of the graph G are expected to have an attribute demand</span>
+<span class="sd">        that indicates how much flow a node wants to send (negative</span>
+<span class="sd">        demand) or receive (positive demand). Note that the sum of the</span>
+<span class="sd">        demands should be 0 otherwise the problem in not feasible. If</span>
+<span class="sd">        this attribute is not present, a node is considered to have 0</span>
+<span class="sd">        demand. Default value: &#39;demand&#39;.</span>
+
+<span class="sd">    capacity : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute capacity</span>
+<span class="sd">        that indicates how much flow the edge can support. If this</span>
+<span class="sd">        attribute is not present, the edge is considered to have</span>
+<span class="sd">        infinite capacity. Default value: &#39;capacity&#39;.</span>
+
+<span class="sd">    weight : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute weight</span>
+<span class="sd">        that indicates the cost incurred by sending one unit of flow on</span>
+<span class="sd">        that edge. If not present, the weight is considered to be 0.</span>
+<span class="sd">        Default value: &#39;weight&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flowCost : integer, float</span>
+<span class="sd">        Cost of a minimum cost flow satisfying all demands.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        This exception is raised if the input graph is not directed or</span>
+<span class="sd">        not connected.</span>
+
+<span class="sd">    NetworkXUnfeasible</span>
+<span class="sd">        This exception is raised in the following situations:</span>
+
+<span class="sd">            * The sum of the demands is not zero. Then, there is no</span>
+<span class="sd">              flow satisfying all demands.</span>
+<span class="sd">            * There is no flow satisfying all demand.</span>
+
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        This exception is raised if the digraph G has a cycle of</span>
+<span class="sd">        negative cost and infinite capacity. Then, the cost of a flow</span>
+<span class="sd">        satisfying all demands is unbounded below.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    cost_of_flow, max_flow_min_cost, min_cost_flow, network_simplex</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm is not guaranteed to work if edge weights or demands</span>
+<span class="sd">    are floating point numbers (overflows and roundoff errors can</span>
+<span class="sd">    cause problems). As a workaround you can use integer numbers by</span>
+<span class="sd">    multiplying the relevant edge attributes by a convenient</span>
+<span class="sd">    constant factor (eg 100).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    A simple example of a min cost flow problem.</span>
+
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(&#39;a&#39;, demand = -5)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(&#39;d&#39;, demand = 5)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;a&#39;, &#39;b&#39;, weight = 3, capacity = 4)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;a&#39;, &#39;c&#39;, weight = 6, capacity = 10)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;b&#39;, &#39;d&#39;, weight = 1, capacity = 9)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;c&#39;, &#39;d&#39;, weight = 2, capacity = 5)</span>
+<span class="sd">    &gt;&gt;&gt; flowCost = nx.min_cost_flow_cost(G)</span>
+<span class="sd">    &gt;&gt;&gt; flowCost</span>
+<span class="sd">    24</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">network_simplex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">demand</span><span class="o">=</span><span class="n">demand</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                              <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="min_cost_flow"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.min_cost_flow.html#networkx.algorithms.flow.min_cost_flow">[docs]</a><span class="k">def</span> <span class="nf">min_cost_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">demand</span><span class="o">=</span><span class="s1">&#39;demand&#39;</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span>
+                  <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return a minimum cost flow satisfying all demands in digraph G.</span>
+
+<span class="sd">    G is a digraph with edge costs and capacities and in which nodes</span>
+<span class="sd">    have demand, i.e., they want to send or receive some amount of</span>
+<span class="sd">    flow. A negative demand means that the node wants to send flow, a</span>
+<span class="sd">    positive demand means that the node want to receive flow. A flow on</span>
+<span class="sd">    the digraph G satisfies all demand if the net flow into each node</span>
+<span class="sd">    is equal to the demand of that node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        DiGraph on which a minimum cost flow satisfying all demands is</span>
+<span class="sd">        to be found.</span>
+
+<span class="sd">    demand : string</span>
+<span class="sd">        Nodes of the graph G are expected to have an attribute demand</span>
+<span class="sd">        that indicates how much flow a node wants to send (negative</span>
+<span class="sd">        demand) or receive (positive demand). Note that the sum of the</span>
+<span class="sd">        demands should be 0 otherwise the problem in not feasible. If</span>
+<span class="sd">        this attribute is not present, a node is considered to have 0</span>
+<span class="sd">        demand. Default value: &#39;demand&#39;.</span>
+
+<span class="sd">    capacity : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute capacity</span>
+<span class="sd">        that indicates how much flow the edge can support. If this</span>
+<span class="sd">        attribute is not present, the edge is considered to have</span>
+<span class="sd">        infinite capacity. Default value: &#39;capacity&#39;.</span>
+
+<span class="sd">    weight : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute weight</span>
+<span class="sd">        that indicates the cost incurred by sending one unit of flow on</span>
+<span class="sd">        that edge. If not present, the weight is considered to be 0.</span>
+<span class="sd">        Default value: &#39;weight&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flowDict : dictionary</span>
+<span class="sd">        Dictionary of dictionaries keyed by nodes such that</span>
+<span class="sd">        flowDict[u][v] is the flow edge (u, v).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        This exception is raised if the input graph is not directed or</span>
+<span class="sd">        not connected.</span>
+
+<span class="sd">    NetworkXUnfeasible</span>
+<span class="sd">        This exception is raised in the following situations:</span>
+
+<span class="sd">            * The sum of the demands is not zero. Then, there is no</span>
+<span class="sd">              flow satisfying all demands.</span>
+<span class="sd">            * There is no flow satisfying all demand.</span>
+
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        This exception is raised if the digraph G has a cycle of</span>
+<span class="sd">        negative cost and infinite capacity. Then, the cost of a flow</span>
+<span class="sd">        satisfying all demands is unbounded below.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    cost_of_flow, max_flow_min_cost, min_cost_flow_cost, network_simplex</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm is not guaranteed to work if edge weights or demands</span>
+<span class="sd">    are floating point numbers (overflows and roundoff errors can</span>
+<span class="sd">    cause problems). As a workaround you can use integer numbers by</span>
+<span class="sd">    multiplying the relevant edge attributes by a convenient</span>
+<span class="sd">    constant factor (eg 100).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    A simple example of a min cost flow problem.</span>
+
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(&#39;a&#39;, demand = -5)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(&#39;d&#39;, demand = 5)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;a&#39;, &#39;b&#39;, weight = 3, capacity = 4)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;a&#39;, &#39;c&#39;, weight = 6, capacity = 10)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;b&#39;, &#39;d&#39;, weight = 1, capacity = 9)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;c&#39;, &#39;d&#39;, weight = 2, capacity = 5)</span>
+<span class="sd">    &gt;&gt;&gt; flowDict = nx.min_cost_flow(G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">network_simplex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">demand</span><span class="o">=</span><span class="n">demand</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                              <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="cost_of_flow"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.cost_of_flow.html#networkx.algorithms.flow.cost_of_flow">[docs]</a><span class="k">def</span> <span class="nf">cost_of_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">flowDict</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the cost of the flow given by flowDict on graph G.</span>
+
+<span class="sd">    Note that this function does not check for the validity of the</span>
+<span class="sd">    flow flowDict. This function will fail if the graph G and the</span>
+<span class="sd">    flow don&#39;t have the same edge set.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        DiGraph on which a minimum cost flow satisfying all demands is</span>
+<span class="sd">        to be found.</span>
+
+<span class="sd">    weight : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute weight</span>
+<span class="sd">        that indicates the cost incurred by sending one unit of flow on</span>
+<span class="sd">        that edge. If not present, the weight is considered to be 0.</span>
+<span class="sd">        Default value: &#39;weight&#39;.</span>
+
+<span class="sd">    flowDict : dictionary</span>
+<span class="sd">        Dictionary of dictionaries keyed by nodes such that</span>
+<span class="sd">        flowDict[u][v] is the flow edge (u, v).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cost : Integer, float</span>
+<span class="sd">        The total cost of the flow. This is given by the sum over all</span>
+<span class="sd">        edges of the product of the edge&#39;s flow and the edge&#39;s weight.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    max_flow_min_cost, min_cost_flow, min_cost_flow_cost, network_simplex</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm is not guaranteed to work if edge weights or demands</span>
+<span class="sd">    are floating point numbers (overflows and roundoff errors can</span>
+<span class="sd">    cause problems). As a workaround you can use integer numbers by</span>
+<span class="sd">    multiplying the relevant edge attributes by a convenient</span>
+<span class="sd">    constant factor (eg 100).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="n">flowDict</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="max_flow_min_cost"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.max_flow_min_cost.html#networkx.algorithms.flow.max_flow_min_cost">[docs]</a><span class="k">def</span> <span class="nf">max_flow_min_cost</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a maximum (s, t)-flow of minimum cost.</span>
+
+<span class="sd">    G is a digraph with edge costs and capacities. There is a source</span>
+<span class="sd">    node s and a sink node t. This function finds a maximum flow from</span>
+<span class="sd">    s to t whose total cost is minimized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        DiGraph on which a minimum cost flow satisfying all demands is</span>
+<span class="sd">        to be found.</span>
+
+<span class="sd">    s: node label</span>
+<span class="sd">        Source of the flow.</span>
+
+<span class="sd">    t: node label</span>
+<span class="sd">        Destination of the flow.</span>
+
+<span class="sd">    capacity: string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute capacity</span>
+<span class="sd">        that indicates how much flow the edge can support. If this</span>
+<span class="sd">        attribute is not present, the edge is considered to have</span>
+<span class="sd">        infinite capacity. Default value: &#39;capacity&#39;.</span>
+
+<span class="sd">    weight: string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute weight</span>
+<span class="sd">        that indicates the cost incurred by sending one unit of flow on</span>
+<span class="sd">        that edge. If not present, the weight is considered to be 0.</span>
+<span class="sd">        Default value: &#39;weight&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flowDict: dictionary</span>
+<span class="sd">        Dictionary of dictionaries keyed by nodes such that</span>
+<span class="sd">        flowDict[u][v] is the flow edge (u, v).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        This exception is raised if the input graph is not directed or</span>
+<span class="sd">        not connected.</span>
+
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        This exception is raised if there is an infinite capacity path</span>
+<span class="sd">        from s to t in G. In this case there is no maximum flow. This</span>
+<span class="sd">        exception is also raised if the digraph G has a cycle of</span>
+<span class="sd">        negative cost and infinite capacity. Then, the cost of a flow</span>
+<span class="sd">        is unbounded below.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    cost_of_flow, min_cost_flow, min_cost_flow_cost, network_simplex</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm is not guaranteed to work if edge weights or demands</span>
+<span class="sd">    are floating point numbers (overflows and roundoff errors can</span>
+<span class="sd">    cause problems). As a workaround you can use integer numbers by</span>
+<span class="sd">    multiplying the relevant edge attributes by a convenient</span>
+<span class="sd">    constant factor (eg 100).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(1, 2, {&#39;capacity&#39;: 12, &#39;weight&#39;: 4}),</span>
+<span class="sd">    ...                   (1, 3, {&#39;capacity&#39;: 20, &#39;weight&#39;: 6}),</span>
+<span class="sd">    ...                   (2, 3, {&#39;capacity&#39;: 6, &#39;weight&#39;: -3}),</span>
+<span class="sd">    ...                   (2, 6, {&#39;capacity&#39;: 14, &#39;weight&#39;: 1}),</span>
+<span class="sd">    ...                   (3, 4, {&#39;weight&#39;: 9}),</span>
+<span class="sd">    ...                   (3, 5, {&#39;capacity&#39;: 10, &#39;weight&#39;: 5}),</span>
+<span class="sd">    ...                   (4, 2, {&#39;capacity&#39;: 19, &#39;weight&#39;: 13}),</span>
+<span class="sd">    ...                   (4, 5, {&#39;capacity&#39;: 4, &#39;weight&#39;: 0}),</span>
+<span class="sd">    ...                   (5, 7, {&#39;capacity&#39;: 28, &#39;weight&#39;: 2}),</span>
+<span class="sd">    ...                   (6, 5, {&#39;capacity&#39;: 11, &#39;weight&#39;: 1}),</span>
+<span class="sd">    ...                   (6, 7, {&#39;weight&#39;: 8}),</span>
+<span class="sd">    ...                   (7, 4, {&#39;capacity&#39;: 6, &#39;weight&#39;: 6})])</span>
+<span class="sd">    &gt;&gt;&gt; mincostFlow = nx.max_flow_min_cost(G, 1, 7)</span>
+<span class="sd">    &gt;&gt;&gt; mincost = nx.cost_of_flow(G, mincostFlow)</span>
+<span class="sd">    &gt;&gt;&gt; mincost</span>
+<span class="sd">    373</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms.flow import maximum_flow</span>
+<span class="sd">    &gt;&gt;&gt; maxFlow = maximum_flow(G, 1, 7)[1]</span>
+<span class="sd">    &gt;&gt;&gt; nx.cost_of_flow(G, maxFlow) &gt;= mincost</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; mincostFlowValue = (sum((mincostFlow[u][7] for u in G.predecessors(7)))</span>
+<span class="sd">    ...                     - sum((mincostFlow[7][v] for v in G.successors(7))))</span>
+<span class="sd">    &gt;&gt;&gt; mincostFlowValue == nx.maximum_flow_value(G, 1, 7)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxFlow</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">maximum_flow_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">demand</span><span class="o">=-</span><span class="n">maxFlow</span><span class="p">)</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">demand</span><span class="o">=</span><span class="n">maxFlow</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">min_cost_flow</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

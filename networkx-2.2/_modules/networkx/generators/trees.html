@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.generators.trees &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.generators.trees</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.generators.trees</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- encoding: utf-8 -*-</span>
+<span class="c1">#    Copyright (C) 2015-2018 by</span>
+<span class="c1">#        Jeffrey Finkelstein &lt;jeffrey.finkelstein@gmail.com&gt;</span>
+<span class="c1">#        NetworkX developers</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors:      Jeffrey Finkelstein &lt;jeffrey.finkelstein@gmail.com&gt;</span>
+<span class="sd">&quot;&quot;&quot;Functions for generating trees.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">generate_unique_node</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;prefix_tree&#39;</span><span class="p">,</span> <span class="s1">&#39;random_tree&#39;</span><span class="p">]</span>
+
+<span class="c1">#: The nil node, the only leaf node in a prefix tree.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Each predecessor of the nil node corresponds to the end of a path</span>
+<span class="c1">#: used to generate the prefix tree.</span>
+<span class="n">NIL</span> <span class="o">=</span> <span class="s1">&#39;NIL&#39;</span>
+
+
+<div class="viewcode-block" id="prefix_tree"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.prefix_tree.html#networkx.generators.trees.prefix_tree">[docs]</a><span class="k">def</span> <span class="nf">prefix_tree</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a directed prefix tree from the given list of iterables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths: iterable of lists</span>
+<span class="sd">        An iterable over &quot;paths&quot;, which are themselves lists of</span>
+<span class="sd">        nodes. Common prefixes among these paths are converted into</span>
+<span class="sd">        common initial segments in the generated tree.</span>
+
+<span class="sd">        Most commonly, this may be an iterable over lists of integers,</span>
+<span class="sd">        or an iterable over Python strings.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DiGraph</span>
+<span class="sd">        A directed graph representing an arborescence consisting of the</span>
+<span class="sd">        prefix tree generated by `paths`. Nodes are directed &quot;downward&quot;,</span>
+<span class="sd">        from parent to child. A special &quot;synthetic&quot; root node is added</span>
+<span class="sd">        to be the parent of the first node in each path. A special</span>
+<span class="sd">        &quot;synthetic&quot; leaf node, the &quot;nil&quot; node, is added to be the child</span>
+<span class="sd">        of all nodes representing the last element in a path. (The</span>
+<span class="sd">        addition of this nil node technically makes this not an</span>
+<span class="sd">        arborescence but a directed acyclic graph; removing the nil node</span>
+<span class="sd">        makes it an arborescence.)</span>
+
+<span class="sd">        Each node has an attribute &#39;source&#39; whose value is the original</span>
+<span class="sd">        element of the path to which this node corresponds. The &#39;source&#39;</span>
+<span class="sd">        of the root node is None, and the &#39;source&#39; of the nil node is</span>
+<span class="sd">        :data:`.NIL`.</span>
+
+<span class="sd">        The root node is the only node of in-degree zero in the graph,</span>
+<span class="sd">        and the nil node is the only node of out-degree zero.  For</span>
+<span class="sd">        convenience, the nil node can be accessed via the :data:`.NIL`</span>
+<span class="sd">        attribute; for example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from networkx.generators.trees import NIL</span>
+<span class="sd">            &gt;&gt;&gt; paths = [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; T = nx.prefix_tree(paths)</span>
+<span class="sd">            &gt;&gt;&gt; T.predecessors(NIL)  # doctest: +SKIP</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The prefix tree is also known as a *trie*.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a prefix tree from a list of strings with some common</span>
+<span class="sd">    prefixes::</span>
+
+<span class="sd">        &gt;&gt;&gt; strings = [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; T, root = nx.prefix_tree(strings)</span>
+
+<span class="sd">    Continuing the above example, to recover the original paths that</span>
+<span class="sd">    generated the prefix tree, traverse up the tree from the</span>
+<span class="sd">    :data:`.NIL` node to the root::</span>
+
+<span class="sd">        &gt;&gt;&gt; from networkx.generators.trees import NIL</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; strings = [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; T, root = nx.prefix_tree(strings)</span>
+<span class="sd">        &gt;&gt;&gt; recovered = []</span>
+<span class="sd">        &gt;&gt;&gt; for v in T.predecessors(NIL):</span>
+<span class="sd">        ...     s = &#39;&#39;</span>
+<span class="sd">        ...     while v != root:</span>
+<span class="sd">        ...         # Prepend the character `v` to the accumulator `s`.</span>
+<span class="sd">        ...         s = str(T.node[v][&#39;source&#39;]) + s</span>
+<span class="sd">        ...         # Each non-nil, non-root node has exactly one parent.</span>
+<span class="sd">        ...         v = next(T.predecessors(v))</span>
+<span class="sd">        ...     recovered.append(s)</span>
+<span class="sd">        &gt;&gt;&gt; sorted(recovered)</span>
+<span class="sd">        [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursively create a trie from the given list of paths.</span>
+
+<span class="sd">        `paths` is a list of paths, each of which is itself a list of</span>
+<span class="sd">        nodes, relative to the given `root` (but not including it). This</span>
+<span class="sd">        list of paths will be interpreted as a tree-like structure, in</span>
+<span class="sd">        which two paths that share a prefix represent two branches of</span>
+<span class="sd">        the tree with the same initial segment.</span>
+
+<span class="sd">        `root` is the parent of the node at index 0 in each path.</span>
+
+<span class="sd">        `B` is the &quot;accumulator&quot;, the :class:`networkx.DiGraph`</span>
+<span class="sd">        representing the branching to which the new nodes and edges will</span>
+<span class="sd">        be added.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create a mapping from each head node to the list of tail paths</span>
+        <span class="c1"># remaining beneath that node.</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="c1"># If the path is the empty list, that represents the empty</span>
+            <span class="c1"># string, so we add an edge to the NIL node.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">NIL</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="c1"># TODO In Python 3, this should be `child, *rest = path`.</span>
+            <span class="n">child</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="c1"># `child` may exist as the head of more than one path in `paths`.</span>
+            <span class="n">children</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+        <span class="c1"># Add a node for each child found above and add edges from the</span>
+        <span class="c1"># root to each child. In this loop, `head` is the child and</span>
+        <span class="c1"># `tails` is the list of remaining paths under that child.</span>
+        <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="n">tails</span> <span class="ow">in</span> <span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># We need to relabel each child with a unique name. To do</span>
+            <span class="c1"># this we simply change each key in the dictionary to be a</span>
+            <span class="c1"># (key, uuid) pair.</span>
+            <span class="n">new_head</span> <span class="o">=</span> <span class="n">generate_unique_node</span><span class="p">()</span>
+            <span class="c1"># Ensure the new child knows the name of the old child so</span>
+            <span class="c1"># that the user can recover the mapping to the original</span>
+            <span class="c1"># nodes.</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_head</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">head</span><span class="p">)</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">new_head</span><span class="p">)</span>
+            <span class="n">_helper</span><span class="p">(</span><span class="n">tails</span><span class="p">,</span> <span class="n">new_head</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the prefix tree with a root node and a nil node.</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">generate_unique_node</span><span class="p">()</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">NIL</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">NIL</span><span class="p">)</span>
+    <span class="c1"># Populate the tree.</span>
+    <span class="n">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">T</span><span class="p">,</span> <span class="n">root</span></div>
+
+
+<span class="c1"># From the Wikipedia article on Prüfer sequences:</span>
+<span class="c1">#</span>
+<span class="c1"># &gt; Generating uniformly distributed random Prüfer sequences and</span>
+<span class="c1"># &gt; converting them into the corresponding trees is a straightforward</span>
+<span class="c1"># &gt; method of generating uniformly distributed random labelled trees.</span>
+<span class="c1">#</span>
+<div class="viewcode-block" id="random_tree"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_tree.html#networkx.generators.trees.random_tree">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a uniformly random tree on `n` nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        A positive integer representing the number of nodes in the tree.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkX graph</span>
+<span class="sd">        A tree, given as an undirected graph, whose nodes are numbers in</span>
+<span class="sd">        the set {0, …, *n* - 1}.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `n` is zero (because the null graph is not a tree).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The current implementation of this function generates a uniformly</span>
+<span class="sd">    random Prüfer sequence then converts that to a tree via the</span>
+<span class="sd">    :func:`~networkx.from_prufer_sequence` function. Since there is a</span>
+<span class="sd">    bijection between Prüfer sequences of length *n* - 2 and trees on</span>
+<span class="sd">    *n* nodes, the tree is chosen uniformly at random from the set of</span>
+<span class="sd">    all trees on *n* nodes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s1">&#39;the null graph is not a tree&#39;</span><span class="p">)</span>
+    <span class="c1"># Cannot create a Prüfer sequence unless `n` is at least two.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_prufer_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

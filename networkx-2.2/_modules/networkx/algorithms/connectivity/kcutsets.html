@@ -1,0 +1,461 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.connectivity.kcutsets &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.connectivity.kcutsets</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.connectivity.kcutsets</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Kanevsky all minimum node k cutsets algorithm.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">build_auxiliary_node_connectivity</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.flow</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">build_residual_network</span><span class="p">,</span>
+    <span class="n">edmonds_karp</span><span class="p">,</span>
+    <span class="n">shortest_augmenting_path</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">default_flow_func</span> <span class="o">=</span> <span class="n">edmonds_karp</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;all_node_cuts&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="all_node_cuts"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.connectivity.kcutsets.all_node_cuts.html#networkx.algorithms.connectivity.kcutsets.all_node_cuts">[docs]</a><span class="k">def</span> <span class="nf">all_node_cuts</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns all minimum k cutsets of an undirected graph G. </span>
+
+<span class="sd">    This implementation is based on Kanevsky&#39;s algorithm [1]_ for finding all</span>
+<span class="sd">    minimum-size node cut-sets of an undirected graph G; ie the set (or sets) </span>
+<span class="sd">    of nodes of cardinality equal to the node connectivity of G. Thus if </span>
+<span class="sd">    removed, would break G into two or more connected components.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Undirected graph</span>
+
+<span class="sd">    k : Integer</span>
+<span class="sd">        Node connectivity of the input graph. If k is None, then it is </span>
+<span class="sd">        computed. Default value: None.</span>
+
+<span class="sd">    flow_func : function</span>
+<span class="sd">        Function to perform the underlying flow computations. Default value</span>
+<span class="sd">        edmonds_karp. This function performs better in sparse graphs with</span>
+<span class="sd">        right tailed degree distributions. shortest_augmenting_path will</span>
+<span class="sd">        perform better in denser graphs.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cuts : a generator of node cutsets</span>
+<span class="sd">        Each node cutset has cardinality equal to the node connectivity of</span>
+<span class="sd">        the input graph.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # A two-dimensional grid graph has 4 cutsets of cardinality 2</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.grid_2d_graph(5, 5)</span>
+<span class="sd">    &gt;&gt;&gt; cutsets = list(nx.all_node_cuts(G))</span>
+<span class="sd">    &gt;&gt;&gt; len(cutsets)</span>
+<span class="sd">    4</span>
+<span class="sd">    &gt;&gt;&gt; all(2 == len(cutset) for cutset in cutsets)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; nx.node_connectivity(G)</span>
+<span class="sd">    2</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation is based on the sequential algorithm for finding all</span>
+<span class="sd">    minimum-size separating vertex sets in a graph [1]_. The main idea is to</span>
+<span class="sd">    compute minimum cuts using local maximum flow computations among a set </span>
+<span class="sd">    of nodes of highest degree and all other non-adjacent nodes in the Graph.</span>
+<span class="sd">    Once we find a minimum cut, we add an edge between the high degree</span>
+<span class="sd">    node and the target node of the local maximum flow computation to make </span>
+<span class="sd">    sure that we will not find that minimum cut again.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    node_connectivity</span>
+<span class="sd">    edmonds_karp</span>
+<span class="sd">    shortest_augmenting_path</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]  Kanevsky, A. (1993). Finding all minimum-size separating vertex </span>
+<span class="sd">            sets in a graph. Networks 23(6), 533--541.</span>
+<span class="sd">            http://onlinelibrary.wiley.com/doi/10.1002/net.3230230604/abstract</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;Input graph is disconnected.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Address some corner cases first.</span>
+    <span class="c1"># For complete Graphs</span>
+    <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">density</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">cut_set</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="nb">set</span><span class="p">(</span><span class="n">cut_set</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="c1"># Initialize data structures.</span>
+    <span class="c1"># Keep track of the cuts already computed so we do not repeat them.</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Even-Tarjan reduction is what we call auxiliary digraph</span>
+    <span class="c1"># for node connectivity.</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">build_auxiliary_node_connectivity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">H_nodes</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">nodes</span> <span class="c1"># for speed</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;mapping&#39;</span><span class="p">]</span>
+    <span class="c1"># Keep a copy of original predecessors, H will be modified later.</span>
+    <span class="c1"># Shallow copy is enough.</span>
+    <span class="n">original_H_pred</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">_pred</span><span class="p">)</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">build_residual_network</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="s1">&#39;capacity&#39;</span><span class="p">)</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span> <span class="n">residual</span><span class="o">=</span><span class="n">R</span><span class="p">)</span>
+    <span class="c1"># Define default flow function</span>
+    <span class="k">if</span> <span class="n">flow_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">flow_func</span> <span class="o">=</span> <span class="n">default_flow_func</span>
+    <span class="k">if</span> <span class="n">flow_func</span> <span class="ow">is</span> <span class="n">shortest_augmenting_path</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;two_phase&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># Begin the actual algorithm</span>
+    <span class="c1"># step 1: Find node connectivity k of G</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">node_connectivity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="n">flow_func</span><span class="p">)</span>
+    <span class="c1"># step 2:</span>
+    <span class="c1"># Find k nodes with top degree, call it X:</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">k</span><span class="p">]}</span>
+    <span class="c1"># Check if X is a k-node-cutset</span>
+    <span class="k">if</span> <span class="n">_is_separating_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">X</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">:</span>
+        <span class="c1"># step 3: Compute local connectivity flow of x with all other</span>
+        <span class="c1"># non adjacent nodes in G</span>
+        <span class="n">non_adjacent</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">X</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">non_adjacent</span><span class="p">:</span>
+            <span class="c1"># step 4: compute maximum flow in an Even-Tarjan reduction H of G</span>
+            <span class="c1"># and step 5: build the associated residual network R</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">flow_func</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">flow_value</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">flow_value</span> <span class="o">==</span> <span class="n">k</span><span class="p">:</span>
+                <span class="c1"># Find the nodes incident to the flow.</span>
+                <span class="n">E1</span> <span class="o">=</span> <span class="n">flowed_edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span>
+                                     <span class="n">R</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                     <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">VE1</span> <span class="o">=</span> <span class="n">incident_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">E1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">edge</span><span class="p">])</span>
+                <span class="c1"># Remove saturated edges form the residual network.</span>
+                <span class="c1"># Note that reversed edges are introduced with capacity 0</span>
+                <span class="c1"># in the residual graph and they need to be removed too.</span>
+                <span class="n">saturated_edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span>
+                                   <span class="n">R</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                   <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span>
+                                   <span class="ow">or</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">remove_edges_from</span><span class="p">(</span><span class="n">saturated_edges</span><span class="p">)</span>
+                <span class="n">R_closure</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">transitive_closure</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+                <span class="c1"># step 6: shrink the strongly connected components of</span>
+                <span class="c1"># residual flow network R and call it L.</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">condensation</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+                <span class="n">cmap</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;mapping&#39;</span><span class="p">]</span>
+                <span class="n">inv_cmap</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">scc</span> <span class="ow">in</span> <span class="n">cmap</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">inv_cmap</span><span class="p">[</span><span class="n">scc</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="c1"># Find the incident nodes in the condensed graph.</span>
+                <span class="n">VE1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">cmap</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">VE1</span><span class="p">])</span>
+                <span class="c1"># step 7: Compute all antichains of L;</span>
+                <span class="c1"># they map to closed sets in H.</span>
+                <span class="c1"># Any edge in H that links a closed set is part of a cutset.</span>
+                <span class="k">for</span> <span class="n">antichain</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">antichains</span><span class="p">(</span><span class="n">L</span><span class="p">):</span>
+                    <span class="c1"># Only antichains that are subsets of incident nodes counts.</span>
+                    <span class="c1"># Lemma 8 in reference.</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">antichain</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">VE1</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># Nodes in an antichain of the condensation graph of</span>
+                    <span class="c1"># the residual network map to a closed set of nodes that</span>
+                    <span class="c1"># define a node partition of the auxiliary digraph H</span>
+                    <span class="c1"># through taking all of antichain&#39;s predecessors in the</span>
+                    <span class="c1"># transitive closure.</span>
+                    <span class="n">S</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">scc</span> <span class="ow">in</span> <span class="n">antichain</span><span class="p">:</span>
+                        <span class="n">S</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">inv_cmap</span><span class="p">[</span><span class="n">scc</span><span class="p">])</span>
+                    <span class="n">S_ancestors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">S</span><span class="p">:</span>
+                        <span class="n">S_ancestors</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">R_closure</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+                    <span class="n">S</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">S_ancestors</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">S</span> <span class="ow">or</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">in</span> <span class="n">S</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># Find the cutset that links the node partition (S,~S) in H</span>
+                    <span class="n">cutset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">S</span><span class="p">:</span>
+                        <span class="n">cutset</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+                                      <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">original_H_pred</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">S</span><span class="p">)</span>
+                    <span class="c1"># The edges in H that form the cutset are internal edges</span>
+                    <span class="c1"># (ie edges that represent a node of the original graph G)</span>
+                    <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">H_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">H_nodes</span><span class="p">[</span><span class="n">w</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">cutset</span><span class="p">]):</span>
+                        <span class="k">continue</span>
+                    <span class="n">node_cut</span> <span class="o">=</span> <span class="p">{</span><span class="n">H_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">cutset</span><span class="p">}</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_cut</span><span class="p">)</span> <span class="o">==</span> <span class="n">k</span><span class="p">:</span>
+                        <span class="c1"># The cut is invalid if it includes internal edges of</span>
+                        <span class="c1"># end nodes. The other half of Lemma 8 in ref.</span>
+                        <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">node_cut</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node_cut</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="k">if</span> <span class="n">node_cut</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                            <span class="k">yield</span> <span class="n">node_cut</span>
+                            <span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_cut</span><span class="p">)</span>
+
+                <span class="c1"># Add an edge (x, v) to make sure that we do not</span>
+                <span class="c1"># find this cutset again. This is equivalent</span>
+                <span class="c1"># of adding the edge in the input graph</span>
+                <span class="c1"># G.add_edge(x, v) and then regenerate H and R:</span>
+                <span class="c1"># Add edges to the auxiliary digraph.</span>
+                <span class="c1"># See build_residual_network for convention we used</span>
+                <span class="c1"># in residual graphs.</span>
+                <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span>
+                           <span class="n">capacity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span>
+                           <span class="n">capacity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># Add edges to the residual network.</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span>
+                           <span class="n">capacity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span>
+                           <span class="n">capacity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span>
+                           <span class="n">capacity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">A&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">B&#39;</span> <span class="o">%</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">],</span>
+                           <span class="n">capacity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="c1"># Add again the saturated edges to reuse the residual network</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">saturated_edges</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_is_separating_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">cut</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assumes that the input graph is connected&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cut</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">restricted_view</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">cut</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

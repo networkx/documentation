@@ -1,0 +1,693 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.linalg.attrmatrix &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.linalg.attrmatrix</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.linalg.attrmatrix</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Functions for constructing matrix-like objects from graph attributes.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;attr_matrix&#39;</span><span class="p">,</span> <span class="s1">&#39;attr_sparse_matrix&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+
+<span class="k">def</span> <span class="nf">_node_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a function that returns a value from G.nodes[u].</span>
+
+<span class="sd">    We return a function expecting a node as its sole argument. Then, in the</span>
+<span class="sd">    simplest scenario, the returned function will return G.nodes[u][node_attr].</span>
+<span class="sd">    However, we also handle the case when `node_attr` is None or when it is a</span>
+<span class="sd">    function itself.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        A NetworkX graph</span>
+
+<span class="sd">    node_attr : {None, str, callable}</span>
+<span class="sd">        Specification of how the value of the node attribute should be obtained</span>
+<span class="sd">        from the node attribute dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value : function</span>
+<span class="sd">        A function expecting a node as its sole argument. The function will</span>
+<span class="sd">        returns a value from G.nodes[u] that depends on `edge_attr`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">node_attr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">):</span> <span class="k">return</span> <span class="n">u</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node_attr</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+        <span class="c1"># assume it is a key for the node attribute dictionary</span>
+        <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">):</span> <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">node_attr</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Advanced:  Allow users to specify something else.</span>
+        <span class="c1">#</span>
+        <span class="c1"># For example,</span>
+        <span class="c1">#     node_attr = lambda u: G.nodes[u].get(&#39;size&#39;, .5) * 3</span>
+        <span class="c1">#</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">node_attr</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span> <span class="nf">_edge_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a function that returns a value from G[u][v].</span>
+
+<span class="sd">    Suppose there exists an edge between u and v.  Then we return a function</span>
+<span class="sd">    expecting u and v as arguments.  For Graph and DiGraph, G[u][v] is</span>
+<span class="sd">    the edge attribute dictionary, and the function (essentially) returns</span>
+<span class="sd">    G[u][v][edge_attr].  However, we also handle cases when `edge_attr` is None</span>
+<span class="sd">    and when it is a function itself. For MultiGraph and MultiDiGraph, G[u][v]</span>
+<span class="sd">    is a dictionary of all edges between u and v.  In this case, the returned</span>
+<span class="sd">    function sums the value of `edge_attr` for every edge between u and v.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    edge_attr : {None, str, callable}</span>
+<span class="sd">        Specification of how the value of the edge attribute should be obtained</span>
+<span class="sd">        from the edge attribute dictionary, G[u][v].  For multigraphs, G[u][v]</span>
+<span class="sd">        is a dictionary of all the edges between u and v.  This allows for</span>
+<span class="sd">        special treatment of multiedges.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value : function</span>
+<span class="sd">        A function expecting two nodes as parameters. The nodes should</span>
+<span class="sd">        represent the from- and to- node of an edge. The function will</span>
+<span class="sd">        return a value from G[u][v] that depends on `edge_attr`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># topological count of edges</span>
+
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">edge_attr</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+        <span class="c1"># assume it is a key for the edge attribute dictionary</span>
+
+        <span class="k">if</span> <span class="n">edge_attr</span> <span class="o">==</span> <span class="s1">&#39;weight&#39;</span><span class="p">:</span>
+            <span class="c1"># provide a default value</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+                <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge_attr</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="k">return</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">edge_attr</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># otherwise, the edge attribute MUST exist for each edge</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+                <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">d</span><span class="p">[</span><span class="n">edge_attr</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="k">return</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Advanced:  Allow users to specify something else.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Alternative default value:</span>
+        <span class="c1">#     edge_attr = lambda u,v: G[u][v].get(&#39;thickness&#39;, .5)</span>
+        <span class="c1">#</span>
+        <span class="c1"># Function on an attribute:</span>
+        <span class="c1">#     edge_attr = lambda u,v: abs(G[u][v][&#39;weight&#39;])</span>
+        <span class="c1">#</span>
+        <span class="c1"># Handle Multi(Di)Graphs differently:</span>
+        <span class="c1">#     edge_attr = lambda u,v: numpy.prod([d[&#39;size&#39;] for d in G[u][v].values()])</span>
+        <span class="c1">#</span>
+        <span class="c1"># Ignore multiple edges</span>
+        <span class="c1">#     edge_attr = lambda u,v: 1 if len(G[u][v]) else 0</span>
+        <span class="c1">#</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">edge_attr</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<div class="viewcode-block" id="attr_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.linalg.attrmatrix.attr_matrix.html#networkx.linalg.attrmatrix.attr_matrix">[docs]</a><span class="k">def</span> <span class="nf">attr_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">rc_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a NumPy matrix using attributes from G.</span>
+
+<span class="sd">    If only `G` is passed in, then the adjacency matrix is constructed.</span>
+
+<span class="sd">    Let A be a discrete set of values for the node attribute `node_attr`. Then</span>
+<span class="sd">    the elements of A represent the rows and columns of the constructed matrix.</span>
+<span class="sd">    Now, iterate through every edge e=(u,v) in `G` and consider the value</span>
+<span class="sd">    of the edge attribute `edge_attr`.  If ua and va are the values of the</span>
+<span class="sd">    node attribute `node_attr` for u and v, respectively, then the value of</span>
+<span class="sd">    the edge attribute is added to the matrix element at (ua, va).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The NetworkX graph used to construct the NumPy matrix.</span>
+
+<span class="sd">    edge_attr : str, optional</span>
+<span class="sd">        Each element of the matrix represents a running total of the</span>
+<span class="sd">        specified edge attribute for edges whose node attributes correspond</span>
+<span class="sd">        to the rows/cols of the matirx. The attribute must be present for</span>
+<span class="sd">        all edges in the graph. If no attribute is specified, then we</span>
+<span class="sd">        just count the number of edges whose node attributes correspond</span>
+<span class="sd">        to the matrix element.</span>
+
+<span class="sd">    node_attr : str, optional</span>
+<span class="sd">        Each row and column in the matrix represents a particular value</span>
+<span class="sd">        of the node attribute.  The attribute must be present for all nodes</span>
+<span class="sd">        in the graph. Note, the values of this attribute should be reliably</span>
+<span class="sd">        hashable. So, float values are not recommended. If no attribute is</span>
+<span class="sd">        specified, then the rows and columns will be the nodes of the graph.</span>
+
+<span class="sd">    normalized : bool, optional</span>
+<span class="sd">        If True, then each row is normalized by the summation of its values.</span>
+
+<span class="sd">    rc_order : list, optional</span>
+<span class="sd">        A list of the node attribute values. This list specifies the ordering</span>
+<span class="sd">        of rows and columns of the array. If no ordering is provided, then</span>
+<span class="sd">        the ordering will be random (and also, a return value).</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    dtype : NumPy data-type, optional</span>
+<span class="sd">        A valid NumPy dtype used to initialize the array. Keep in mind certain</span>
+<span class="sd">        dtypes can yield unexpected results if the array is to be normalized.</span>
+<span class="sd">        The parameter is passed to numpy.zeros(). If unspecified, the NumPy</span>
+<span class="sd">        default is used.</span>
+
+<span class="sd">    order : {&#39;C&#39;, &#39;F&#39;}, optional</span>
+<span class="sd">        Whether to store multidimensional data in C- or Fortran-contiguous</span>
+<span class="sd">        (row- or column-wise) order in memory. This parameter is passed to</span>
+<span class="sd">        numpy.zeros(). If unspecified, the NumPy default is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    M : NumPy matrix</span>
+<span class="sd">        The attribute matrix.</span>
+
+<span class="sd">    ordering : list</span>
+<span class="sd">        If `rc_order` was specified, then only the matrix is returned.</span>
+<span class="sd">        However, if `rc_order` was None, then the ordering used to construct</span>
+<span class="sd">        the matrix is returned as well.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Construct an adjacency matrix:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; try:</span>
+<span class="sd">    ...    np.set_printoptions(legacy=&quot;1.13&quot;)</span>
+<span class="sd">    ... except TypeError:</span>
+<span class="sd">    ...    pass</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0, 1, thickness=1, weight=3)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0, 2, thickness=2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2, thickness=3)</span>
+<span class="sd">    &gt;&gt;&gt; nx.attr_matrix(G, rc_order=[0, 1, 2])</span>
+<span class="sd">    matrix([[ 0.,  1.,  1.],</span>
+<span class="sd">            [ 1.,  0.,  1.],</span>
+<span class="sd">            [ 1.,  1.,  0.]])</span>
+
+<span class="sd">    Alternatively, we can obtain the matrix describing edge thickness.</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.attr_matrix(G, edge_attr=&#39;thickness&#39;, rc_order=[0, 1, 2])</span>
+<span class="sd">    matrix([[ 0.,  1.,  2.],</span>
+<span class="sd">            [ 1.,  0.,  3.],</span>
+<span class="sd">            [ 2.,  3.,  0.]])</span>
+
+<span class="sd">    We can also color the nodes and ask for the probability distribution over</span>
+<span class="sd">    all edges (u,v) describing:</span>
+
+<span class="sd">        Pr(v has color Y | u has color X)</span>
+
+<span class="sd">    &gt;&gt;&gt; G.nodes[0][&#39;color&#39;] = &#39;red&#39;</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[1][&#39;color&#39;] = &#39;red&#39;</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[2][&#39;color&#39;] = &#39;blue&#39;</span>
+<span class="sd">    &gt;&gt;&gt; rc = [&#39;red&#39;, &#39;blue&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; nx.attr_matrix(G, node_attr=&#39;color&#39;, normalized=True, rc_order=rc)</span>
+<span class="sd">    matrix([[ 0.33333333,  0.66666667],</span>
+<span class="sd">            [ 1.        ,  0.        ]])</span>
+
+<span class="sd">    For example, the above tells us that for all edges (u,v):</span>
+
+<span class="sd">        Pr( v is red  | u is red)  = 1/3</span>
+<span class="sd">        Pr( v is blue | u is red)  = 2/3</span>
+
+<span class="sd">        Pr( v is red  | u is blue) = 1</span>
+<span class="sd">        Pr( v is blue | u is blue) = 0</span>
+
+<span class="sd">    Finally, we can obtain the total weights listed by the node colors.</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.attr_matrix(G, edge_attr=&#39;weight&#39;, node_attr=&#39;color&#39;, rc_order=rc)</span>
+<span class="sd">    matrix([[ 3.,  2.],</span>
+<span class="sd">            [ 2.,  0.]])</span>
+
+<span class="sd">    Thus, the total weight over all edges (u,v) with u and v having colors:</span>
+
+<span class="sd">        (red, red)   is 3   # the sole contribution is from edge (0,1)</span>
+<span class="sd">        (red, blue)  is 2   # contributions from edges (0,2) and (1,2)</span>
+<span class="sd">        (blue, red)  is 2   # same as (red, blue) since graph is undirected</span>
+<span class="sd">        (blue, blue) is 0   # there are no edges with blue endpoints</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;attr_matrix() requires numpy: http://scipy.org/ &quot;</span><span class="p">)</span>
+
+    <span class="n">edge_value</span> <span class="o">=</span> <span class="n">_edge_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">)</span>
+    <span class="n">node_value</span> <span class="o">=</span> <span class="n">_node_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_attr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rc_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">node_value</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="n">rc_order</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordering</span><span class="p">)</span>
+    <span class="n">undirected</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ordering</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)))</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">nbrdict</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nbrdict</span><span class="p">:</span>
+            <span class="c1"># Obtain the node attribute values.</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">node_value</span><span class="p">(</span><span class="n">u</span><span class="p">)],</span> <span class="n">index</span><span class="p">[</span><span class="n">node_value</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">edge_value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
+                    <span class="n">M</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">/=</span> <span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rc_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">M</span><span class="p">,</span> <span class="n">ordering</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">M</span></div>
+
+
+<div class="viewcode-block" id="attr_sparse_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.linalg.attrmatrix.attr_sparse_matrix.html#networkx.linalg.attrmatrix.attr_sparse_matrix">[docs]</a><span class="k">def</span> <span class="nf">attr_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rc_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a SciPy sparse matrix using attributes from G.</span>
+
+<span class="sd">    If only `G` is passed in, then the adjacency matrix is constructed.</span>
+
+<span class="sd">    Let A be a discrete set of values for the node attribute `node_attr`. Then</span>
+<span class="sd">    the elements of A represent the rows and columns of the constructed matrix.</span>
+<span class="sd">    Now, iterate through every edge e=(u,v) in `G` and consider the value</span>
+<span class="sd">    of the edge attribute `edge_attr`.  If ua and va are the values of the</span>
+<span class="sd">    node attribute `node_attr` for u and v, respectively, then the value of</span>
+<span class="sd">    the edge attribute is added to the matrix element at (ua, va).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The NetworkX graph used to construct the NumPy matrix.</span>
+
+<span class="sd">    edge_attr : str, optional</span>
+<span class="sd">        Each element of the matrix represents a running total of the</span>
+<span class="sd">        specified edge attribute for edges whose node attributes correspond</span>
+<span class="sd">        to the rows/cols of the matirx. The attribute must be present for</span>
+<span class="sd">        all edges in the graph. If no attribute is specified, then we</span>
+<span class="sd">        just count the number of edges whose node attributes correspond</span>
+<span class="sd">        to the matrix element.</span>
+
+<span class="sd">    node_attr : str, optional</span>
+<span class="sd">        Each row and column in the matrix represents a particular value</span>
+<span class="sd">        of the node attribute.  The attribute must be present for all nodes</span>
+<span class="sd">        in the graph. Note, the values of this attribute should be reliably</span>
+<span class="sd">        hashable. So, float values are not recommended. If no attribute is</span>
+<span class="sd">        specified, then the rows and columns will be the nodes of the graph.</span>
+
+<span class="sd">    normalized : bool, optional</span>
+<span class="sd">        If True, then each row is normalized by the summation of its values.</span>
+
+<span class="sd">    rc_order : list, optional</span>
+<span class="sd">        A list of the node attribute values. This list specifies the ordering</span>
+<span class="sd">        of rows and columns of the array. If no ordering is provided, then</span>
+<span class="sd">        the ordering will be random (and also, a return value).</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    dtype : NumPy data-type, optional</span>
+<span class="sd">        A valid NumPy dtype used to initialize the array. Keep in mind certain</span>
+<span class="sd">        dtypes can yield unexpected results if the array is to be normalized.</span>
+<span class="sd">        The parameter is passed to numpy.zeros(). If unspecified, the NumPy</span>
+<span class="sd">        default is used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    M : SciPy sparse matrix</span>
+<span class="sd">        The attribute matrix.</span>
+
+<span class="sd">    ordering : list</span>
+<span class="sd">        If `rc_order` was specified, then only the matrix is returned.</span>
+<span class="sd">        However, if `rc_order` was None, then the ordering used to construct</span>
+<span class="sd">        the matrix is returned as well.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Construct an adjacency matrix:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; try:</span>
+<span class="sd">    ...    np.set_printoptions(legacy=&quot;1.13&quot;)</span>
+<span class="sd">    ... except TypeError:</span>
+<span class="sd">    ...    pass</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0,1,thickness=1,weight=3)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0,2,thickness=2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1,2,thickness=3)</span>
+<span class="sd">    &gt;&gt;&gt; M = nx.attr_sparse_matrix(G, rc_order=[0,1,2])</span>
+<span class="sd">    &gt;&gt;&gt; M.todense()</span>
+<span class="sd">    matrix([[ 0.,  1.,  1.],</span>
+<span class="sd">            [ 1.,  0.,  1.],</span>
+<span class="sd">            [ 1.,  1.,  0.]])</span>
+
+<span class="sd">    Alternatively, we can obtain the matrix describing edge thickness.</span>
+
+<span class="sd">    &gt;&gt;&gt; M = nx.attr_sparse_matrix(G, edge_attr=&#39;thickness&#39;, rc_order=[0,1,2])</span>
+<span class="sd">    &gt;&gt;&gt; M.todense()</span>
+<span class="sd">    matrix([[ 0.,  1.,  2.],</span>
+<span class="sd">            [ 1.,  0.,  3.],</span>
+<span class="sd">            [ 2.,  3.,  0.]])</span>
+
+<span class="sd">    We can also color the nodes and ask for the probability distribution over</span>
+<span class="sd">    all edges (u,v) describing:</span>
+
+<span class="sd">        Pr(v has color Y | u has color X)</span>
+
+<span class="sd">    &gt;&gt;&gt; G.nodes[0][&#39;color&#39;] = &#39;red&#39;</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[1][&#39;color&#39;] = &#39;red&#39;</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[2][&#39;color&#39;] = &#39;blue&#39;</span>
+<span class="sd">    &gt;&gt;&gt; rc = [&#39;red&#39;, &#39;blue&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; M = nx.attr_sparse_matrix(G, node_attr=&#39;color&#39;, \</span>
+<span class="sd">                                  normalized=True, rc_order=rc)</span>
+<span class="sd">    &gt;&gt;&gt; M.todense()</span>
+<span class="sd">    matrix([[ 0.33333333,  0.66666667],</span>
+<span class="sd">            [ 1.        ,  0.        ]])</span>
+
+<span class="sd">    For example, the above tells us that for all edges (u,v):</span>
+
+<span class="sd">        Pr( v is red  | u is red)  = 1/3</span>
+<span class="sd">        Pr( v is blue | u is red)  = 2/3</span>
+
+<span class="sd">        Pr( v is red  | u is blue) = 1</span>
+<span class="sd">        Pr( v is blue | u is blue) = 0</span>
+
+<span class="sd">    Finally, we can obtain the total weights listed by the node colors.</span>
+
+<span class="sd">    &gt;&gt;&gt; M = nx.attr_sparse_matrix(G, edge_attr=&#39;weight&#39;,\</span>
+<span class="sd">                                  node_attr=&#39;color&#39;, rc_order=rc)</span>
+<span class="sd">    &gt;&gt;&gt; M.todense()</span>
+<span class="sd">    matrix([[ 3.,  2.],</span>
+<span class="sd">            [ 2.,  0.]])</span>
+
+<span class="sd">    Thus, the total weight over all edges (u,v) with u and v having colors:</span>
+
+<span class="sd">        (red, red)   is 3   # the sole contribution is from edge (0,1)</span>
+<span class="sd">        (red, blue)  is 2   # contributions from edges (0,2) and (1,2)</span>
+<span class="sd">        (blue, red)  is 2   # same as (red, blue) since graph is undirected</span>
+<span class="sd">        (blue, blue) is 0   # there are no edges with blue endpoints</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+        <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">sparse</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;attr_sparse_matrix() requires scipy: http://scipy.org/ &quot;</span><span class="p">)</span>
+
+    <span class="n">edge_value</span> <span class="o">=</span> <span class="n">_edge_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">)</span>
+    <span class="n">node_value</span> <span class="o">=</span> <span class="n">_node_value</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_attr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rc_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">node_value</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="n">rc_order</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordering</span><span class="p">)</span>
+    <span class="n">undirected</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ordering</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)))</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">lil_matrix</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">nbrdict</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nbrdict</span><span class="p">:</span>
+            <span class="c1"># Obtain the node attribute values.</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">node_value</span><span class="p">(</span><span class="n">u</span><span class="p">)],</span> <span class="n">index</span><span class="p">[</span><span class="n">node_value</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">edge_value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
+                    <span class="n">M</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">norm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">norms</span><span class="p">):</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/=</span> <span class="n">norm</span>
+
+    <span class="k">if</span> <span class="n">rc_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">M</span><span class="p">,</span> <span class="n">ordering</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">M</span></div>
+
+
+<span class="c1"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;NumPy not available&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;SciPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,672 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.generators.small &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.generators.small</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.generators.small</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Various small and named graphs, together with some compact generators.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)</span><span class="se">\n</span><span class="s2">Pieter Swart (swart@lanl.gov)&quot;&quot;&quot;</span>
+<span class="c1">#    Copyright (C) 2004-2018 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;make_small_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;LCF_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;bull_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;chvatal_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;cubical_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;desargues_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;diamond_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;dodecahedral_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;frucht_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;heawood_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;hoffman_singleton_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;house_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;house_x_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;icosahedral_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;krackhardt_kite_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;moebius_kantor_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;octahedral_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;pappus_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;petersen_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;sedgewick_maze_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;tetrahedral_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;truncated_cube_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;truncated_tetrahedron_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;tutte_graph&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.generators.classic</span> <span class="k">import</span> <span class="n">empty_graph</span><span class="p">,</span> <span class="n">cycle_graph</span><span class="p">,</span> <span class="n">path_graph</span><span class="p">,</span> <span class="n">complete_graph</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="k">import</span> <span class="n">NetworkXError</span>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+<span class="c1">#   Tools for creating small graphs</span>
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span> <span class="nf">make_small_undirected_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a small undirected graph described by graph_description.</span>
+
+<span class="sd">    See make_small_graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Directed Graph not supported&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">make_small_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="make_small_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.make_small_graph.html#networkx.generators.small.make_small_graph">[docs]</a><span class="k">def</span> <span class="nf">make_small_graph</span><span class="p">(</span><span class="n">graph_description</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the small graph described by graph_description.</span>
+
+<span class="sd">    graph_description is a list of the form [ltype,name,n,xlist]</span>
+
+<span class="sd">    Here ltype is one of &quot;adjacencylist&quot; or &quot;edgelist&quot;,</span>
+<span class="sd">    name is the name of the graph and n the number of nodes.</span>
+<span class="sd">    This constructs a graph of n nodes with integer labels 0,..,n-1.</span>
+
+<span class="sd">    If ltype=&quot;adjacencylist&quot;  then xlist is an adjacency list</span>
+<span class="sd">    with exactly n entries, in with the j&#39;th entry (which can be empty)</span>
+<span class="sd">    specifies the nodes connected to vertex j.</span>
+<span class="sd">    e.g. the &quot;square&quot; graph C_4 can be obtained by</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.make_small_graph([&quot;adjacencylist&quot;,&quot;C_4&quot;,4,[[2,4],[1,3],[2,4],[1,3]]])</span>
+
+<span class="sd">    or, since we do not need to add edges twice,</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.make_small_graph([&quot;adjacencylist&quot;,&quot;C_4&quot;,4,[[2,4],[3],[4],[]]])</span>
+
+<span class="sd">    If ltype=&quot;edgelist&quot; then xlist is an edge list</span>
+<span class="sd">    written as [[v1,w2],[v2,w2],...,[vk,wk]],</span>
+<span class="sd">    where vj and wj integers in the range 1,..,n</span>
+<span class="sd">    e.g. the &quot;square&quot; graph C_4 can be obtained by</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.make_small_graph([&quot;edgelist&quot;,&quot;C_4&quot;,4,[[1,2],[3,4],[2,3],[4,1]]])</span>
+
+<span class="sd">    Use the create_using argument to choose the graph class/type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ltype</span> <span class="o">=</span> <span class="n">graph_description</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">graph_description</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">graph_description</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">ltype</span> <span class="o">==</span> <span class="s2">&quot;adjacencylist&quot;</span><span class="p">:</span>
+        <span class="n">adjlist</span> <span class="o">=</span> <span class="n">graph_description</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">adjlist</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;invalid graph_description&quot;</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">adjlist</span><span class="p">[</span><span class="n">v</span><span class="p">]])</span>
+    <span class="k">elif</span> <span class="n">ltype</span> <span class="o">==</span> <span class="s2">&quot;edgelist&quot;</span><span class="p">:</span>
+        <span class="n">edgelist</span> <span class="o">=</span> <span class="n">graph_description</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">:</span>
+            <span class="n">v1</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">v2</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">v1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">v1</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">v2</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">v2</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;invalid graph_description&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="LCF_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.LCF_graph.html#networkx.generators.small.LCF_graph">[docs]</a><span class="k">def</span> <span class="nf">LCF_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">shift_list</span><span class="p">,</span> <span class="n">repeats</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the cubic graph specified in LCF notation.</span>
+
+<span class="sd">    LCF notation (LCF=Lederberg-Coxeter-Fruchte) is a compressed</span>
+<span class="sd">    notation used in the generation of various cubic Hamiltonian</span>
+<span class="sd">    graphs of high symmetry. See, for example, dodecahedral_graph,</span>
+<span class="sd">    desargues_graph, heawood_graph and pappus_graph below.</span>
+
+<span class="sd">    n (number of nodes)</span>
+<span class="sd">      The starting graph is the n-cycle with nodes 0,...,n-1.</span>
+<span class="sd">      (The null graph is returned if n &lt; 0.)</span>
+
+<span class="sd">    shift_list = [s1,s2,..,sk], a list of integer shifts mod n,</span>
+
+<span class="sd">    repeats</span>
+<span class="sd">      integer specifying the number of times that shifts in shift_list</span>
+<span class="sd">      are successively applied to each v_current in the n-cycle</span>
+<span class="sd">      to generate an edge between v_current and v_current+shift mod n.</span>
+
+<span class="sd">    For v1 cycling through the n-cycle a total of k*repeats</span>
+<span class="sd">    with shift cycling through shiftlist repeats times connect</span>
+<span class="sd">    v1 with v1+shift mod n</span>
+
+<span class="sd">    The utility graph $K_{3,3}$</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.LCF_graph(6, [3, -3], 3)</span>
+
+<span class="sd">    The Heawood graph</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.LCF_graph(14, [5, -5], 7)</span>
+
+<span class="sd">    See http://mathworld.wolfram.com/LCFNotation.html for a description</span>
+<span class="sd">    and references.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+
+    <span class="c1"># start with the n-cycle</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">cycle_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Directed Graph not supported&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;LCF_graph&quot;</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="n">n_extra_edges</span> <span class="o">=</span> <span class="n">repeats</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">shift_list</span><span class="p">)</span>
+    <span class="c1"># edges are added n_extra_edges times</span>
+    <span class="c1"># (not all of these need be new)</span>
+    <span class="k">if</span> <span class="n">n_extra_edges</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_extra_edges</span><span class="p">):</span>
+        <span class="n">shift</span> <span class="o">=</span> <span class="n">shift_list</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">shift_list</span><span class="p">)]</span>  <span class="c1"># cycle through shift_list</span>
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>                    <span class="c1"># cycle repeatedly through nodes</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="n">shift</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<span class="c1">#-------------------------------------------------------------------------------</span>
+<span class="c1">#   Various small and named graphs</span>
+<span class="c1">#-------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="bull_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.bull_graph.html#networkx.generators.small.bull_graph">[docs]</a><span class="k">def</span> <span class="nf">bull_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Bull graph. &quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Bull Graph&quot;</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="chvatal_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.chvatal_graph.html#networkx.generators.small.chvatal_graph">[docs]</a><span class="k">def</span> <span class="nf">chvatal_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Chvátal graph.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Chvatal Graph&quot;</span><span class="p">,</span>
+        <span class="mi">12</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="cubical_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.cubical_graph.html#networkx.generators.small.cubical_graph">[docs]</a><span class="k">def</span> <span class="nf">cubical_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the 3-regular Platonic Cubical graph.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Platonic Cubical Graph&quot;</span><span class="p">,</span>
+        <span class="mi">8</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="desargues_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.desargues_graph.html#networkx.generators.small.desargues_graph">[docs]</a><span class="k">def</span> <span class="nf">desargues_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the Desargues graph.&quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">],</span> <span class="mi">5</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Desargues Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="diamond_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.diamond_graph.html#networkx.generators.small.diamond_graph">[docs]</a><span class="k">def</span> <span class="nf">diamond_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Diamond graph. &quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Diamond Graph&quot;</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="dodecahedral_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.dodecahedral_graph.html#networkx.generators.small.dodecahedral_graph">[docs]</a><span class="k">def</span> <span class="nf">dodecahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the Platonic Dodecahedral graph. &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Dodecahedral Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="frucht_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.frucht_graph.html#networkx.generators.small.frucht_graph">[docs]</a><span class="k">def</span> <span class="nf">frucht_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Frucht Graph.</span>
+
+<span class="sd">    The Frucht Graph is the smallest cubical graph whose</span>
+<span class="sd">    automorphism group consists only of the identity element.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">cycle_graph</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+                      <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">]])</span>
+
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Frucht Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="heawood_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.heawood_graph.html#networkx.generators.small.heawood_graph">[docs]</a><span class="k">def</span> <span class="nf">heawood_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the Heawood graph, a (3,6) cage. &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="mi">7</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Heawood Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="hoffman_singleton_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.hoffman_singleton_graph.html#networkx.generators.small.hoffman_singleton_graph">[docs]</a><span class="k">def</span> <span class="nf">hoffman_singleton_graph</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Return the Hoffman-Singleton Graph.&#39;&#39;&#39;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">((</span><span class="s1">&#39;pentagon&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;pentagon&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span><span class="p">))</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">((</span><span class="s1">&#39;pentagon&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;pentagon&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span><span class="p">))</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">((</span><span class="s1">&#39;pentagram&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;pentagram&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">j</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span><span class="p">))</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">((</span><span class="s1">&#39;pentagram&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;pentagram&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">((</span><span class="s1">&#39;pentagon&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s1">&#39;pentagram&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">convert_node_labels_to_integers</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Hoffman-Singleton Graph&#39;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="house_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.house_graph.html#networkx.generators.small.house_graph">[docs]</a><span class="k">def</span> <span class="nf">house_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the House graph (square with triangle on top).&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;House Graph&quot;</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="house_x_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.house_x_graph.html#networkx.generators.small.house_x_graph">[docs]</a><span class="k">def</span> <span class="nf">house_x_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the House graph with a cross inside the house square.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;House-with-X-inside Graph&quot;</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="icosahedral_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.icosahedral_graph.html#networkx.generators.small.icosahedral_graph">[docs]</a><span class="k">def</span> <span class="nf">icosahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Platonic Icosahedral graph.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Platonic Icosahedral Graph&quot;</span><span class="p">,</span>
+        <span class="mi">12</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">],</span> <span class="p">[</span><span class="mi">12</span><span class="p">],</span> <span class="p">[]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="krackhardt_kite_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.krackhardt_kite_graph.html#networkx.generators.small.krackhardt_kite_graph">[docs]</a><span class="k">def</span> <span class="nf">krackhardt_kite_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the Krackhardt Kite Social Network.</span>
+
+<span class="sd">    A 10 actor social network introduced by David Krackhardt</span>
+<span class="sd">    to illustrate: degree, betweenness, centrality, closeness, etc.</span>
+<span class="sd">    The traditional labeling is:</span>
+<span class="sd">    Andre=1, Beverley=2, Carol=3, Diane=4,</span>
+<span class="sd">    Ed=5, Fernando=6, Garth=7, Heather=8, Ike=9, Jane=10.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Krackhardt Kite Social Network&quot;</span><span class="p">,</span>
+        <span class="mi">10</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="moebius_kantor_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.moebius_kantor_graph.html#networkx.generators.small.moebius_kantor_graph">[docs]</a><span class="k">def</span> <span class="nf">moebius_kantor_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Moebius-Kantor graph.&quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="mi">8</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Moebius-Kantor Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="octahedral_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.octahedral_graph.html#networkx.generators.small.octahedral_graph">[docs]</a><span class="k">def</span> <span class="nf">octahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Platonic Octahedral graph.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Platonic Octahedral Graph&quot;</span><span class="p">,</span>
+        <span class="mi">6</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="p">[]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="pappus_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.pappus_graph.html#networkx.generators.small.pappus_graph">[docs]</a><span class="k">def</span> <span class="nf">pappus_graph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Return the Pappus graph.&quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">LCF_graph</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Pappus Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="petersen_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.petersen_graph.html#networkx.generators.small.petersen_graph">[docs]</a><span class="k">def</span> <span class="nf">petersen_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Petersen graph.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Petersen Graph&quot;</span><span class="p">,</span>
+        <span class="mi">10</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="sedgewick_maze_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.sedgewick_maze_graph.html#networkx.generators.small.sedgewick_maze_graph">[docs]</a><span class="k">def</span> <span class="nf">sedgewick_maze_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a small maze with a cycle.</span>
+
+<span class="sd">    This is the maze used in Sedgewick,3rd Edition, Part 5, Graph</span>
+<span class="sd">    Algorithms, Chapter 18, e.g. Figure 18.2 and following.</span>
+<span class="sd">    Nodes are numbered 0,..,7</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Sedgewick Maze&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="tetrahedral_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.tetrahedral_graph.html#networkx.generators.small.tetrahedral_graph">[docs]</a><span class="k">def</span> <span class="nf">tetrahedral_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the 3-regular Platonic Tetrahedral graph.&quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">complete_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Platonic Tetrahedral graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="truncated_cube_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.truncated_cube_graph.html#networkx.generators.small.truncated_cube_graph">[docs]</a><span class="k">def</span> <span class="nf">truncated_cube_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the skeleton of the truncated cube.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Truncated Cube Graph&quot;</span><span class="p">,</span>
+        <span class="mi">24</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">17</span><span class="p">,</span> <span class="mi">19</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">13</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">21</span><span class="p">],</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">],</span> <span class="p">[</span><span class="mi">15</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">14</span><span class="p">],</span> <span class="p">[</span><span class="mi">22</span><span class="p">,</span> <span class="mi">23</span><span class="p">],</span> <span class="p">[</span><span class="mi">16</span><span class="p">],</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">24</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">19</span><span class="p">],</span> <span class="p">[</span><span class="mi">21</span><span class="p">],</span> <span class="p">[</span><span class="mi">20</span><span class="p">],</span> <span class="p">[</span><span class="mi">24</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">22</span><span class="p">],</span> <span class="p">[</span><span class="mi">23</span><span class="p">],</span> <span class="p">[</span><span class="mi">24</span><span class="p">],</span> <span class="p">[]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="truncated_tetrahedron_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.truncated_tetrahedron_graph.html#networkx.generators.small.truncated_tetrahedron_graph">[docs]</a><span class="k">def</span> <span class="nf">truncated_tetrahedron_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the skeleton of the truncated Platonic tetrahedron.&quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">path_graph</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+<span class="c1">#    G.add_edges_from([(1,3),(1,10),(2,7),(4,12),(5,12),(6,8),(9,11)])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Truncated Tetrahedron Graph&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="tutte_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.small.tutte_graph.html#networkx.generators.small.tutte_graph">[docs]</a><span class="k">def</span> <span class="nf">tutte_graph</span><span class="p">(</span><span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Tutte graph.&quot;&quot;&quot;</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;adjacencylist&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Tutte&#39;s Graph&quot;</span><span class="p">,</span>
+        <span class="mi">46</span><span class="p">,</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">27</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span> <span class="p">[</span><span class="mi">19</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">34</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">28</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">39</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">38</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">40</span><span class="p">],</span> <span class="p">[</span><span class="mi">13</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="p">[</span><span class="mi">14</span><span class="p">,</span> <span class="mi">36</span><span class="p">],</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span> <span class="p">[</span><span class="mi">35</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">17</span><span class="p">,</span> <span class="mi">23</span><span class="p">],</span> <span class="p">[</span><span class="mi">18</span><span class="p">,</span> <span class="mi">45</span><span class="p">],</span> <span class="p">[</span><span class="mi">19</span><span class="p">,</span> <span class="mi">44</span><span class="p">],</span> <span class="p">[</span><span class="mi">46</span><span class="p">],</span> <span class="p">[</span><span class="mi">21</span><span class="p">,</span> <span class="mi">46</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">22</span><span class="p">,</span> <span class="mi">42</span><span class="p">],</span> <span class="p">[</span><span class="mi">23</span><span class="p">,</span> <span class="mi">24</span><span class="p">],</span> <span class="p">[</span><span class="mi">41</span><span class="p">],</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">28</span><span class="p">],</span> <span class="p">[</span><span class="mi">26</span><span class="p">,</span> <span class="mi">33</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">27</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="p">[</span><span class="mi">34</span><span class="p">],</span> <span class="p">[</span><span class="mi">29</span><span class="p">],</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">33</span><span class="p">],</span> <span class="p">[</span><span class="mi">31</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">34</span><span class="p">],</span> <span class="p">[</span><span class="mi">33</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[</span><span class="mi">36</span><span class="p">,</span> <span class="mi">39</span><span class="p">],</span>
+         <span class="p">[</span><span class="mi">37</span><span class="p">],</span> <span class="p">[</span><span class="mi">38</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="p">[</span><span class="mi">39</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[],</span>
+         <span class="p">[</span><span class="mi">42</span><span class="p">,</span> <span class="mi">45</span><span class="p">],</span> <span class="p">[</span><span class="mi">43</span><span class="p">],</span> <span class="p">[</span><span class="mi">44</span><span class="p">,</span> <span class="mi">46</span><span class="p">],</span> <span class="p">[</span><span class="mi">45</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[]]</span>
+    <span class="p">]</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">make_small_undirected_graph</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

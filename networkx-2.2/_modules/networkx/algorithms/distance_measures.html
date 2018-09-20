@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.distance_measures &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.distance_measures</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.distance_measures</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#    Copyright (C) 2004-2018 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Aric Hagberg (hagberg@lanl.gov)</span>
+<span class="c1">#          Dan Schult (dschult@colgate.edu)</span>
+<span class="sd">&quot;&quot;&quot;Graph diameter, radius, eccentricity and other properties.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">networkx</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;extrema_bounding&#39;</span><span class="p">,</span> <span class="s1">&#39;eccentricity&#39;</span><span class="p">,</span> <span class="s1">&#39;diameter&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="s1">&#39;periphery&#39;</span><span class="p">,</span> <span class="s1">&#39;center&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="extrema_bounding"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.extrema_bounding.html#networkx.algorithms.distance_measures.extrema_bounding">[docs]</a><span class="k">def</span> <span class="nf">extrema_bounding</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">compute</span><span class="o">=</span><span class="s2">&quot;diameter&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute requested extreme distance metric of undirected graph G</span>
+
+<span class="sd">    Computation is based on smart lower and upper bounds, and in practice</span>
+<span class="sd">    linear in the number of nodes, rather than quadratic (except for some</span>
+<span class="sd">    border cases such as complete graphs or circle shaped graphs).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       An undirected graph</span>
+
+<span class="sd">    compute : string denoting the requesting metric</span>
+<span class="sd">       &quot;diameter&quot; for the maximal eccentricity value,</span>
+<span class="sd">       &quot;radius&quot; for the minimal eccentricity value,</span>
+<span class="sd">       &quot;periphery&quot; for the set of nodes with eccentricity equal to the diameter</span>
+<span class="sd">       &quot;center&quot; for the set of nodes with eccentricity equal to the radius</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value : value of the requested metric</span>
+<span class="sd">       int for &quot;diameter&quot; and &quot;radius&quot; or</span>
+<span class="sd">       list of nodes for &quot;center&quot; and &quot;periphery&quot;</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the graph consists of multiple components</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm was proposed in the following papers:</span>
+
+<span class="sd">    F.W. Takes and W.A. Kosters, Determining the Diameter of Small World</span>
+<span class="sd">    Networks, in Proceedings of the 20th ACM International Conference on</span>
+<span class="sd">    Information and Knowledge Management (CIKM 2011), pp. 1191-1196, 2011.</span>
+<span class="sd">    doi: https://doi.org/10.1145/2063576.2063748</span>
+
+<span class="sd">    F.W. Takes and W.A. Kosters, Computing the Eccentricity Distribution of</span>
+<span class="sd">    Large Graphs, Algorithms 6(1): 100-118, 2013.</span>
+<span class="sd">    doi: https://doi.org/10.3390/a6010100</span>
+
+<span class="sd">    M. Borassi, P. Crescenzi, M. Habib, W.A. Kosters, A. Marino and F.W. Takes,</span>
+<span class="sd">    Fast Graph Diameter and Radius BFS-Based Computation in (Weakly Connected)</span>
+<span class="sd">    Real-World Graphs, Theoretical Computer Science 586: 59-80, 2015.</span>
+<span class="sd">    doi: https://doi.org/10.1016/j.tcs.2015.02.033</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># init variables</span>
+    <span class="n">degrees</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>  <span class="c1"># start with the highest degree node</span>
+    <span class="n">minlowernode</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">degrees</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">degrees</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span>  <span class="c1"># number of nodes</span>
+    <span class="c1"># alternate between smallest lower and largest upper bound</span>
+    <span class="n">high</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># status variables</span>
+    <span class="n">ecc_lower</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">ecc_upper</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="n">candidates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="c1"># (re)set bound extremes</span>
+    <span class="n">minlower</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="n">maxlower</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">minupper</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="n">maxupper</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># repeat the following until there are no more candidates</span>
+    <span class="k">while</span> <span class="n">candidates</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">high</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">maxuppernode</span>  <span class="c1"># select node with largest upper bound</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">minlowernode</span>  <span class="c1"># select node with smallest lower bound</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">high</span>
+
+        <span class="c1"># get distances from/to current node and derive eccentricity</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">networkx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">current</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Cannot compute metric because graph is not connected.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">networkx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">current_ecc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="c1"># print status update</span>
+<span class="c1">#        print (&quot;ecc of &quot; + str(current) + &quot; (&quot; + str(ecc_lower[current]) + &quot;/&quot;</span>
+<span class="c1">#        + str(ecc_upper[current]) + &quot;, deg: &quot; + str(dist[current]) + &quot;) is &quot;</span>
+<span class="c1">#        + str(current_ecc))</span>
+<span class="c1">#        print(ecc_upper)</span>
+
+        <span class="c1"># (re)set bound extremes</span>
+        <span class="n">maxuppernode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">minlowernode</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># update node bounds</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="c1"># update eccentricity bounds</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">low</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">max</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="p">(</span><span class="n">current_ecc</span> <span class="o">-</span> <span class="n">d</span><span class="p">)))</span>
+            <span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">upp</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">current_ecc</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span>
+
+            <span class="c1"># update min/max values of lower and upper bounds</span>
+            <span class="n">minlower</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">minlower</span><span class="p">)</span>
+            <span class="n">maxlower</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">maxlower</span><span class="p">)</span>
+            <span class="n">minupper</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">minupper</span><span class="p">)</span>
+            <span class="n">maxupper</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">maxupper</span><span class="p">)</span>
+
+        <span class="c1"># update candidate set</span>
+        <span class="k">if</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;diameter&#39;</span><span class="p">:</span>
+            <span class="n">ruled_out</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span> <span class="k">if</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">maxlower</span> <span class="ow">and</span>
+                         <span class="mi">2</span> <span class="o">*</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">maxupper</span><span class="p">}</span>
+
+        <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;radius&#39;</span><span class="p">:</span>
+            <span class="n">ruled_out</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span> <span class="k">if</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">minupper</span> <span class="ow">and</span>
+                         <span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">minlower</span><span class="p">}</span>
+
+        <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;periphery&#39;</span><span class="p">:</span>
+            <span class="n">ruled_out</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span> <span class="k">if</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">maxlower</span> <span class="ow">and</span>
+                         <span class="p">(</span><span class="n">maxlower</span> <span class="o">==</span> <span class="n">maxupper</span> <span class="ow">or</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">maxupper</span><span class="p">)}</span>
+
+        <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;center&#39;</span><span class="p">:</span>
+            <span class="n">ruled_out</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span> <span class="k">if</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">minupper</span> <span class="ow">and</span>
+                         <span class="p">(</span><span class="n">minlower</span> <span class="o">==</span> <span class="n">minupper</span> <span class="ow">or</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">minlower</span><span class="p">)}</span>
+
+        <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;eccentricities&#39;</span><span class="p">:</span>
+            <span class="n">ruled_out</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">ruled_out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span> <span class="k">if</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">candidates</span> <span class="o">-=</span> <span class="n">ruled_out</span>
+
+<span class="c1">#        for i in ruled_out:</span>
+<span class="c1">#            print(&quot;removing %g: ecc_u: %g maxl: %g ecc_l: %g maxu: %g&quot;%</span>
+<span class="c1">#                    (i,ecc_upper[i],maxlower,ecc_lower[i],maxupper))</span>
+<span class="c1">#        print(&quot;node %g: ecc_u: %g maxl: %g ecc_l: %g maxu: %g&quot;%</span>
+<span class="c1">#                    (4,ecc_upper[4],maxlower,ecc_lower[4],maxupper))</span>
+<span class="c1">#        print(&quot;NODE 4: %g&quot;%(ecc_upper[4] &lt;= maxlower))</span>
+<span class="c1">#        print(&quot;NODE 4: %g&quot;%(2 * ecc_lower[4] &gt;= maxupper))</span>
+<span class="c1">#        print(&quot;NODE 4: %g&quot;%(ecc_upper[4] &lt;= maxlower</span>
+<span class="c1">#                            and 2 * ecc_lower[4] &gt;= maxupper))</span>
+
+        <span class="c1"># updating maxuppernode and minlowernode for selection in next round</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">minlowernode</span> <span class="ow">is</span> <span class="kc">None</span> \
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">minlowernode</span><span class="p">]</span>
+                        <span class="ow">and</span> <span class="n">degrees</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">degrees</span><span class="p">[</span><span class="n">minlowernode</span><span class="p">])</span> \
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">ecc_lower</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">minlowernode</span><span class="p">]):</span>
+                <span class="n">minlowernode</span> <span class="o">=</span> <span class="n">i</span>
+
+            <span class="k">if</span> <span class="n">maxuppernode</span> <span class="ow">is</span> <span class="kc">None</span> \
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">maxuppernode</span><span class="p">]</span>
+                        <span class="ow">and</span> <span class="n">degrees</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">degrees</span><span class="p">[</span><span class="n">maxuppernode</span><span class="p">])</span> \
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">ecc_upper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">maxuppernode</span><span class="p">]):</span>
+                <span class="n">maxuppernode</span> <span class="o">=</span> <span class="n">i</span>
+
+        <span class="c1"># print status update</span>
+<span class="c1">#        print (&quot; min=&quot; + str(minlower) + &quot;/&quot; + str(minupper) +</span>
+<span class="c1">#        &quot; max=&quot; + str(maxlower) + &quot;/&quot; + str(maxupper) +</span>
+<span class="c1">#        &quot; candidates: &quot; + str(len(candidates)))</span>
+<span class="c1">#        print(&quot;cand:&quot;,candidates)</span>
+<span class="c1">#        print(&quot;ecc_l&quot;,ecc_lower)</span>
+<span class="c1">#        print(&quot;ecc_u&quot;,ecc_upper)</span>
+<span class="c1">#        wait = input(&quot;press Enter to continue&quot;)</span>
+
+    <span class="c1"># return the correct value of the requested metric</span>
+    <span class="k">if</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;diameter&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">maxlower</span>
+    <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;radius&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">minupper</span>
+    <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;periphery&#39;</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">if</span> <span class="n">ecc_lower</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">maxlower</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">p</span>
+    <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;center&#39;</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">if</span> <span class="n">ecc_upper</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">minupper</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">c</span>
+    <span class="k">elif</span> <span class="n">compute</span> <span class="o">==</span> <span class="s1">&#39;eccentricities&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ecc_lower</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="eccentricity"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.eccentricity.html#networkx.algorithms.distance_measures.eccentricity">[docs]</a><span class="k">def</span> <span class="nf">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the eccentricity of nodes in G.</span>
+
+<span class="sd">    The eccentricity of a node v is the maximum distance from v to</span>
+<span class="sd">    all other nodes in G.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    v : node, optional</span>
+<span class="sd">       Return value of specified node</span>
+
+<span class="sd">    sp : dict of dicts, optional</span>
+<span class="sd">       All pairs shortest path lengths as a dictionary of dictionaries</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ecc : dictionary</span>
+<span class="sd">       A dictionary of eccentricity values keyed by node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c1">#    if v is None:                # none, use entire graph</span>
+<span class="c1">#        nodes=G.nodes()</span>
+<span class="c1">#    elif v in G:               # is v a single node</span>
+<span class="c1">#        nodes=[v]</span>
+<span class="c1">#    else:                      # assume v is a container of nodes</span>
+<span class="c1">#        nodes=v</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+
+    <span class="n">e</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">networkx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">length</span> <span class="o">=</span> <span class="n">sp</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">networkx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;Format of &quot;sp&quot; is invalid.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">L</span> <span class="o">!=</span> <span class="n">order</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Found infinite path length because the digraph is not&#39;</span>
+                       <span class="s1">&#39; strongly connected&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Found infinite path length because the graph is not&#39;</span>
+                       <span class="s1">&#39; connected&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">networkx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">e</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">length</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>  <span class="c1"># return single value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span></div>
+
+
+<div class="viewcode-block" id="diameter"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.diameter.html#networkx.algorithms.distance_measures.diameter">[docs]</a><span class="k">def</span> <span class="nf">diameter</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">usebounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the diameter of the graph G.</span>
+
+<span class="sd">    The diameter is the maximum eccentricity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    d : integer</span>
+<span class="sd">       Diameter of graph</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    eccentricity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">usebounds</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">extrema_bounding</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">compute</span><span class="o">=</span><span class="s2">&quot;diameter&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="periphery"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.periphery.html#networkx.algorithms.distance_measures.periphery">[docs]</a><span class="k">def</span> <span class="nf">periphery</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">usebounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the periphery of the graph G.</span>
+
+<span class="sd">    The periphery is the set of nodes with eccentricity equal to the diameter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    p : list</span>
+<span class="sd">       List of nodes in periphery</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">usebounds</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">extrema_bounding</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">compute</span><span class="o">=</span><span class="s2">&quot;periphery&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">diameter</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">e</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">diameter</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">p</span></div>
+
+
+<div class="viewcode-block" id="radius"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.radius.html#networkx.algorithms.distance_measures.radius">[docs]</a><span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">usebounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the radius of the graph G.</span>
+
+<span class="sd">    The radius is the minimum eccentricity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : integer</span>
+<span class="sd">       Radius of graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">usebounds</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">extrema_bounding</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">compute</span><span class="o">=</span><span class="s2">&quot;radius&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="center"><a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.center.html#networkx.algorithms.distance_measures.center">[docs]</a><span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">e</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">usebounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the center of the graph G.</span>
+
+<span class="sd">    The center is the set of nodes with eccentricity equal to radius.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    e : eccentricity dictionary, optional</span>
+<span class="sd">      A precomputed dictionary of eccentricities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    c : list</span>
+<span class="sd">       List of nodes in center</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">usebounds</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">extrema_bounding</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">compute</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">eccentricity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">e</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">radius</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">p</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

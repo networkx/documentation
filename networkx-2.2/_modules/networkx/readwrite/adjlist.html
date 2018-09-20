@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.readwrite.adjlist &mdash; NetworkX 2.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+      <link rel="search" type="application/opensearchdescription+xml"
+            title="Search within NetworkX 2.2 documentation"
+            href="../../../_static/opensearch.xml"/>
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.readwrite.adjlist</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.readwrite.adjlist</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">**************</span>
+<span class="sd">Adjacency List</span>
+<span class="sd">**************</span>
+<span class="sd">Read and write NetworkX graphs as adjacency lists.</span>
+
+<span class="sd">Adjacency list format is useful for graphs without data associated</span>
+<span class="sd">with nodes or edges and for nodes that can be meaningfully represented</span>
+<span class="sd">as strings.</span>
+
+<span class="sd">Format</span>
+<span class="sd">------</span>
+<span class="sd">The adjacency list format consists of lines with node labels.  The</span>
+<span class="sd">first label in a line is the source node.  Further labels in the line</span>
+<span class="sd">are considered target nodes and are added to the graph along with an edge</span>
+<span class="sd">between the source node and target node.</span>
+
+<span class="sd">The graph with edges a-b, a-c, d-e can be represented as the following</span>
+<span class="sd">adjacency list (anything following the # in a line is a comment)::</span>
+
+<span class="sd">     a b c # source target target</span>
+<span class="sd">     d e</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Aric Hagberg &lt;hagberg@lanl.gov&gt;&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Dan Schult &lt;dschult@colgate.edu&gt;&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Loïc Séguin-C. &lt;loicseguin@gmail.com&gt;&#39;</span><span class="p">])</span>
+<span class="c1">#    Copyright (C) 2004-2018 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;generate_adjlist&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;write_adjlist&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;parse_adjlist&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;read_adjlist&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">make_str</span><span class="p">,</span> <span class="n">open_file</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+
+<div class="viewcode-block" id="generate_adjlist"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.adjlist.generate_adjlist.html#networkx.readwrite.adjlist.generate_adjlist">[docs]</a><span class="k">def</span> <span class="nf">generate_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a single line of the graph G in adjacency list format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       Separator for node labels</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lines : string</span>
+<span class="sd">        Lines of data in adjlist format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.lollipop_graph(4, 3)</span>
+<span class="sd">    &gt;&gt;&gt; for line in nx.generate_adjlist(G):</span>
+<span class="sd">    ...     print(line)</span>
+<span class="sd">    0 1 2 3</span>
+<span class="sd">    1 2 3</span>
+<span class="sd">    2 3</span>
+<span class="sd">    3 4</span>
+<span class="sd">    4 5</span>
+<span class="sd">    5 6</span>
+<span class="sd">    6</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_adjlist, read_adjlist</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adjacency</span><span class="p">():</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">make_str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">delimiter</span>
+        <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">directed</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">line</span> <span class="o">+=</span> <span class="n">make_str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">delimiter</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="n">make_str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">+</span> <span class="n">delimiter</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">directed</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)]</span></div>
+
+
+<div class="viewcode-block" id="write_adjlist"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.adjlist.write_adjlist.html#networkx.readwrite.adjlist.write_adjlist">[docs]</a><span class="nd">@open_file</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write graph G in single-line adjacency-list format to path.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    path : string or file</span>
+<span class="sd">       Filename or file handle for data output.</span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be compressed.</span>
+
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       Marker for comment lines</span>
+
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       Separator for node labels</span>
+
+<span class="sd">    encoding : string, optional</span>
+<span class="sd">       Text encoding.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G,&quot;test.adjlist&quot;)</span>
+
+<span class="sd">    The path can be a filehandle or a string with the name of the file. If a</span>
+<span class="sd">    filehandle is provided, it has to be opened in &#39;wb&#39; mode.</span>
+
+<span class="sd">    &gt;&gt;&gt; fh=open(&quot;test.adjlist&quot;,&#39;wb&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, fh)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This format does not store graph, node, or edge data.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    read_adjlist, generate_adjlist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+    <span class="n">pargs</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">(</span><span class="n">pargs</span>
+              <span class="o">+</span> <span class="n">comments</span> <span class="o">+</span> <span class="s2">&quot; GMT </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">()))</span>
+              <span class="o">+</span> <span class="n">comments</span> <span class="o">+</span> <span class="s2">&quot; </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">encoding</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">generate_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">encoding</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="parse_adjlist"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.adjlist.parse_adjlist.html#networkx.readwrite.adjlist.parse_adjlist">[docs]</a><span class="k">def</span> <span class="nf">parse_adjlist</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse lines of a graph adjacency list representation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lines : list or iterator of strings</span>
+<span class="sd">        Input data in adjlist format</span>
+
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    nodetype : Python type, optional</span>
+<span class="sd">       Convert nodes to this type.</span>
+
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       Marker for comment lines</span>
+
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       Separator for node labels.  The default is whitespace.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G: NetworkX graph</span>
+<span class="sd">        The graph corresponding to the lines in adjacency list format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; lines = [&#39;1 2 5&#39;,</span>
+<span class="sd">    ...          &#39;2 3 4&#39;,</span>
+<span class="sd">    ...          &#39;3 5&#39;,</span>
+<span class="sd">    ...          &#39;4&#39;,</span>
+<span class="sd">    ...          &#39;5&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.parse_adjlist(lines, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; nodes = [1, 2, 3, 4, 5]</span>
+<span class="sd">    &gt;&gt;&gt; all(node in G for node in nodes)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; edges = [(1, 2), (1, 5), (2, 3), (2, 4), (3, 5)]</span>
+<span class="sd">    &gt;&gt;&gt; all((u, v) in G.edges() or (v, u) in G.edges() for (u, v) in edges)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    read_adjlist</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">p</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">vlist</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">vlist</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># convert types</span>
+        <span class="k">if</span> <span class="n">nodetype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">nodetype</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Failed to convert node (</span><span class="si">{}</span><span class="s2">) to type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">nodetype</span><span class="p">))</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nodetype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">vlist</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">nodetype</span><span class="p">,</span> <span class="n">vlist</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Failed to convert nodes (</span><span class="si">{}</span><span class="s2">) to type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vlist</span><span class="p">),</span> <span class="n">nodetype</span><span class="p">))</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vlist</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="read_adjlist"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.adjlist.read_adjlist.html#networkx.readwrite.adjlist.read_adjlist">[docs]</a><span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">read_adjlist</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">nodetype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read graph in adjacency list format from path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : string or file</span>
+<span class="sd">       Filename or file handle to read.</span>
+<span class="sd">       Filenames ending in .gz or .bz2 will be uncompressed.</span>
+
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    nodetype : Python type, optional</span>
+<span class="sd">       Convert nodes to this type.</span>
+
+<span class="sd">    comments : string, optional</span>
+<span class="sd">       Marker for comment lines</span>
+
+<span class="sd">    delimiter : string, optional</span>
+<span class="sd">       Separator for node labels.  The default is whitespace.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G: NetworkX graph</span>
+<span class="sd">        The graph corresponding to the lines in adjacency list format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, &quot;test.adjlist&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_adjlist(&quot;test.adjlist&quot;)</span>
+
+<span class="sd">    The path can be a filehandle or a string with the name of the file. If a</span>
+<span class="sd">    filehandle is provided, it has to be opened in &#39;rb&#39; mode.</span>
+
+<span class="sd">    &gt;&gt;&gt; fh=open(&quot;test.adjlist&quot;, &#39;rb&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_adjlist(fh)</span>
+
+<span class="sd">    Filenames ending in .gz or .bz2 will be compressed.</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G,&quot;test.adjlist.gz&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.read_adjlist(&quot;test.adjlist.gz&quot;)</span>
+
+<span class="sd">    The optional nodetype is a function to convert node strings to nodetype.</span>
+
+<span class="sd">    For example</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.read_adjlist(&quot;test.adjlist&quot;, nodetype=int)</span>
+
+<span class="sd">    will attempt to convert all nodes to integer type.</span>
+
+<span class="sd">    Since nodes must be hashable, the function nodetype must return hashable</span>
+<span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.)</span>
+
+<span class="sd">    The optional create_using parameter indicates the type of NetworkX graph</span>
+<span class="sd">    created.  The default is `nx.Graph`, an undirected graph.</span>
+<span class="sd">    To read the data as a directed graph use</span>
+
+<span class="sd">    &gt;&gt;&gt; G=nx.read_adjlist(&quot;test.adjlist&quot;, create_using=nx.DiGraph)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This format does not store graph or node data.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    write_adjlist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parse_adjlist</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span>
+                         <span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">,</span>
+                         <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                         <span class="n">create_using</span><span class="o">=</span><span class="n">create_using</span><span class="p">,</span>
+                         <span class="n">nodetype</span><span class="o">=</span><span class="n">nodetype</span><span class="p">)</span></div>
+
+<span class="c1"># fixture for nose tests</span>
+
+
+<span class="k">def</span> <span class="nf">teardown_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;test.adjlist&#39;</span><span class="p">,</span> <span class="s1">&#39;test.adjlist.gz&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2018, NetworkX Developers.
+      Last updated on Sep 19, 2018.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'2.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  false,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
