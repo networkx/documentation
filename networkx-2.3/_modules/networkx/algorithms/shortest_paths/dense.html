@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.shortest_paths.dense &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.shortest_paths.dense</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.shortest_paths.dense</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Floyd-Warshall algorithm for shortest paths.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#    Copyright (C) 2004-2019 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Aric Hagberg &lt;aric.hagberg@gmail.com&gt;</span>
+<span class="c1">#          Miguel Sozinho Ramalho &lt;m.ramalho@fe.up.pt&gt;</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;floyd_warshall&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;floyd_warshall_predecessor_and_distance&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;reconstruct_path&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;floyd_warshall_numpy&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="floyd_warshall_numpy"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.shortest_paths.dense.floyd_warshall_numpy.html#networkx.algorithms.shortest_paths.dense.floyd_warshall_numpy">[docs]</a><span class="k">def</span> <span class="nf">floyd_warshall_numpy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find all-pairs shortest path lengths using Floyd&#39;s algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">       The rows and columns are ordered by the nodes in nodelist.</span>
+<span class="sd">       If nodelist is None then the ordering is produced by G.nodes().</span>
+
+<span class="sd">    weight: string, optional (default= &#39;weight&#39;)</span>
+<span class="sd">       Edge data key corresponding to the edge weight.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    distance : NumPy matrix</span>
+<span class="sd">        A matrix of shortest path distances between nodes.</span>
+<span class="sd">        If there is no path between to nodes the corresponding matrix entry</span>
+<span class="sd">        will be Inf.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Floyd&#39;s algorithm is appropriate for finding shortest paths in</span>
+<span class="sd">    dense graphs or graphs with negative weights when Dijkstra&#39;s</span>
+<span class="sd">    algorithm fails.  This algorithm can still fail if there are</span>
+<span class="sd">    negative cycles.  It has running time $O(n^3)$ with running space of $O(n^2)$.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;to_numpy_matrix() requires numpy: http://scipy.org/ &quot;</span><span class="p">)</span>
+
+    <span class="c1"># To handle cases when an edge has weight=0, we must make sure that</span>
+    <span class="c1"># nonedges are not given the value 0 as well.</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">multigraph_weight</span><span class="o">=</span><span class="nb">min</span><span class="p">,</span>
+                           <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">nonedge</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">A</span><span class="p">[</span><span class="n">I</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># diagonal elements should be zero</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">A</span></div>
+
+
+<div class="viewcode-block" id="floyd_warshall_predecessor_and_distance"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.shortest_paths.dense.floyd_warshall_predecessor_and_distance.html#networkx.algorithms.shortest_paths.dense.floyd_warshall_predecessor_and_distance">[docs]</a><span class="k">def</span> <span class="nf">floyd_warshall_predecessor_and_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find all-pairs shortest path lengths using Floyd&#39;s algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight: string, optional (default= &#39;weight&#39;)</span>
+<span class="sd">       Edge data key corresponding to the edge weight.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    predecessor,distance : dictionaries</span>
+<span class="sd">       Dictionaries, keyed by source and target, of predecessors and distances</span>
+<span class="sd">       in the shortest path.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_weighted_edges_from([(&#39;s&#39;, &#39;u&#39;, 10), (&#39;s&#39;, &#39;x&#39;, 5),</span>
+<span class="sd">    ...     (&#39;u&#39;, &#39;v&#39;, 1), (&#39;u&#39;, &#39;x&#39;, 2), (&#39;v&#39;, &#39;y&#39;, 1), (&#39;x&#39;, &#39;u&#39;, 3),</span>
+<span class="sd">    ...     (&#39;x&#39;, &#39;v&#39;, 5), (&#39;x&#39;, &#39;y&#39;, 2), (&#39;y&#39;, &#39;s&#39;, 7), (&#39;y&#39;, &#39;v&#39;, 6)])</span>
+<span class="sd">    &gt;&gt;&gt; predecessors, _ = nx.floyd_warshall_predecessor_and_distance(G)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.reconstruct_path(&#39;s&#39;, &#39;v&#39;, predecessors))</span>
+<span class="sd">    [&#39;s&#39;, &#39;x&#39;, &#39;u&#39;, &#39;v&#39;]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Floyd&#39;s algorithm is appropriate for finding shortest paths</span>
+<span class="sd">    in dense graphs or graphs with negative weights when Dijkstra&#39;s algorithm</span>
+<span class="sd">    fails.  This algorithm can still fail if there are negative cycles.</span>
+<span class="sd">    It has running time $O(n^3)$ with running space of $O(n^2)$.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    floyd_warshall</span>
+<span class="sd">    floyd_warshall_numpy</span>
+<span class="sd">    all_pairs_shortest_path</span>
+<span class="sd">    all_pairs_shortest_path_length</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+    <span class="c1"># dictionary-of-dictionaries representation for dist and pred</span>
+    <span class="c1"># use some defaultdict magick here</span>
+    <span class="c1"># for dist the default is the floating point inf value</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># initialize path distance dictionary to be the adjacency matrix</span>
+    <span class="c1"># also set the distance to self to 0 (zero diagonal)</span>
+    <span class="n">undirected</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">e_weight</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">])</span>
+        <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+        <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
+            <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">])</span>
+            <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">w</span><span class="p">]</span> <span class="o">+</span> <span class="n">dist</span><span class="p">[</span><span class="n">w</span><span class="p">][</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">w</span><span class="p">]</span> <span class="o">+</span> <span class="n">dist</span><span class="p">[</span><span class="n">w</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+                    <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred</span><span class="p">[</span><span class="n">w</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pred</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="reconstruct_path"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.shortest_paths.dense.reconstruct_path.html#networkx.algorithms.shortest_paths.dense.reconstruct_path">[docs]</a><span class="k">def</span> <span class="nf">reconstruct_path</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">predecessors</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reconstruct a path from source to target using the predecessors</span>
+<span class="sd">    dict as returned by floyd_warshall_predecessor_and_distance</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : node</span>
+<span class="sd">       Starting node for path</span>
+
+<span class="sd">    target : node</span>
+<span class="sd">       Ending node for path</span>
+
+<span class="sd">    predecessors: dictionary</span>
+<span class="sd">       Dictionary, keyed by source and target, of predecessors in the</span>
+<span class="sd">       shortest path, as returned by floyd_warshall_predecessor_and_distance</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    path : list</span>
+<span class="sd">       A list of nodes containing the shortest path from source to target</span>
+
+<span class="sd">       If source and target are the same, an empty list is returned</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    This function is meant to give more applicability to the</span>
+<span class="sd">    floyd_warshall_predecessor_and_distance function</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    floyd_warshall_predecessor_and_distance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">prev</span> <span class="o">=</span> <span class="n">predecessors</span><span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">prev</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">target</span><span class="p">,</span> <span class="n">curr</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">curr</span> <span class="o">!=</span> <span class="n">source</span><span class="p">:</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">prev</span><span class="p">[</span><span class="n">curr</span><span class="p">]</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="floyd_warshall"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.shortest_paths.dense.floyd_warshall.html#networkx.algorithms.shortest_paths.dense.floyd_warshall">[docs]</a><span class="k">def</span> <span class="nf">floyd_warshall</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find all-pairs shortest path lengths using Floyd&#39;s algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight: string, optional (default= &#39;weight&#39;)</span>
+<span class="sd">       Edge data key corresponding to the edge weight.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    distance : dict</span>
+<span class="sd">       A dictionary,  keyed by source and target, of shortest paths distances</span>
+<span class="sd">       between nodes.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    Floyd&#39;s algorithm is appropriate for finding shortest paths</span>
+<span class="sd">    in dense graphs or graphs with negative weights when Dijkstra&#39;s algorithm</span>
+<span class="sd">    fails.  This algorithm can still fail if there are negative cycles.</span>
+<span class="sd">    It has running time $O(n^3)$ with running space of $O(n^2)$.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    floyd_warshall_predecessor_and_distance</span>
+<span class="sd">    floyd_warshall_numpy</span>
+<span class="sd">    all_pairs_shortest_path</span>
+<span class="sd">    all_pairs_shortest_path_length</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># could make this its own function to reduce memory costs</span>
+    <span class="k">return</span> <span class="n">floyd_warshall_predecessor_and_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span></div>
+
+<span class="c1"># fixture for nose tests</span>
+
+
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;NumPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

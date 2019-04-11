@@ -1,0 +1,847 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.generators.community &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.generators.community</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.generators.community</h1><div class="highlight"><pre>
+<span></span><span class="c1">#    Copyright(C) 2011-2019 by</span>
+<span class="c1">#    Ben Edwards &lt;bedwards@cs.unm.edu&gt;</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Konstantinos Karakatsanis &lt;dinoskarakas@gmail.com&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors:  Ben Edwards (bedwards@cs.unm.edu)</span>
+<span class="c1">#           Aric Hagberg (hagberg@lanl.gov)</span>
+<span class="c1">#           Konstantinos Karakatsanis (dinoskarakas@gmail.com)</span>
+<span class="c1">#           Jean-Gabriel Young (jean.gabriel.young@gmail.com)</span>
+<span class="sd">&quot;&quot;&quot;Generators for classes of graphs used in studying social networks.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;caveman_graph&#39;</span><span class="p">,</span> <span class="s1">&#39;connected_caveman_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;relaxed_caveman_graph&#39;</span><span class="p">,</span> <span class="s1">&#39;random_partition_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;planted_partition_graph&#39;</span><span class="p">,</span> <span class="s1">&#39;gaussian_random_partition_graph&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;ring_of_cliques&#39;</span><span class="p">,</span> <span class="s1">&#39;windmill_graph&#39;</span><span class="p">,</span> <span class="s1">&#39;stochastic_block_model&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="caveman_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.caveman_graph.html#networkx.generators.community.caveman_graph">[docs]</a><span class="k">def</span> <span class="nf">caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a caveman graph of `l` cliques of size `k`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : int</span>
+<span class="sd">      Number of cliques</span>
+<span class="sd">    k : int</span>
+<span class="sd">      Size of cliques</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">      caveman graph</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This returns an undirected graph, it can be converted to a directed</span>
+<span class="sd">    graph using :func:`nx.to_directed`, or a multigraph using</span>
+<span class="sd">    ``nx.MultiGraph(nx.caveman_graph(l, k))``. Only the undirected version is</span>
+<span class="sd">    described in [1]_ and it is unclear which of the directed</span>
+<span class="sd">    generalizations is most useful.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.caveman_graph(3, 3)</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    connected_caveman_graph</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Watts, D. J. &#39;Networks, Dynamics, and the Small-World Phenomenon.&#39;</span>
+<span class="sd">       Amer. J. Soc. 105, 493-527, 1999.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># l disjoint cliques of size k</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">l</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">k</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="connected_caveman_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.connected_caveman_graph.html#networkx.generators.community.connected_caveman_graph">[docs]</a><span class="k">def</span> <span class="nf">connected_caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a connected caveman graph of `l` cliques of size `k`.</span>
+
+<span class="sd">    The connected caveman graph is formed by creating `n` cliques of size</span>
+<span class="sd">    `k`, then a single edge in each clique is rewired to a node in an</span>
+<span class="sd">    adjacent clique.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : int</span>
+<span class="sd">      number of cliques</span>
+<span class="sd">    k : int</span>
+<span class="sd">      size of cliques</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">      connected caveman graph</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This returns an undirected graph, it can be converted to a directed</span>
+<span class="sd">    graph using :func:`nx.to_directed`, or a multigraph using</span>
+<span class="sd">    ``nx.MultiGraph(nx.caveman_graph(l, k))``. Only the undirected version is</span>
+<span class="sd">    described in [1]_ and it is unclear which of the directed</span>
+<span class="sd">    generalizations is most useful.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.connected_caveman_graph(3, 3)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Watts, D. J. &#39;Networks, Dynamics, and the Small-World Phenomenon.&#39;</span>
+<span class="sd">       Amer. J. Soc. 105, 493-527, 1999.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span> <span class="o">*</span> <span class="n">k</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="relaxed_caveman_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.relaxed_caveman_graph.html#networkx.generators.community.relaxed_caveman_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">relaxed_caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a relaxed caveman graph.</span>
+
+<span class="sd">    A relaxed caveman graph starts with `l` cliques of size `k`.  Edges are</span>
+<span class="sd">    then randomly rewired with probability `p` to link different cliques.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : int</span>
+<span class="sd">      Number of groups</span>
+<span class="sd">    k : int</span>
+<span class="sd">      Size of cliques</span>
+<span class="sd">    p : float</span>
+<span class="sd">      Probabilty of rewiring each edge.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">      Relaxed Caveman Graph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError:</span>
+<span class="sd">     If p is not in [0,1]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.relaxed_caveman_graph(2, 3, 0.1, seed=42)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Santo Fortunato, Community Detection in Graphs,</span>
+<span class="sd">       Physics Reports Volume 486, Issues 3-5, February 2010, Pages 75-174.</span>
+<span class="sd">       https://arxiv.org/abs/0906.0612</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">:</span>  <span class="c1"># rewire the edge</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="random_partition_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.random_partition_graph.html#networkx.generators.community.random_partition_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_partition_graph</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the random partition graph with a partition of sizes.</span>
+
+<span class="sd">    A partition graph is a graph of communities with sizes defined by</span>
+<span class="sd">    s in sizes. Nodes in the same group are connected with probability</span>
+<span class="sd">    p_in and nodes of different groups are connected with probability</span>
+<span class="sd">    p_out.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sizes : list of ints</span>
+<span class="sd">      Sizes of groups</span>
+<span class="sd">    p_in : float</span>
+<span class="sd">      probability of edges with in groups</span>
+<span class="sd">    p_out : float</span>
+<span class="sd">      probability of edges between groups</span>
+<span class="sd">    directed : boolean optional, default=False</span>
+<span class="sd">      Whether to create a directed graph</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph or DiGraph</span>
+<span class="sd">      random partition graph of size sum(gs)</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">      If p_in or p_out is not in [0,1]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.random_partition_graph([10,10,10],.25,.01)</span>
+<span class="sd">    &gt;&gt;&gt; len(G)</span>
+<span class="sd">    30</span>
+<span class="sd">    &gt;&gt;&gt; partition = G.graph[&#39;partition&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; len(partition)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This is a generalization of the planted-l-partition described in</span>
+<span class="sd">    [1]_.  It allows for the creation of groups of any size.</span>
+
+<span class="sd">    The partition is store as a graph attribute &#39;partition&#39;.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Santo Fortunato &#39;Community Detection in Graphs&#39; Physical Reports</span>
+<span class="sd">       Volume 486, Issue 3-5 p. 75-174. https://arxiv.org/abs/0906.0612</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Use geometric method for O(n+m) complexity algorithm</span>
+    <span class="c1"># partition = nx.community_sets(nx.get_node_attributes(G, &#39;affiliation&#39;))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">p_in</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;p_in must be in [0,1]&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">p_out</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;p_out must be in [0,1]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># create connection matrix</span>
+    <span class="n">num_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[[</span><span class="n">p_out</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span><span class="p">)]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_in</span>
+
+    <span class="k">return</span> <span class="n">stochastic_block_model</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                                  <span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">,</span> <span class="n">selfloops</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                  <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="planted_partition_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.planted_partition_graph.html#networkx.generators.community.planted_partition_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">planted_partition_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the planted l-partition graph.</span>
+
+<span class="sd">    This model partitions a graph with n=l*k vertices in</span>
+<span class="sd">    l groups with k vertices each. Vertices of the same</span>
+<span class="sd">    group are linked with a probability p_in, and vertices</span>
+<span class="sd">    of different groups are linked with probability p_out.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : int</span>
+<span class="sd">      Number of groups</span>
+<span class="sd">    k : int</span>
+<span class="sd">      Number of vertices in each group</span>
+<span class="sd">    p_in : float</span>
+<span class="sd">      probability of connecting vertices within a group</span>
+<span class="sd">    p_out : float</span>
+<span class="sd">      probability of connected vertices between groups</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+<span class="sd">    directed : bool,optional (default=False)</span>
+<span class="sd">      If True return a directed graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph or DiGraph</span>
+<span class="sd">      planted l-partition graph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError:</span>
+<span class="sd">      If p_in,p_out are not in [0,1] or</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.planted_partition_graph(4, 3, 0.5, 0.1, seed=42)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    random_partition_model</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A. Condon, R.M. Karp, Algorithms for graph partitioning</span>
+<span class="sd">        on the planted partition model,</span>
+<span class="sd">        Random Struct. Algor. 18 (2001) 116-140.</span>
+
+<span class="sd">    .. [2] Santo Fortunato &#39;Community Detection in Graphs&#39; Physical Reports</span>
+<span class="sd">       Volume 486, Issue 3-5 p. 75-174. https://arxiv.org/abs/0906.0612</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">random_partition_graph</span><span class="p">([</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">l</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">directed</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="gaussian_random_partition_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.gaussian_random_partition_graph.html#networkx.generators.community.gaussian_random_partition_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">gaussian_random_partition_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a Gaussian random partition graph.</span>
+
+<span class="sd">    A Gaussian random partition graph is created by creating k partitions</span>
+<span class="sd">    each with a size drawn from a normal distribution with mean s and variance</span>
+<span class="sd">    s/v. Nodes are connected within clusters with probability p_in and</span>
+<span class="sd">    between clusters with probability p_out[1]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">      Number of nodes in the graph</span>
+<span class="sd">    s : float</span>
+<span class="sd">      Mean cluster size</span>
+<span class="sd">    v : float</span>
+<span class="sd">      Shape parameter. The variance of cluster size distribution is s/v.</span>
+<span class="sd">    p_in : float</span>
+<span class="sd">      Probabilty of intra cluster connection.</span>
+<span class="sd">    p_out : float</span>
+<span class="sd">      Probability of inter cluster connection.</span>
+<span class="sd">    directed : boolean, optional default=False</span>
+<span class="sd">      Whether to create a directed graph or not</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph or DiGraph</span>
+<span class="sd">      gaussian random partition graph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">      If s is &gt; n</span>
+<span class="sd">      If p_in or p_out is not in [0,1]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Note the number of partitions is dependent on s,v and n, and that the</span>
+<span class="sd">    last partition may be considerably smaller, as it is sized to simply</span>
+<span class="sd">    fill out the nodes [1]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    random_partition_graph</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.gaussian_random_partition_graph(100,10,10,.25,.1)</span>
+<span class="sd">    &gt;&gt;&gt; len(G)</span>
+<span class="sd">    100</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Ulrik Brandes, Marco Gaertler, Dorothea Wagner,</span>
+<span class="sd">       Experiments on Graph Clustering Algorithms,</span>
+<span class="sd">       In the proceedings of the 11th Europ. Symp. Algorithms, 2003.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;s must be &lt;= n&quot;</span><span class="p">)</span>
+    <span class="n">assigned</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">v</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># how to handle 0 or negative sizes?</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">assigned</span> <span class="o">+</span> <span class="n">size</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">assigned</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="n">assigned</span> <span class="o">+=</span> <span class="n">size</span>
+        <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">random_partition_graph</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ring_of_cliques"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.ring_of_cliques.html#networkx.generators.community.ring_of_cliques">[docs]</a><span class="k">def</span> <span class="nf">ring_of_cliques</span><span class="p">(</span><span class="n">num_cliques</span><span class="p">,</span> <span class="n">clique_size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Defines a &quot;ring of cliques&quot; graph.</span>
+
+<span class="sd">    A ring of cliques graph is consisting of cliques, connected through single</span>
+<span class="sd">    links. Each clique is a complete graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_cliques : int</span>
+<span class="sd">        Number of cliques</span>
+<span class="sd">    clique_size : int</span>
+<span class="sd">        Size of cliques</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        ring of cliques graph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the number of cliques is lower than 2 or</span>
+<span class="sd">        if the size of cliques is smaller than 2.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.ring_of_cliques(8, 4)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    connected_caveman_graph</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The `connected_caveman_graph` graph removes a link from each clique to</span>
+<span class="sd">    connect it with the next clique. Instead, the `ring_of_cliques` graph</span>
+<span class="sd">    simply adds the link without removing any link from the cliques.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">num_cliques</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;A ring of cliques must have at least &#39;</span>
+                               <span class="s1">&#39;two cliques&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clique_size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;The cliques must have at least two nodes&#39;</span><span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cliques</span><span class="p">):</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">clique_size</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="n">clique_size</span> <span class="o">+</span>
+                                             <span class="n">clique_size</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">clique_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">clique_size</span> <span class="o">%</span>
+                   <span class="p">(</span><span class="n">num_cliques</span> <span class="o">*</span> <span class="n">clique_size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="windmill_graph"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.windmill_graph.html#networkx.generators.community.windmill_graph">[docs]</a><span class="k">def</span> <span class="nf">windmill_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate a windmill graph.</span>
+<span class="sd">    A windmill graph is a graph of `n` cliques each of size `k` that are all</span>
+<span class="sd">    joined at one node.</span>
+<span class="sd">    It can be thought of as taking a disjoint union of `n` cliques of size `k`,</span>
+<span class="sd">    selecting one point from each, and contracting all of the selected points.</span>
+<span class="sd">    Alternatively, one could generate `n` cliques of size `k-1` and one node</span>
+<span class="sd">    that is connected to all other nodes in the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Number of cliques</span>
+<span class="sd">    k : int</span>
+<span class="sd">        Size of cliques</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        windmill graph with n cliques of size k</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the number of cliques is less than two</span>
+<span class="sd">        If the size of the cliques are less than two</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.windmill_graph(4, 5)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The node labeled `0` will be the node connected to all other nodes.</span>
+<span class="sd">    Note that windmill graphs are usually denoted `Wd(k,n)`, so the parameters</span>
+<span class="sd">    are in the opposite order as the parameters of this method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;A windmill graph must have at least two cliques&#39;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;The cliques must have at least two nodes&#39;</span><span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">disjoint_union_all</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">([</span><span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="n">k</span><span class="p">)],</span>
+                                              <span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                                               <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))))</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="stochastic_block_model"><a class="viewcode-back" href="../../../reference/generated/networkx.generators.community.stochastic_block_model.html#networkx.generators.community.stochastic_block_model">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">stochastic_block_model</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">selfloops</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a stochastic block model graph.</span>
+
+<span class="sd">    This model partitions the nodes in blocks of arbitrary sizes, and places</span>
+<span class="sd">    edges between pairs of nodes independently, with a probability that depends</span>
+<span class="sd">    on the blocks.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sizes : list of ints</span>
+<span class="sd">        Sizes of blocks</span>
+<span class="sd">    p : list of list of floats</span>
+<span class="sd">        Element (r,s) gives the density of edges going from the nodes</span>
+<span class="sd">        of group r to nodes of group s.</span>
+<span class="sd">        p must match the number of groups (len(sizes) == len(p)),</span>
+<span class="sd">        and it must be symmetric if the graph is undirected.</span>
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">        The block tags are assigned according to the node identifiers</span>
+<span class="sd">        in nodelist. If nodelist is None, then the ordering is the</span>
+<span class="sd">        range [0,sum(sizes)-1].</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+<span class="sd">    directed : boolean optional, default=False</span>
+<span class="sd">        Whether to create a directed graph or not.</span>
+<span class="sd">    selfloops : boolean optional, default=False</span>
+<span class="sd">        Whether to include self-loops or not.</span>
+<span class="sd">    sparse: boolean optional, default=True</span>
+<span class="sd">        Use the sparse heuristic to speed up the generator.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    g : NetworkX Graph or DiGraph</span>
+<span class="sd">        Stochastic block model graph of size sum(sizes)</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">      If probabilities are not in [0,1].</span>
+<span class="sd">      If the probability matrix is not square (directed case).</span>
+<span class="sd">      If the probability matrix is not symmetric (undirected case).</span>
+<span class="sd">      If the sizes list does not match nodelist or the probability matrix.</span>
+<span class="sd">      If nodelist contains duplicate.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; sizes = [75, 75, 300]</span>
+<span class="sd">    &gt;&gt;&gt; probs = [[0.25, 0.05, 0.02],</span>
+<span class="sd">    ...          [0.05, 0.35, 0.07],</span>
+<span class="sd">    ...          [0.02, 0.07, 0.40]]</span>
+<span class="sd">    &gt;&gt;&gt; g = nx.stochastic_block_model(sizes, probs, seed=0)</span>
+<span class="sd">    &gt;&gt;&gt; len(g)</span>
+<span class="sd">    450</span>
+<span class="sd">    &gt;&gt;&gt; H = nx.quotient_graph(g, g.graph[&#39;partition&#39;], relabel=True)</span>
+<span class="sd">    &gt;&gt;&gt; for v in H.nodes(data=True):</span>
+<span class="sd">    ...     print(round(v[1][&#39;density&#39;], 3))</span>
+<span class="sd">    ...</span>
+<span class="sd">    0.245</span>
+<span class="sd">    0.348</span>
+<span class="sd">    0.405</span>
+<span class="sd">    &gt;&gt;&gt; for v in H.edges(data=True):</span>
+<span class="sd">    ...     print(round(1.0 * v[2][&#39;weight&#39;] / (sizes[v[0]] * sizes[v[1]]), 3))</span>
+<span class="sd">    ...</span>
+<span class="sd">    0.051</span>
+<span class="sd">    0.022</span>
+<span class="sd">    0.07</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    random_partition_graph</span>
+<span class="sd">    planted_partition_graph</span>
+<span class="sd">    gaussian_random_partition_graph</span>
+<span class="sd">    gnp_random_graph</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Holland, P. W., Laskey, K. B., &amp; Leinhardt, S.,</span>
+<span class="sd">           &quot;Stochastic blockmodels: First steps&quot;,</span>
+<span class="sd">           Social networks, 5(2), 109-137, 1983.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check if dimensions match</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;&#39;sizes&#39; and &#39;p&#39; do not match.&quot;</span><span class="p">)</span>
+    <span class="c1"># Check for probability symmetry (undirected) and shape (directed)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;&#39;p&#39; must be a square matrix.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">directed</span><span class="p">:</span>
+        <span class="n">p_transpose</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p_transpose</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">1e-08</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;&#39;p&#39; must be symmetric.&quot;</span><span class="p">)</span>
+    <span class="c1"># Check for probability range</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">prob</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">prob</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">prob</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;Entries of &#39;p&#39; not in [0,1].&quot;</span><span class="p">)</span>
+    <span class="c1"># Check for nodelist consistency</span>
+    <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;&#39;nodelist&#39; and &#39;sizes&#39; do not match.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;nodelist contains duplicate.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">))</span>
+
+    <span class="c1"># Setup the graph conditionally to the directed switch.</span>
+    <span class="n">block_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">directed</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+        <span class="n">block_iter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">block_range</span><span class="p">,</span> <span class="n">block_range</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">block_iter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations_with_replacement</span><span class="p">(</span><span class="n">block_range</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># Split nodelist in a partition (list of sets).</span>
+    <span class="n">size_cumsum</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">x</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">nodelist</span><span class="p">[</span><span class="n">size_cumsum</span><span class="p">[</span><span class="n">x</span><span class="p">]:</span><span class="n">size_cumsum</span><span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]])</span>
+                            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">size_cumsum</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="c1"># Setup nodes and graph name</span>
+    <span class="k">for</span> <span class="n">block_id</span><span class="p">,</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block_id</span><span class="p">)</span>
+
+    <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;stochastic_block_model&quot;</span>
+
+    <span class="c1"># Test for edge existence</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;partition&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">block_iter</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">directed</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">selfloops</span><span class="p">:</span>
+                    <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">selfloops</span><span class="p">:</span>
+                    <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">sparse</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Test edges cases p_ij = 0 or 1</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                    <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">logrand</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">())</span>
+                        <span class="n">skip</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">logrand</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]))</span>
+                        <span class="c1"># consume &quot;skip&quot; edges</span>
+                        <span class="nb">next</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">skip</span><span class="p">,</span> <span class="n">skip</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="n">e</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+                        <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>  <span class="c1"># __safe</span>
+                    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                        <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>  <span class="c1"># __safe</span>
+    <span class="k">return</span> <span class="n">g</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

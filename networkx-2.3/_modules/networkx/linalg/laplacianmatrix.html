@@ -1,0 +1,586 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.linalg.laplacianmatrix &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.linalg.laplacianmatrix</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.linalg.laplacianmatrix</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Laplacian matrix of graphs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#    Copyright (C) 2004-2019 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">not_implemented_for</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Pieter Swart (swart@lanl.gov)&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Dan Schult (dschult@colgate.edu)&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Alejandro Weinstein &lt;alejandro.weinstein@gmail.com&gt;&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;laplacian_matrix&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;normalized_laplacian_matrix&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;directed_laplacian_matrix&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;directed_combinatorial_laplacian_matrix&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="laplacian_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.laplacian_matrix.html#networkx.linalg.laplacianmatrix.laplacian_matrix">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the Laplacian matrix of G.</span>
+
+<span class="sd">    The graph Laplacian is the matrix L = D - A, where</span>
+<span class="sd">    A is the adjacency matrix and D is the diagonal matrix of node degrees.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">       The rows and columns are ordered according to the nodes in nodelist.</span>
+<span class="sd">       If nodelist is None, then the ordering is produced by G.nodes().</span>
+
+<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">       The edge data key used to compute each value in the matrix.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    L : SciPy sparse matrix</span>
+<span class="sd">      The Laplacian matrix of G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For MultiGraph/MultiDiGraph, the edges weights are summed.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    to_numpy_matrix</span>
+<span class="sd">    normalized_laplacian_matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+    <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                                  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">diags</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">D</span> <span class="o">-</span> <span class="n">A</span></div>
+
+
+<div class="viewcode-block" id="normalized_laplacian_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.normalized_laplacian_matrix.html#networkx.linalg.laplacianmatrix.normalized_laplacian_matrix">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">normalized_laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the normalized Laplacian matrix of G.</span>
+
+<span class="sd">    The normalized graph Laplacian is the matrix</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        N = D^{-1/2} L D^{-1/2}</span>
+
+<span class="sd">    where `L` is the graph Laplacian and `D` is the diagonal matrix of</span>
+<span class="sd">    node degrees.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">       The rows and columns are ordered according to the nodes in nodelist.</span>
+<span class="sd">       If nodelist is None, then the ordering is produced by G.nodes().</span>
+
+<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">       The edge data key used to compute each value in the matrix.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    N : NumPy matrix</span>
+<span class="sd">      The normalized Laplacian matrix of G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For MultiGraph/MultiDiGraph, the edges weights are summed.</span>
+<span class="sd">    See to_numpy_matrix for other options.</span>
+
+<span class="sd">    If the Graph contains selfloops, D is defined as diag(sum(A,1)), where A is</span>
+<span class="sd">    the adjacency matrix [2]_.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    laplacian_matrix</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Fan Chung-Graham, Spectral Graph Theory,</span>
+<span class="sd">       CBMS Regional Conference Series in Mathematics, Number 92, 1997.</span>
+<span class="sd">    .. [2] Steve Butler, Interlacing For Weighted Graphs Using The Normalized</span>
+<span class="sd">       Laplacian, Electronic Journal of Linear Algebra, Volume 16, pp. 90-98,</span>
+<span class="sd">       March 2007.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+    <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                                  <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">diags</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">D</span> <span class="o">-</span> <span class="n">A</span>
+    <span class="k">with</span> <span class="n">scipy</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+        <span class="n">diags_sqrt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span>
+    <span class="n">diags_sqrt</span><span class="p">[</span><span class="n">scipy</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">DH</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csr&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DH</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">DH</span><span class="p">))</span></div>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Code based on</span>
+<span class="c1"># https://bitbucket.org/bedwards/networkx-community/src/370bd69fc02f/networkx/algorithms/community/</span>
+
+
+<div class="viewcode-block" id="directed_laplacian_matrix"><a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.directed_laplacian_matrix.html#networkx.linalg.laplacianmatrix.directed_laplacian_matrix">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">directed_laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span>
+                              <span class="n">walk_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the directed Laplacian matrix of G.</span>
+
+<span class="sd">    The graph directed Laplacian is the matrix</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        L = I - (\Phi^{1/2} P \Phi^{-1/2} + \Phi^{-1/2} P^T \Phi^{1/2} ) / 2</span>
+
+<span class="sd">    where `I` is the identity matrix, `P` is the transition matrix of the</span>
+<span class="sd">    graph, and `\Phi` a matrix with the Perron vector of `P` in the diagonal and</span>
+<span class="sd">    zeros elsewhere.</span>
+
+<span class="sd">    Depending on the value of walk_type, `P` can be the transition matrix</span>
+<span class="sd">    induced by a random walk, a lazy random walk, or a random walk with</span>
+<span class="sd">    teleportation (PageRank).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : DiGraph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">       The rows and columns are ordered according to the nodes in nodelist.</span>
+<span class="sd">       If nodelist is None, then the ordering is produced by G.nodes().</span>
+
+<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">       The edge data key used to compute each value in the matrix.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    walk_type : string or None, optional (default=None)</span>
+<span class="sd">       If None, `P` is selected depending on the properties of the</span>
+<span class="sd">       graph. Otherwise is one of &#39;random&#39;, &#39;lazy&#39;, or &#39;pagerank&#39;</span>
+
+<span class="sd">    alpha : real</span>
+<span class="sd">       (1 - alpha) is the teleportation probability used with pagerank</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    L : NumPy array</span>
+<span class="sd">      Normalized Laplacian of G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Only implemented for DiGraphs</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    laplacian_matrix</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Fan Chung (2005).</span>
+<span class="sd">       Laplacians and the Cheeger inequality for directed graphs.</span>
+<span class="sd">       Annals of Combinatorics, 9(1), 2005</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">spdiags</span><span class="p">,</span> <span class="n">linalg</span>
+
+    <span class="n">P</span> <span class="o">=</span> <span class="n">_transition_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                           <span class="n">walk_type</span><span class="o">=</span><span class="n">walk_type</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eigs</span><span class="p">(</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">evecs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">v</span> <span class="o">/</span> <span class="n">v</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">sqrtp</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">spdiags</span><span class="p">(</span><span class="n">sqrtp</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">P</span> <span class="o">*</span> <span class="n">spdiags</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">sqrtp</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">I</span> <span class="o">-</span> <span class="p">(</span><span class="n">Q</span> <span class="o">+</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span></div>
+
+
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">directed_combinatorial_laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span>
+                                            <span class="n">walk_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the directed combinatorial Laplacian matrix of G.</span>
+
+<span class="sd">    The graph directed combinatorial Laplacian is the matrix</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        L = \Phi - (\Phi P + P^T \Phi) / 2</span>
+
+<span class="sd">    where `P` is the transition matrix of the graph and and `\Phi` a matrix</span>
+<span class="sd">    with the Perron vector of `P` in the diagonal and zeros elsewhere.</span>
+
+<span class="sd">    Depending on the value of walk_type, `P` can be the transition matrix</span>
+<span class="sd">    induced by a random walk, a lazy random walk, or a random walk with</span>
+<span class="sd">    teleportation (PageRank).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : DiGraph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">       The rows and columns are ordered according to the nodes in nodelist.</span>
+<span class="sd">       If nodelist is None, then the ordering is produced by G.nodes().</span>
+
+<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">       The edge data key used to compute each value in the matrix.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    walk_type : string or None, optional (default=None)</span>
+<span class="sd">       If None, `P` is selected depending on the properties of the</span>
+<span class="sd">       graph. Otherwise is one of &#39;random&#39;, &#39;lazy&#39;, or &#39;pagerank&#39;</span>
+
+<span class="sd">    alpha : real</span>
+<span class="sd">       (1 - alpha) is the teleportation probability used with pagerank</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    L : NumPy array</span>
+<span class="sd">      Combinatorial Laplacian of G.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Only implemented for DiGraphs</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    laplacian_matrix</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Fan Chung (2005).</span>
+<span class="sd">       Laplacians and the Cheeger inequality for directed graphs.</span>
+<span class="sd">       Annals of Combinatorics, 9(1), 2005</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">spdiags</span><span class="p">,</span> <span class="n">linalg</span>
+
+    <span class="n">P</span> <span class="o">=</span> <span class="n">_transition_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                           <span class="n">walk_type</span><span class="o">=</span><span class="n">walk_type</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">evals</span><span class="p">,</span> <span class="n">evecs</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eigs</span><span class="p">(</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">evecs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">v</span> <span class="o">/</span> <span class="n">v</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">Phi</span> <span class="o">=</span> <span class="n">spdiags</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="n">Phi</span> <span class="o">=</span> <span class="n">Phi</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">Phi</span> <span class="o">-</span> <span class="p">(</span><span class="n">Phi</span><span class="o">*</span><span class="n">P</span> <span class="o">+</span> <span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">Phi</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+
+<span class="k">def</span> <span class="nf">_transition_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span>
+                       <span class="n">walk_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the transition matrix of G.</span>
+
+<span class="sd">    This is a row stochastic giving the transition probabilities while</span>
+<span class="sd">    performing a random walk on the graph. Depending on the value of walk_type,</span>
+<span class="sd">    P can be the transition matrix induced by a random walk, a lazy random walk,</span>
+<span class="sd">    or a random walk with teleportation (PageRank).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : DiGraph</span>
+<span class="sd">       A NetworkX graph</span>
+
+<span class="sd">    nodelist : list, optional</span>
+<span class="sd">       The rows and columns are ordered according to the nodes in nodelist.</span>
+<span class="sd">       If nodelist is None, then the ordering is produced by G.nodes().</span>
+
+<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">       The edge data key used to compute each value in the matrix.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    walk_type : string or None, optional (default=None)</span>
+<span class="sd">       If None, `P` is selected depending on the properties of the</span>
+<span class="sd">       graph. Otherwise is one of &#39;random&#39;, &#39;lazy&#39;, or &#39;pagerank&#39;</span>
+
+<span class="sd">    alpha : real</span>
+<span class="sd">       (1 - alpha) is the teleportation probability used with pagerank</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    P : NumPy array</span>
+<span class="sd">      transition matrix of G.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If walk_type not specified or alpha not in valid range</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">identity</span><span class="p">,</span> <span class="n">spdiags</span>
+    <span class="k">if</span> <span class="n">walk_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_aperiodic</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+                <span class="n">walk_type</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">walk_type</span> <span class="o">=</span> <span class="s2">&quot;lazy&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">walk_type</span> <span class="o">=</span> <span class="s2">&quot;pagerank&quot;</span>
+
+    <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                                  <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">walk_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;lazy&quot;</span><span class="p">]:</span>
+        <span class="n">DI</span> <span class="o">=</span> <span class="n">spdiags</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">flat</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">walk_type</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">DI</span> <span class="o">*</span> <span class="n">M</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">identity</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span> <span class="o">+</span> <span class="n">DI</span> <span class="o">*</span> <span class="n">M</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="k">elif</span> <span class="n">walk_type</span> <span class="o">==</span> <span class="s2">&quot;pagerank&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;alpha must be between 0 and 1&#39;</span><span class="p">)</span>
+        <span class="c1"># this is using a dense representation</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+        <span class="c1"># add constant to dangling nodes&#39; row</span>
+        <span class="n">dangling</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dangling</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="c1"># normalize</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span> <span class="o">/</span> <span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">M</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;walk_type must be random, lazy, or pagerank&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">P</span>
+
+<span class="c1"># fixture for nose tests</span>
+
+
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;NumPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

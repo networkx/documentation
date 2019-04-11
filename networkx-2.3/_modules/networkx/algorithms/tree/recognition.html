@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.tree.recognition &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.tree.recognition</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.tree.recognition</h1><div class="highlight"><pre>
+<span></span><span class="c1">#-*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Recognition Tests</span>
+<span class="sd">=================</span>
+
+<span class="sd">A *forest* is an acyclic, undirected graph, and a *tree* is a connected forest.</span>
+<span class="sd">Depending on the subfield, there are various conventions for generalizing these</span>
+<span class="sd">definitions to directed graphs.</span>
+
+<span class="sd">In one convention, directed variants of forest and tree are defined in an</span>
+<span class="sd">identical manner, except that the direction of the edges is ignored. In effect,</span>
+<span class="sd">each directed edge is treated as a single undirected edge. Then, additional</span>
+<span class="sd">restrictions are imposed to define *branchings* and *arborescences*.</span>
+
+<span class="sd">In another convention, directed variants of forest and tree correspond to</span>
+<span class="sd">the previous convention&#39;s branchings and arborescences, respectively. Then two</span>
+<span class="sd">new terms, *polyforest* and *polytree*, are defined to correspond to the other</span>
+<span class="sd">convention&#39;s forest and tree.</span>
+
+<span class="sd">Summarizing::</span>
+
+<span class="sd">   +-----------------------------+</span>
+<span class="sd">   | Convention A | Convention B |</span>
+<span class="sd">   +=============================+</span>
+<span class="sd">   | forest       | polyforest   |</span>
+<span class="sd">   | tree         | polytree     |</span>
+<span class="sd">   | branching    | forest       |</span>
+<span class="sd">   | arborescence | tree         |</span>
+<span class="sd">   +-----------------------------+</span>
+
+<span class="sd">Each convention has its reasons. The first convention emphasizes definitional</span>
+<span class="sd">similarity in that directed forests and trees are only concerned with</span>
+<span class="sd">acyclicity and do not have an in-degree constraint, just as their undirected</span>
+<span class="sd">counterparts do not. The second convention emphasizes functional similarity</span>
+<span class="sd">in the sense that the directed analog of a spanning tree is a spanning</span>
+<span class="sd">arborescence. That is, take any spanning tree and choose one node as the root.</span>
+<span class="sd">Then every edge is assigned a direction such there is a directed path from the</span>
+<span class="sd">root to every other node. The result is a spanning arborescence.</span>
+
+<span class="sd">NetworkX follows convention &quot;A&quot;. Explicitly, these are:</span>
+
+<span class="sd">undirected forest</span>
+<span class="sd">   An undirected graph with no undirected cycles.</span>
+
+<span class="sd">undirected tree</span>
+<span class="sd">   A connected, undirected forest.</span>
+
+<span class="sd">directed forest</span>
+<span class="sd">   A directed graph with no undirected cycles. Equivalently, the underlying</span>
+<span class="sd">   graph structure (which ignores edge orientations) is an undirected forest.</span>
+<span class="sd">   In convention B, this is known as a polyforest.</span>
+
+<span class="sd">directed tree</span>
+<span class="sd">   A weakly connected, directed forest. Equivalently, the underlying graph</span>
+<span class="sd">   structure (which ignores edge orientations) is an undirected tree. In</span>
+<span class="sd">   convention B, this is known as a polytree.</span>
+
+<span class="sd">branching</span>
+<span class="sd">   A directed forest with each node having, at most, one parent. So the maximum</span>
+<span class="sd">   in-degree is equal to 1. In convention B, this is known as a forest.</span>
+
+<span class="sd">arborescence</span>
+<span class="sd">   A directed tree with each node having, at most, one parent. So the maximum</span>
+<span class="sd">   in-degree is equal to 1. In convention B, this is known as a tree.</span>
+
+<span class="sd">For trees and arborescences, the adjective &quot;spanning&quot; may be added to designate</span>
+<span class="sd">that the graph, when considered as a forest/branching, consists of a single</span>
+<span class="sd">tree/arborescence that includes all nodes in the graph. It is true, by</span>
+<span class="sd">definition, that every tree/arborescence is spanning with respect to the nodes</span>
+<span class="sd">that define the tree/arborescence and so, it might seem redundant to introduce</span>
+<span class="sd">the notion of &quot;spanning&quot;. However, the nodes may represent a subset of</span>
+<span class="sd">nodes from a larger graph, and it is in this context that the term &quot;spanning&quot;</span>
+<span class="sd">becomes a useful notion.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+    <span class="s1">&#39;Ferdinando Papale &lt;ferdinando.papale@gmail.com&gt;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;chebee7i &lt;chebee7i@gmail.com&gt;&#39;</span><span class="p">,</span>
+<span class="p">])</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;is_arborescence&#39;</span><span class="p">,</span> <span class="s1">&#39;is_branching&#39;</span><span class="p">,</span> <span class="s1">&#39;is_forest&#39;</span><span class="p">,</span> <span class="s1">&#39;is_tree&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="is_arborescence"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.recognition.is_arborescence.html#networkx.algorithms.tree.recognition.is_arborescence">[docs]</a><span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_arborescence</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if `G` is an arborescence.</span>
+
+<span class="sd">    An arborescence is a directed tree with maximum in-degree equal to 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The graph to test.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    b : bool</span>
+<span class="sd">        A boolean that is True if `G` is an arborescence.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In another convention, an arborescence is known as a *tree*.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_tree</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">is_tree</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">())</span> <span class="o">&lt;=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="is_branching"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.recognition.is_branching.html#networkx.algorithms.tree.recognition.is_branching">[docs]</a><span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s1">&#39;undirected&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_branching</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if `G` is a branching.</span>
+
+<span class="sd">    A branching is a directed forest with maximum in-degree equal to 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : directed graph</span>
+<span class="sd">        The directed graph to test.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    b : bool</span>
+<span class="sd">        A boolean that is True if `G` is a branching.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In another convention, a branching is also known as a *forest*.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_forest</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">is_forest</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">())</span> <span class="o">&lt;=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="is_forest"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.recognition.is_forest.html#networkx.algorithms.tree.recognition.is_forest">[docs]</a><span class="k">def</span> <span class="nf">is_forest</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if `G` is a forest.</span>
+
+<span class="sd">    A forest is a graph with no undirected cycles.</span>
+
+<span class="sd">    For directed graphs, `G` is a forest if the underlying graph is a forest.</span>
+<span class="sd">    The underlying graph is obtained by treating each directed edge as a single</span>
+<span class="sd">    undirected edge in a multigraph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The graph to test.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    b : bool</span>
+<span class="sd">        A boolean that is True if `G` is a forest.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In another convention, a directed forest is known as a *polyforest* and</span>
+<span class="sd">    then *forest* corresponds to a *branching*.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_branching</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s1">&#39;G has no nodes.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">weakly_connected_component_subgraphs</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_component_subgraphs</span>
+
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">c</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">components</span><span class="p">(</span><span class="n">G</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="is_tree"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.recognition.is_tree.html#networkx.algorithms.tree.recognition.is_tree">[docs]</a><span class="k">def</span> <span class="nf">is_tree</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if `G` is a tree.</span>
+
+<span class="sd">    A tree is a connected graph with no undirected cycles.</span>
+
+<span class="sd">    For directed graphs, `G` is a tree if the underlying graph is a tree. The</span>
+<span class="sd">    underlying graph is obtained by treating each directed edge as a single</span>
+<span class="sd">    undirected edge in a multigraph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The graph to test.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    b : bool</span>
+<span class="sd">        A boolean that is True if `G` is a tree.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In another convention, a directed tree is known as a *polytree* and then</span>
+<span class="sd">    *tree* corresponds to an *arborescence*.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_arborescence</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s1">&#39;G has no nodes.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="n">is_connected</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_weakly_connected</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_connected</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span>
+
+    <span class="c1"># A connected graph with no cycles has n-1 edges.</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span> <span class="ow">and</span> <span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

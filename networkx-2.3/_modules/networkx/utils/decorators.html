@@ -1,0 +1,674 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.utils.decorators &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.utils.decorators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.utils.decorators</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">splitext</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="c1"># Use Path to indicate if pathlib exists (like numpy does)</span>
+    <span class="n">Path</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">decorator</span> <span class="k">import</span> <span class="n">decorator</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">is_string_like</span><span class="p">,</span> <span class="n">create_random_state</span><span class="p">,</span> \
+                           <span class="n">create_py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;not_implemented_for&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;open_file&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nodes_or_number&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;preserve_random_state&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;random_state&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;np_random_state&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;py_random_state&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="not_implemented_for"><a class="viewcode-back" href="../../../reference/generated/networkx.utils.decorators.not_implemented_for.html#networkx.utils.decorators.not_implemented_for">[docs]</a><span class="k">def</span> <span class="nf">not_implemented_for</span><span class="p">(</span><span class="o">*</span><span class="n">graph_types</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to mark algorithms as not implemented</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph_types : container of strings</span>
+<span class="sd">        Entries must be one of &#39;directed&#39;,&#39;undirected&#39;, &#39;multigraph&#39;, &#39;graph&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    _require : function</span>
+<span class="sd">        The decorated function.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">    If any of the packages cannot be imported</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Multiple types are joined logically with &quot;and&quot;.</span>
+<span class="sd">    For &quot;or&quot; use multiple @not_implemented_for() lines.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decorate functions like this::</span>
+
+<span class="sd">       @not_implemnted_for(&#39;directed&#39;)</span>
+<span class="sd">       def sp_function(G):</span>
+<span class="sd">           pass</span>
+
+<span class="sd">       @not_implemnted_for(&#39;directed&#39;,&#39;multigraph&#39;)</span>
+<span class="sd">       def sp_np_function(G):</span>
+<span class="sd">           pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@decorator</span>
+    <span class="k">def</span> <span class="nf">_not_implemented_for</span><span class="p">(</span><span class="n">not_implement_for_func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;directed&#39;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(),</span>
+                 <span class="s1">&#39;undirected&#39;</span><span class="p">:</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(),</span>
+                 <span class="s1">&#39;multigraph&#39;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">(),</span>
+                 <span class="s1">&#39;graph&#39;</span><span class="p">:</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()}</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">graph_types</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">terms</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;use one or more of &#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;directed, undirected, multigraph, graph&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;not implemented for </span><span class="si">%s</span><span class="s1"> type&#39;</span> <span class="o">%</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">graph_types</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNotImplemented</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">not_implement_for_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_not_implemented_for</span></div>
+
+
+<span class="k">def</span> <span class="nf">_open_gz</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">gzip</span>
+    <span class="k">return</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_open_bz2</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">bz2</span>
+    <span class="k">return</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+
+<span class="c1"># To handle new extensions, define a function accepting a `path` and `mode`.</span>
+<span class="c1"># Then add the extension to _dispatch_dict.</span>
+<span class="n">_dispatch_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">open</span><span class="p">)</span>
+<span class="n">_dispatch_dict</span><span class="p">[</span><span class="s1">&#39;.gz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_open_gz</span>
+<span class="n">_dispatch_dict</span><span class="p">[</span><span class="s1">&#39;.bz2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_open_bz2</span>
+<span class="n">_dispatch_dict</span><span class="p">[</span><span class="s1">&#39;.gzip&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_open_gz</span>
+
+
+<div class="viewcode-block" id="open_file"><a class="viewcode-back" href="../../../reference/generated/networkx.utils.decorators.open_file.html#networkx.utils.decorators.open_file">[docs]</a><span class="k">def</span> <span class="nf">open_file</span><span class="p">(</span><span class="n">path_arg</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to ensure clean opening and closing of files.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path_arg : int</span>
+<span class="sd">        Location of the path argument in args.  Even if the argument is a</span>
+<span class="sd">        named positional argument (with a default value), you must specify its</span>
+<span class="sd">        index as a positional argument.</span>
+<span class="sd">    mode : str</span>
+<span class="sd">        String for opening mode.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    _open_file : function</span>
+<span class="sd">        Function which cleanly executes the io.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decorate functions like this::</span>
+
+<span class="sd">       @open_file(0,&#39;r&#39;)</span>
+<span class="sd">       def read_function(pathname):</span>
+<span class="sd">           pass</span>
+
+<span class="sd">       @open_file(1,&#39;w&#39;)</span>
+<span class="sd">       def write_function(G,pathname):</span>
+<span class="sd">           pass</span>
+
+<span class="sd">       @open_file(1,&#39;w&#39;)</span>
+<span class="sd">       def write_function(G, pathname=&#39;graph.dot&#39;)</span>
+<span class="sd">           pass</span>
+
+<span class="sd">       @open_file(&#39;path&#39;, &#39;w+&#39;)</span>
+<span class="sd">       def another_function(arg, **kwargs):</span>
+<span class="sd">           path = kwargs[&#39;path&#39;]</span>
+<span class="sd">           pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that this decorator solves the problem when a path argument is</span>
+    <span class="c1"># specified as a string, but it does not handle the situation when the</span>
+    <span class="c1"># function wants to accept a default of None (and then handle it).</span>
+    <span class="c1"># Here is an example:</span>
+    <span class="c1">#</span>
+    <span class="c1"># @open_file(&#39;path&#39;)</span>
+    <span class="c1"># def some_function(arg1, arg2, path=None):</span>
+    <span class="c1">#    if path is None:</span>
+    <span class="c1">#        fobj = tempfile.NamedTemporaryFile(delete=False)</span>
+    <span class="c1">#        close_fobj = True</span>
+    <span class="c1">#    else:</span>
+    <span class="c1">#        # `path` could have been a string or file object or something</span>
+    <span class="c1">#        # similar. In any event, the decorator has given us a file object</span>
+    <span class="c1">#        # and it will close it for us, if it should.</span>
+    <span class="c1">#        fobj = path</span>
+    <span class="c1">#        close_fobj = False</span>
+    <span class="c1">#</span>
+    <span class="c1">#    try:</span>
+    <span class="c1">#        fobj.write(&#39;blah&#39;)</span>
+    <span class="c1">#    finally:</span>
+    <span class="c1">#        if close_fobj:</span>
+    <span class="c1">#            fobj.close()</span>
+    <span class="c1">#</span>
+    <span class="c1"># Normally, we&#39;d want to use &quot;with&quot; to ensure that fobj gets closed.</span>
+    <span class="c1"># However, recall that the decorator will make `path` a file object for</span>
+    <span class="c1"># us, and using &quot;with&quot; would undesirably close that file object. Instead,</span>
+    <span class="c1"># you use a try block, as shown above. When we exit the function, fobj will</span>
+    <span class="c1"># be closed, if it should be, by the decorator.</span>
+
+    <span class="nd">@decorator</span>
+    <span class="k">def</span> <span class="nf">_open_file</span><span class="p">(</span><span class="n">func_to_be_decorated</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="c1"># Note that since we have used @decorator, *args, and **kwargs have</span>
+        <span class="c1"># already been resolved to match the function signature of func. This</span>
+        <span class="c1"># means default values have been propagated. For example,  the function</span>
+        <span class="c1"># func(x, y, a=1, b=2, **kwargs) if called as func(0,1,b=5,c=10) would</span>
+        <span class="c1"># have args=(0,1,1,5) and kwargs={&#39;c&#39;:10}.</span>
+
+        <span class="c1"># First we parse the arguments of the decorator. The path_arg could</span>
+        <span class="c1"># be an positional argument or a keyword argument.  Even if it is</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># path_arg is a required positional argument</span>
+            <span class="c1"># This works precisely because we are using @decorator</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">path_arg</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c1"># path_arg is a keyword argument. It is &quot;required&quot; in the sense</span>
+            <span class="c1"># that it must exist, according to the decorator specification,</span>
+            <span class="c1"># It can exist in `kwargs` by a developer specified default value</span>
+            <span class="c1"># or it could have been explicitly set by the user.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">path_arg</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="c1"># Could not find the keyword. Thus, no default was specified</span>
+                <span class="c1"># in the function signature and the user did not provide it.</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Missing required keyword argument: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_arg</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">is_kwarg</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="c1"># A &quot;required&quot; argument was missing. This can only happen if</span>
+            <span class="c1"># the decorator of the function was incorrectly specified.</span>
+            <span class="c1"># So this probably is not a user error, but a developer error.</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;path_arg of open_file decorator is incorrect&quot;</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">is_kwarg</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Now we have the path_arg. There are two types of input to consider:</span>
+        <span class="c1">#   1) string representing a path that should be opened</span>
+        <span class="c1">#   2) an already opened file object</span>
+        <span class="k">if</span> <span class="n">is_string_like</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">fobj</span> <span class="o">=</span> <span class="n">_dispatch_dict</span><span class="p">[</span><span class="n">ext</span><span class="p">](</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+            <span class="n">close_fobj</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">):</span>
+            <span class="c1"># path is already a file-like object</span>
+            <span class="n">fobj</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="n">close_fobj</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">Path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="c1"># path is a pathlib reference to a filename</span>
+            <span class="n">fobj</span> <span class="o">=</span> <span class="n">_dispatch_dict</span><span class="p">[</span><span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="p">](</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+            <span class="n">close_fobj</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># could be None, in which case the algorithm will deal with it</span>
+            <span class="n">fobj</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="n">close_fobj</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Insert file object into args or kwargs.</span>
+        <span class="k">if</span> <span class="n">is_kwarg</span><span class="p">:</span>
+            <span class="n">new_args</span> <span class="o">=</span> <span class="n">args</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">path_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">fobj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># args is a tuple, so we must convert to list before modifying it.</span>
+            <span class="n">new_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">new_args</span><span class="p">[</span><span class="n">path_arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">fobj</span>
+
+        <span class="c1"># Finally, we call the original function, making sure to close the fobj</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">func_to_be_decorated</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">close_fobj</span><span class="p">:</span>
+                <span class="n">fobj</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">_open_file</span></div>
+
+
+<div class="viewcode-block" id="nodes_or_number"><a class="viewcode-back" href="../../../reference/generated/networkx.utils.decorators.nodes_or_number.html#networkx.utils.decorators.nodes_or_number">[docs]</a><span class="k">def</span> <span class="nf">nodes_or_number</span><span class="p">(</span><span class="n">which_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to allow number of nodes or container of nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    which_args : int or sequence of ints</span>
+<span class="sd">        Location of the node arguments in args. Even if the argument is a</span>
+<span class="sd">        named positional argument (with a default value), you must specify its</span>
+<span class="sd">        index as a positional argument.</span>
+<span class="sd">        If more than one node argument is allowed, can be a list of locations.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    _nodes_or_numbers : function</span>
+<span class="sd">        Function which replaces int args with ranges.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decorate functions like this::</span>
+
+<span class="sd">       @nodes_or_number(0)</span>
+<span class="sd">       def empty_graph(nodes):</span>
+<span class="sd">           pass</span>
+
+<span class="sd">       @nodes_or_number([0,1])</span>
+<span class="sd">       def grid_2d_graph(m1, m2, periodic=False):</span>
+<span class="sd">           pass</span>
+
+<span class="sd">       @nodes_or_number(1)</span>
+<span class="sd">       def full_rary_tree(r, n)</span>
+<span class="sd">           # r is a number. n can be a number of a list of nodes</span>
+<span class="sd">           pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@decorator</span>
+    <span class="k">def</span> <span class="nf">_nodes_or_number</span><span class="p">(</span><span class="n">func_to_be_decorated</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="c1"># form tuple of arg positions to be converted.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">iter_wa</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">which_args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">iter_wa</span> <span class="o">=</span> <span class="p">(</span><span class="n">which_args</span><span class="p">,)</span>
+        <span class="c1"># change each argument in turn</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_wa</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Negative number of nodes not valid: </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">n</span>
+                    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">new_args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func_to_be_decorated</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_nodes_or_number</span></div>
+
+
+<div class="viewcode-block" id="preserve_random_state"><a class="viewcode-back" href="../../../reference/generated/networkx.utils.decorators.preserve_random_state.html#networkx.utils.decorators.preserve_random_state">[docs]</a><span class="k">def</span> <span class="nf">preserve_random_state</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Decorator to preserve the numpy.random state during a function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    func : function</span>
+<span class="sd">        function around which to preserve the random state.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    wrapper : function</span>
+<span class="sd">        Function which wraps the input function by saving the state before</span>
+<span class="sd">        calling the function and restoring the function afterward.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decorate functions like this::</span>
+
+<span class="sd">        @preserve_random_state</span>
+<span class="sd">        def do_random_stuff(x, y):</span>
+<span class="sd">            return x + y * numpy.random.random()</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If numpy.random is not importable, the state is not saved or restored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="k">import</span> <span class="n">get_state</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">set_state</span>
+
+        <span class="nd">@contextmanager</span>
+        <span class="k">def</span> <span class="nf">save_random_state</span><span class="p">():</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">get_state</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">yield</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">set_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">save_random_state</span><span class="p">():</span>
+                <span class="n">seed</span><span class="p">(</span><span class="mi">1234567890</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">wrapper</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func</span></div>
+
+
+<div class="viewcode-block" id="random_state"><a class="viewcode-back" href="../../../reference/generated/networkx.utils.decorators.random_state.html#networkx.utils.decorators.random_state">[docs]</a><span class="k">def</span> <span class="nf">random_state</span><span class="p">(</span><span class="n">random_state_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to generate a numpy.random.RandomState instance.</span>
+
+<span class="sd">    Argument position `random_state_index` is processed by create_random_state.</span>
+<span class="sd">    The result is a numpy.random.RandomState instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    random_state_index : int</span>
+<span class="sd">        Location of the random_state argument in args that is to be used to</span>
+<span class="sd">        generate the numpy.random.RandomState instance. Even if the argument is</span>
+<span class="sd">        a named positional argument (with a default value), you must specify</span>
+<span class="sd">        its index as a positional argument.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    _random_state : function</span>
+<span class="sd">        Function whose random_state keyword argument is a RandomState instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decorate functions like this::</span>
+
+<span class="sd">       @np_random_state(0)</span>
+<span class="sd">       def random_float(random_state=None):</span>
+<span class="sd">           return random_state.rand()</span>
+
+<span class="sd">       @np_random_state(1)</span>
+<span class="sd">       def random_array(dims, random_state=1):</span>
+<span class="sd">           return random_state.rand(*dims)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    py_random_state</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@decorator</span>
+    <span class="k">def</span> <span class="nf">_random_state</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Parse the decorator arguments.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">random_state_arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">random_state_index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;random_state_index must be an integer&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;random_state_index is incorrect&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a numpy.random.RandomState instance</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">create_random_state</span><span class="p">(</span><span class="n">random_state_arg</span><span class="p">)</span>
+
+        <span class="c1"># args is a tuple, so we must convert to list before modifying it.</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">new_args</span><span class="p">[</span><span class="n">random_state_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_random_state</span></div>
+
+
+<span class="n">np_random_state</span> <span class="o">=</span> <span class="n">random_state</span>
+
+
+<span class="k">def</span> <span class="nf">py_random_state</span><span class="p">(</span><span class="n">random_state_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to generate a random.Random instance (or equiv).</span>
+
+<span class="sd">    Argument position `random_state_index` processed by create_py_random_state.</span>
+<span class="sd">    The result is either a random.Random instance, or numpy.random.RandomState</span>
+<span class="sd">    instance with additional attributes to mimic basic methods of Random.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    random_state_index : int</span>
+<span class="sd">        Location of the random_state argument in args that is to be used to</span>
+<span class="sd">        generate the numpy.random.RandomState instance. Even if the argument is</span>
+<span class="sd">        a named positional argument (with a default value), you must specify</span>
+<span class="sd">        its index as a positional argument.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    _random_state : function</span>
+<span class="sd">        Function whose random_state keyword argument is a RandomState instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decorate functions like this::</span>
+
+<span class="sd">       @py_random_state(0)</span>
+<span class="sd">       def random_float(random_state=None):</span>
+<span class="sd">           return random_state.rand()</span>
+
+<span class="sd">       @py_random_state(1)</span>
+<span class="sd">       def random_array(dims, random_state=1):</span>
+<span class="sd">           return random_state.rand(*dims)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    np_random_state</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@decorator</span>
+    <span class="k">def</span> <span class="nf">_random_state</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Parse the decorator arguments.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">random_state_arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="n">random_state_index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;random_state_index must be an integer&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;random_state_index is incorrect&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Create a numpy.random.RandomState instance</span>
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">create_py_random_state</span><span class="p">(</span><span class="n">random_state_arg</span><span class="p">)</span>
+
+        <span class="c1"># args is a tuple, so we must convert to list before modifying it.</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">new_args</span><span class="p">[</span><span class="n">random_state_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_state</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_random_state</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

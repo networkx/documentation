@@ -1,0 +1,639 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.flow.preflowpush &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.flow.preflowpush</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.flow.preflowpush</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Highest-label preflow-push algorithm for maximum flow problems.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;ysitu &lt;ysitu@users.noreply.github.com&gt;&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2014 ysitu &lt;ysitu@users.noreply.github.com&gt;</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1"># BSD license.</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">islice</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="c1">#from networkx.algorithms.flow.utils import *</span>
+<span class="kn">from</span> <span class="nn">...utils</span> <span class="k">import</span> <span class="n">arbitrary_element</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">build_residual_network</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">CurrentEdge</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">detect_unboundedness</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">GlobalRelabelThreshold</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">Level</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;preflow_push&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">preflow_push_impl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">global_relabel_freq</span><span class="p">,</span>
+                      <span class="n">value_only</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementation of the highest-label preflow-push algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;node </span><span class="si">%s</span><span class="s1"> not in graph&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;node </span><span class="si">%s</span><span class="s1"> not in graph&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">t</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;source and sink are the same node&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">global_relabel_freq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">global_relabel_freq</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">global_relabel_freq</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;global_relabel_freq must be nonnegative.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">residual</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">build_residual_network</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">residual</span>
+
+    <span class="n">detect_unboundedness</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="n">R_nodes</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">nodes</span>
+    <span class="n">R_pred</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">pred</span>
+    <span class="n">R_succ</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">succ</span>
+
+    <span class="c1"># Initialize/reset the residual network.</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">e</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">reverse_bfs</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform a reverse breadth-first search from src in the residual</span>
+<span class="sd">        network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">heights</span> <span class="o">=</span> <span class="p">{</span><span class="n">src</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="n">src</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+        <span class="k">while</span> <span class="n">q</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">height</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">heights</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]:</span>
+                    <span class="n">heights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+                    <span class="n">q</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">height</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">heights</span>
+
+    <span class="c1"># Initialize heights of the nodes.</span>
+    <span class="n">heights</span> <span class="o">=</span> <span class="n">reverse_bfs</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">heights</span><span class="p">:</span>
+        <span class="c1"># t is not reachable from s in the residual network. The maximum flow</span>
+        <span class="c1"># must be zero.</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">R</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+    <span class="c1"># max_height represents the height of the highest level below level n with</span>
+    <span class="c1"># at least one active node.</span>
+    <span class="n">max_height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">heights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">heights</span> <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">heights</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+
+    <span class="n">grt</span> <span class="o">=</span> <span class="n">GlobalRelabelThreshold</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">global_relabel_freq</span><span class="p">)</span>
+
+    <span class="c1"># Initialize heights and &#39;current edge&#39; data structures of the nodes.</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">heights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">heights</span> <span class="k">else</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;curr_edge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CurrentEdge</span><span class="p">(</span><span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">push</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">flow</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Push flow units of flow from u to v.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+        <span class="n">R_succ</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+
+    <span class="c1"># The maximum flow must be nonzero now. Initialize the preflow by</span>
+    <span class="c1"># saturating all edges emanating from s.</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">flow</span> <span class="o">=</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">flow</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">push</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">flow</span><span class="p">)</span>
+
+    <span class="c1"># Partition nodes into levels.</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="p">[</span><span class="n">Level</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">t</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[</span><span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">level</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Move a node from the inactive set to the active set of its level.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">t</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[</span><span class="n">R_nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">level</span><span class="o">.</span><span class="n">inactive</span><span class="p">:</span>
+                <span class="n">level</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">relabel</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Relabel a node to create an admissible edge.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">grt</span><span class="o">.</span><span class="n">add_work</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">R_nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                   <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">discharge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">is_phase1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Discharge a node until it becomes inactive or, during phase 1 (see</span>
+<span class="sd">        below), its height reaches at least n. The node is known to have the</span>
+<span class="sd">        largest height among active nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
+        <span class="n">curr_edge</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;curr_edge&#39;</span><span class="p">]</span>
+        <span class="c1"># next_height represents the next height to examine after discharging</span>
+        <span class="c1"># the current node. During phase 1, it is capped to below n.</span>
+        <span class="n">next_height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="n">levels</span><span class="p">[</span><span class="n">height</span><span class="p">]</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="o">=</span> <span class="n">curr_edge</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">height</span> <span class="o">==</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">and</span>
+                    <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]):</span>
+                <span class="n">flow</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">],</span>
+                           <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">])</span>
+                <span class="n">push</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">flow</span><span class="p">)</span>
+                <span class="n">activate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># The node has become inactive.</span>
+                    <span class="n">levels</span><span class="p">[</span><span class="n">height</span><span class="p">]</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                    <span class="k">break</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">curr_edge</span><span class="o">.</span><span class="n">move_to_next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="c1"># We have run off the end of the adjacency list, and there can</span>
+                <span class="c1"># be no more admissible edges. Relabel the node to create one.</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="n">relabel</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">is_phase1</span> <span class="ow">and</span> <span class="n">height</span> <span class="o">&gt;=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># Although the node is still active, with a height at least</span>
+                    <span class="c1"># n - 1, it is now known to be on the s side of the minimum</span>
+                    <span class="c1"># s-t cut. Stop processing it until phase 2.</span>
+                    <span class="n">levels</span><span class="p">[</span><span class="n">height</span><span class="p">]</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="c1"># The first relabel operation after global relabeling may not</span>
+                <span class="c1"># increase the height of the node since the &#39;current edge&#39; data</span>
+                <span class="c1"># structure is not rewound. Use height instead of (height - 1)</span>
+                <span class="c1"># in case other active nodes at the same level are missed.</span>
+                <span class="n">next_height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="k">return</span> <span class="n">next_height</span>
+
+    <span class="k">def</span> <span class="nf">gap_heuristic</span><span class="p">(</span><span class="n">height</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the gap heuristic.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Move all nodes at levels (height + 1) to max_height to level n + 1.</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">islice</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="n">height</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_height</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+                <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">level</span><span class="o">.</span><span class="n">inactive</span><span class="p">:</span>
+                <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">levels</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="p">)</span>
+            <span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="n">levels</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">inactive</span><span class="p">)</span>
+            <span class="n">level</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">global_relabel</span><span class="p">(</span><span class="n">from_sink</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the global relabeling heuristic.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">from_sink</span> <span class="k">else</span> <span class="n">s</span>
+        <span class="n">heights</span> <span class="o">=</span> <span class="n">reverse_bfs</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">from_sink</span><span class="p">:</span>
+            <span class="c1"># s must be reachable from t. Remove t explicitly.</span>
+            <span class="k">del</span> <span class="n">heights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="n">max_height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">heights</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">from_sink</span><span class="p">:</span>
+            <span class="c1"># Also mark nodes from which t is unreachable for relabeling. This</span>
+            <span class="c1"># serves the same purpose as the gap heuristic.</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">heights</span> <span class="ow">and</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="n">heights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Shift the computed heights because the height of s is n.</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">heights</span><span class="p">:</span>
+                <span class="n">heights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">+=</span> <span class="n">n</span>
+            <span class="n">max_height</span> <span class="o">+=</span> <span class="n">n</span>
+        <span class="k">del</span> <span class="n">heights</span><span class="p">[</span><span class="n">src</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">new_height</span> <span class="ow">in</span> <span class="n">heights</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">old_height</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">new_height</span> <span class="o">!=</span> <span class="n">old_height</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">[</span><span class="n">old_height</span><span class="p">]</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+                    <span class="n">levels</span><span class="p">[</span><span class="n">old_height</span><span class="p">]</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                    <span class="n">levels</span><span class="p">[</span><span class="n">new_height</span><span class="p">]</span><span class="o">.</span><span class="n">active</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">levels</span><span class="p">[</span><span class="n">old_height</span><span class="p">]</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                    <span class="n">levels</span><span class="p">[</span><span class="n">new_height</span><span class="p">]</span><span class="o">.</span><span class="n">inactive</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_height</span>
+        <span class="k">return</span> <span class="n">max_height</span>
+
+    <span class="c1"># Phase 1: Find the maximum preflow by pushing as much flow as possible to</span>
+    <span class="c1"># t.</span>
+
+    <span class="n">height</span> <span class="o">=</span> <span class="n">max_height</span>
+    <span class="k">while</span> <span class="n">height</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Discharge active nodes in the current level.</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[</span><span class="n">height</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+                <span class="c1"># All active nodes in the current level have been discharged.</span>
+                <span class="c1"># Move to the next lower level.</span>
+                <span class="n">height</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="c1"># Record the old height and level for the gap heuristic.</span>
+            <span class="n">old_height</span> <span class="o">=</span> <span class="n">height</span>
+            <span class="n">old_level</span> <span class="o">=</span> <span class="n">level</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="n">discharge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">grt</span><span class="o">.</span><span class="n">is_reached</span><span class="p">():</span>
+                <span class="c1"># Global relabeling heuristic: Recompute the exact heights of</span>
+                <span class="c1"># all nodes.</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="n">global_relabel</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">max_height</span> <span class="o">=</span> <span class="n">height</span>
+                <span class="n">grt</span><span class="o">.</span><span class="n">clear_work</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">old_level</span><span class="o">.</span><span class="n">active</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">old_level</span><span class="o">.</span><span class="n">inactive</span><span class="p">:</span>
+                <span class="c1"># Gap heuristic: If the level at old_height is empty (a &#39;gap&#39;),</span>
+                <span class="c1"># a minimum cut has been identified. All nodes with heights</span>
+                <span class="c1"># above old_height can have their heights set to n + 1 and not</span>
+                <span class="c1"># be further processed before a maximum preflow is found.</span>
+                <span class="n">gap_heuristic</span><span class="p">(</span><span class="n">old_height</span><span class="p">)</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="n">old_height</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">max_height</span> <span class="o">=</span> <span class="n">height</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Update the height of the highest level with at least one</span>
+                <span class="c1"># active node.</span>
+                <span class="n">max_height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_height</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+    <span class="c1"># A maximum preflow has been found. The excess at t is the maximum flow</span>
+    <span class="c1"># value.</span>
+    <span class="k">if</span> <span class="n">value_only</span><span class="p">:</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">R</span>
+
+    <span class="c1"># Phase 2: Convert the maximum preflow into a maximum flow by returning the</span>
+    <span class="c1"># excess to s.</span>
+
+    <span class="c1"># Relabel all nodes so that they have accurate heights.</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">global_relabel</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">grt</span><span class="o">.</span><span class="n">clear_work</span><span class="p">()</span>
+
+    <span class="c1"># Continue to discharge the active nodes.</span>
+    <span class="k">while</span> <span class="n">height</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="c1"># Discharge active nodes in the current level.</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">levels</span><span class="p">[</span><span class="n">height</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+                <span class="c1"># All active nodes in the current level have been discharged.</span>
+                <span class="c1"># Move to the next lower level.</span>
+                <span class="n">height</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">break</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">arbitrary_element</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">active</span><span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="n">discharge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">grt</span><span class="o">.</span><span class="n">is_reached</span><span class="p">():</span>
+                <span class="c1"># Global relabeling heuristic.</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="n">global_relabel</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">grt</span><span class="o">.</span><span class="n">clear_work</span><span class="p">()</span>
+
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="s1">&#39;excess&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">R</span>
+
+
+<div class="viewcode-block" id="preflow_push"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.preflow_push.html#networkx.algorithms.flow.preflow_push">[docs]</a><span class="k">def</span> <span class="nf">preflow_push</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span> <span class="n">residual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">global_relabel_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">value_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Find a maximum single-commodity flow using the highest-label</span>
+<span class="sd">    preflow-push algorithm.</span>
+
+<span class="sd">    This function returns the residual network resulting after computing</span>
+<span class="sd">    the maximum flow. See below for details about the conventions</span>
+<span class="sd">    NetworkX uses for defining residual networks.</span>
+
+<span class="sd">    This algorithm has a running time of $O(n^2 \sqrt{m})$ for $n$ nodes and</span>
+<span class="sd">    $m$ edges.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Edges of the graph are expected to have an attribute called</span>
+<span class="sd">        &#39;capacity&#39;. If this attribute is not present, the edge is</span>
+<span class="sd">        considered to have infinite capacity.</span>
+
+<span class="sd">    s : node</span>
+<span class="sd">        Source node for the flow.</span>
+
+<span class="sd">    t : node</span>
+<span class="sd">        Sink node for the flow.</span>
+
+<span class="sd">    capacity : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute capacity</span>
+<span class="sd">        that indicates how much flow the edge can support. If this</span>
+<span class="sd">        attribute is not present, the edge is considered to have</span>
+<span class="sd">        infinite capacity. Default value: &#39;capacity&#39;.</span>
+
+<span class="sd">    residual : NetworkX graph</span>
+<span class="sd">        Residual network on which the algorithm is to be executed. If None, a</span>
+<span class="sd">        new residual network is created. Default value: None.</span>
+
+<span class="sd">    global_relabel_freq : integer, float</span>
+<span class="sd">        Relative frequency of applying the global relabeling heuristic to speed</span>
+<span class="sd">        up the algorithm. If it is None, the heuristic is disabled. Default</span>
+<span class="sd">        value: 1.</span>
+
+<span class="sd">    value_only : bool</span>
+<span class="sd">        If False, compute a maximum flow; otherwise, compute a maximum preflow</span>
+<span class="sd">        which is enough for computing the maximum flow value. Default value:</span>
+<span class="sd">        False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    R : NetworkX DiGraph</span>
+<span class="sd">        Residual network after computing the maximum flow.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support MultiGraph and MultiDiGraph. If</span>
+<span class="sd">        the input graph is an instance of one of these two classes, a</span>
+<span class="sd">        NetworkXError is raised.</span>
+
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        If the graph has a path of infinite capacity, the value of a</span>
+<span class="sd">        feasible flow on the graph is unbounded above and the function</span>
+<span class="sd">        raises a NetworkXUnbounded.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :meth:`maximum_flow`</span>
+<span class="sd">    :meth:`minimum_cut`</span>
+<span class="sd">    :meth:`edmonds_karp`</span>
+<span class="sd">    :meth:`shortest_augmenting_path`</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The residual network :samp:`R` from an input graph :samp:`G` has the</span>
+<span class="sd">    same nodes as :samp:`G`. :samp:`R` is a DiGraph that contains a pair</span>
+<span class="sd">    of edges :samp:`(u, v)` and :samp:`(v, u)` iff :samp:`(u, v)` is not a</span>
+<span class="sd">    self-loop, and at least one of :samp:`(u, v)` and :samp:`(v, u)` exists</span>
+<span class="sd">    in :samp:`G`. For each node :samp:`u` in :samp:`R`,</span>
+<span class="sd">    :samp:`R.nodes[u][&#39;excess&#39;]` represents the difference between flow into</span>
+<span class="sd">    :samp:`u` and flow out of :samp:`u`.</span>
+
+<span class="sd">    For each edge :samp:`(u, v)` in :samp:`R`, :samp:`R[u][v][&#39;capacity&#39;]`</span>
+<span class="sd">    is equal to the capacity of :samp:`(u, v)` in :samp:`G` if it exists</span>
+<span class="sd">    in :samp:`G` or zero otherwise. If the capacity is infinite,</span>
+<span class="sd">    :samp:`R[u][v][&#39;capacity&#39;]` will have a high arbitrary finite value</span>
+<span class="sd">    that does not affect the solution of the problem. This value is stored in</span>
+<span class="sd">    :samp:`R.graph[&#39;inf&#39;]`. For each edge :samp:`(u, v)` in :samp:`R`,</span>
+<span class="sd">    :samp:`R[u][v][&#39;flow&#39;]` represents the flow function of :samp:`(u, v)` and</span>
+<span class="sd">    satisfies :samp:`R[u][v][&#39;flow&#39;] == -R[v][u][&#39;flow&#39;]`.</span>
+
+<span class="sd">    The flow value, defined as the total flow into :samp:`t`, the sink, is</span>
+<span class="sd">    stored in :samp:`R.graph[&#39;flow_value&#39;]`. Reachability to :samp:`t` using</span>
+<span class="sd">    only edges :samp:`(u, v)` such that</span>
+<span class="sd">    :samp:`R[u][v][&#39;flow&#39;] &lt; R[u][v][&#39;capacity&#39;]` induces a minimum</span>
+<span class="sd">    :samp:`s`-:samp:`t` cut.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms.flow import preflow_push</span>
+
+<span class="sd">    The functions that implement flow algorithms and output a residual</span>
+<span class="sd">    network, such as this one, are not imported to the base NetworkX</span>
+<span class="sd">    namespace, so you have to explicitly import them from the flow package.</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;x&#39;,&#39;a&#39;, capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;x&#39;,&#39;b&#39;, capacity=1.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;a&#39;,&#39;c&#39;, capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;b&#39;,&#39;c&#39;, capacity=5.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;b&#39;,&#39;d&#39;, capacity=4.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;d&#39;,&#39;e&#39;, capacity=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;c&#39;,&#39;y&#39;, capacity=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;e&#39;,&#39;y&#39;, capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; R = preflow_push(G, &#39;x&#39;, &#39;y&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; flow_value = nx.maximum_flow_value(G, &#39;x&#39;, &#39;y&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == R.graph[&#39;flow_value&#39;]</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; # preflow_push also stores the maximum flow value</span>
+<span class="sd">    &gt;&gt;&gt; # in the excess attribute of the sink node t</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == R.nodes[&#39;y&#39;][&#39;excess&#39;]</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; # For some problems, you might only want to compute a</span>
+<span class="sd">    &gt;&gt;&gt; # maximum preflow.</span>
+<span class="sd">    &gt;&gt;&gt; R = preflow_push(G, &#39;x&#39;, &#39;y&#39;, value_only=True)</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == R.graph[&#39;flow_value&#39;]</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == R.nodes[&#39;y&#39;][&#39;excess&#39;]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">preflow_push_impl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">global_relabel_freq</span><span class="p">,</span>
+                          <span class="n">value_only</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;algorithm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;preflow_push&#39;</span>
+    <span class="k">return</span> <span class="n">R</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

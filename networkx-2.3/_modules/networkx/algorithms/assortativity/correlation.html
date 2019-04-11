@@ -1,0 +1,510 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.assortativity.correlation &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.assortativity.correlation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.assortativity.correlation</h1><div class="highlight"><pre>
+<span></span><span class="c1">#-*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Node assortativity coefficients and correlation measures.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.assortativity.mixing</span> <span class="k">import</span> <span class="n">degree_mixing_matrix</span><span class="p">,</span> \
+    <span class="n">attribute_mixing_matrix</span><span class="p">,</span> <span class="n">numeric_mixing_matrix</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.assortativity.pairs</span> <span class="k">import</span> <span class="n">node_degree_xy</span><span class="p">,</span> \
+    <span class="n">node_attribute_xy</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Aric Hagberg &lt;aric.hagberg@gmail.com&gt;&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;Oleguer Sagarra &lt;oleguer.sagarra@gmail.com&gt;&#39;</span><span class="p">])</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;degree_pearson_correlation_coefficient&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;degree_assortativity_coefficient&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;attribute_assortativity_coefficient&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;numeric_assortativity_coefficient&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="degree_assortativity_coefficient"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.assortativity.degree_assortativity_coefficient.html#networkx.algorithms.assortativity.degree_assortativity_coefficient">[docs]</a><span class="k">def</span> <span class="nf">degree_assortativity_coefficient</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                     <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute degree assortativity of graph.</span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the node degree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    x: string (&#39;in&#39;,&#39;out&#39;)</span>
+<span class="sd">       The degree type for source node (directed graphs only).</span>
+
+<span class="sd">    y: string (&#39;in&#39;,&#39;out&#39;)</span>
+<span class="sd">       The degree type for target node (directed graphs only).</span>
+
+<span class="sd">    weight: string or None, optional (default=None)</span>
+<span class="sd">       The edge attribute that holds the numerical value used </span>
+<span class="sd">       as a weight.  If None, then each edge has weight 1.</span>
+<span class="sd">       The degree is the sum of the edge weights adjacent to the node.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute degree assortativity only for nodes in container. </span>
+<span class="sd">        The default is all nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : float</span>
+<span class="sd">       Assortativity of graph by degree.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; r=nx.degree_assortativity_coefficient(G)</span>
+<span class="sd">    &gt;&gt;&gt; print(&quot;%3.1f&quot;%r)</span>
+<span class="sd">    -0.5</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    attribute_assortativity_coefficient</span>
+<span class="sd">    numeric_assortativity_coefficient</span>
+<span class="sd">    neighbor_connectivity</span>
+<span class="sd">    degree_mixing_dict</span>
+<span class="sd">    degree_mixing_matrix</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (21) in Ref. [1]_ , where e is the joint</span>
+<span class="sd">    probability distribution (mixing matrix) of the degrees.  If G is</span>
+<span class="sd">    directed than the matrix e is the joint probability of the </span>
+<span class="sd">    user-specified degree type for the source and target.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks,</span>
+<span class="sd">       Physical Review E, 67 026126, 2003</span>
+<span class="sd">    .. [2] Foster, J.G., Foster, D.V., Grassberger, P. &amp; Paczuski, M. </span>
+<span class="sd">       Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">degree_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numeric_ac</span><span class="p">(</span><span class="n">M</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="degree_pearson_correlation_coefficient"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.assortativity.degree_pearson_correlation_coefficient.html#networkx.algorithms.assortativity.degree_pearson_correlation_coefficient">[docs]</a><span class="k">def</span> <span class="nf">degree_pearson_correlation_coefficient</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;in&#39;</span><span class="p">,</span>
+                                           <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute degree assortativity of graph. </span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the node degree.</span>
+
+<span class="sd">    This is the same as degree_assortativity_coefficient but uses the </span>
+<span class="sd">    potentially faster scipy.stats.pearsonr function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    x: string (&#39;in&#39;,&#39;out&#39;)</span>
+<span class="sd">       The degree type for source node (directed graphs only).</span>
+
+<span class="sd">    y: string (&#39;in&#39;,&#39;out&#39;)</span>
+<span class="sd">       The degree type for target node (directed graphs only).</span>
+
+<span class="sd">    weight: string or None, optional (default=None)</span>
+<span class="sd">       The edge attribute that holds the numerical value used </span>
+<span class="sd">       as a weight.  If None, then each edge has weight 1.</span>
+<span class="sd">       The degree is the sum of the edge weights adjacent to the node.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute pearson correlation of degrees only for specified nodes.</span>
+<span class="sd">        The default is all nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r : float</span>
+<span class="sd">       Assortativity of graph by degree.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; r=nx.degree_pearson_correlation_coefficient(G) </span>
+<span class="sd">    &gt;&gt;&gt; print(&quot;%3.1f&quot;%r)</span>
+<span class="sd">    -0.5</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This calls scipy.stats.pearsonr.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks</span>
+<span class="sd">           Physical Review E, 67 026126, 2003</span>
+<span class="sd">    .. [2] Foster, J.G., Foster, D.V., Grassberger, P. &amp; Paczuski, M. </span>
+<span class="sd">       Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">stats</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;Assortativity requires SciPy: http://scipy.org/ &quot;</span><span class="p">)</span>
+    <span class="n">xy</span> <span class="o">=</span> <span class="n">node_degree_xy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">xy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="attribute_assortativity_coefficient"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.assortativity.attribute_assortativity_coefficient.html#networkx.algorithms.assortativity.attribute_assortativity_coefficient">[docs]</a><span class="k">def</span> <span class="nf">attribute_assortativity_coefficient</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute assortativity for node attributes.</span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the given attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">        Node attribute key</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute attribute assortativity for nodes in container. </span>
+<span class="sd">        The default is all nodes. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r: float</span>
+<span class="sd">       Assortativity of graph for given attribute</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([0,1],color=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([2,3],color=&#39;blue&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(0,1),(2,3)])</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.attribute_assortativity_coefficient(G,&#39;color&#39;))</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (2) in Ref. [1]_ , trace(M)-sum(M))/(1-sum(M),</span>
+<span class="sd">    where M is the joint probability distribution (mixing matrix)</span>
+<span class="sd">    of the specified attribute.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks,</span>
+<span class="sd">       Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">attribute_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">attribute_ac</span><span class="p">(</span><span class="n">M</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="numeric_assortativity_coefficient"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.assortativity.numeric_assortativity_coefficient.html#networkx.algorithms.assortativity.numeric_assortativity_coefficient">[docs]</a><span class="k">def</span> <span class="nf">numeric_assortativity_coefficient</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute assortativity for numerical node attributes.</span>
+
+<span class="sd">    Assortativity measures the similarity of connections</span>
+<span class="sd">    in the graph with respect to the given numeric attribute.</span>
+<span class="sd">    The numeric attribute must be an integer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    attribute : string </span>
+<span class="sd">        Node attribute key.  The corresponding attribute value must be an</span>
+<span class="sd">        integer.</span>
+
+<span class="sd">    nodes: list or iterable (optional)</span>
+<span class="sd">        Compute numeric assortativity only for attributes of nodes in </span>
+<span class="sd">        container. The default is all nodes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    r: float</span>
+<span class="sd">       Assortativity of graph for given attribute</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([0,1],size=2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([2,3],size=3)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(0,1),(2,3)])</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.numeric_assortativity_coefficient(G,&#39;size&#39;))</span>
+<span class="sd">    1.0</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (21) in Ref. [1]_ , for the mixing matrix of </span>
+<span class="sd">    of the specified attribute.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks</span>
+<span class="sd">           Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">numeric_mixing_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numeric_ac</span><span class="p">(</span><span class="n">a</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">attribute_ac</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute assortativity for attribute matrix M.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    M : numpy array or matrix</span>
+<span class="sd">        Attribute mixing matrix.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This computes Eq. (2) in Ref. [1]_ , (trace(e)-sum(e))/(1-sum(e)),</span>
+<span class="sd">    where e is the joint probability distribution (mixing matrix)</span>
+<span class="sd">    of the specified attribute.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M. E. J. Newman, Mixing patterns in networks,</span>
+<span class="sd">       Physical Review E, 67 026126, 2003</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;attribute_assortativity requires NumPy: http://scipy.org/ &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">M</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">numeric_ac</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="c1"># M is a numpy matrix or array</span>
+    <span class="c1"># numeric assortativity coefficient, pearsonr</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;numeric_assortativity requires &#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;NumPy: http://scipy.org/&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># nx=ny</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">vara</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="p">((</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">varb</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="p">((</span><span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">xy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">ab</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">xy</span> <span class="o">*</span> <span class="p">(</span><span class="n">M</span> <span class="o">-</span> <span class="n">ab</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vara</span> <span class="o">*</span> <span class="n">varb</span><span class="p">)</span>
+
+
+<span class="c1"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;NumPy not available&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;SciPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

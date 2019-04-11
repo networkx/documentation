@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.link_analysis.hits_alg &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.link_analysis.hits_alg</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.link_analysis.hits_alg</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Hubs and authorities analysis of graph structure.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#    Copyright (C) 2008-2012 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#    NetworkX:http://networkx.github.io/</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Aric Hagberg (hagberg@lanl.gov)&quot;&quot;&quot;</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hits&#39;</span><span class="p">,</span> <span class="s1">&#39;hits_numpy&#39;</span><span class="p">,</span> <span class="s1">&#39;hits_scipy&#39;</span><span class="p">,</span> <span class="s1">&#39;authority_matrix&#39;</span><span class="p">,</span> <span class="s1">&#39;hub_matrix&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="hits"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.link_analysis.hits_alg.hits.html#networkx.algorithms.link_analysis.hits_alg.hits">[docs]</a><span class="k">def</span> <span class="nf">hits</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns HITS hubs and authorities values for nodes.</span>
+
+<span class="sd">    The HITS algorithm computes two numbers for a node.</span>
+<span class="sd">    Authorities estimates the node value based on the incoming links.</span>
+<span class="sd">    Hubs estimates the node value based on outgoing links.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A NetworkX graph</span>
+
+<span class="sd">    max_iter : integer, optional</span>
+<span class="sd">      Maximum number of iterations in power method.</span>
+
+<span class="sd">    tol : float, optional</span>
+<span class="sd">      Error tolerance used to check convergence in power method iteration.</span>
+
+<span class="sd">    nstart : dictionary, optional</span>
+<span class="sd">      Starting value of each node for power method iteration.</span>
+
+<span class="sd">    normalized : bool (default=True)</span>
+<span class="sd">       Normalize results by the sum of all of the values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (hubs,authorities) : two-tuple of dictionaries</span>
+<span class="sd">       Two dictionaries keyed by node containing the hub and authority</span>
+<span class="sd">       values.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    PowerIterationFailedConvergence</span>
+<span class="sd">        If the algorithm fails to converge to the specified tolerance</span>
+<span class="sd">        within the specified number of iterations of the power iteration</span>
+<span class="sd">        method.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; h,a=nx.hits(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The eigenvector calculation is done by the power iteration method</span>
+<span class="sd">    and has no guarantee of convergence.  The iteration will stop</span>
+<span class="sd">    after max_iter iterations or an error tolerance of</span>
+<span class="sd">    number_of_nodes(G)*tol has been reached.</span>
+
+<span class="sd">    The HITS algorithm was designed for directed graphs but this</span>
+<span class="sd">    algorithm does not check if the input graph is directed and will</span>
+<span class="sd">    execute on undirected graphs.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A. Langville and C. Meyer,</span>
+<span class="sd">       &quot;A survey of eigenvector methods of web information retrieval.&quot;</span>
+<span class="sd">       http://citeseer.ist.psu.edu/713792.html</span>
+<span class="sd">    .. [2] Jon Kleinberg,</span>
+<span class="sd">       Authoritative sources in a hyperlinked environment</span>
+<span class="sd">       Journal of the ACM 46 (5): 604-32, 1999.</span>
+<span class="sd">       doi:10.1145/324133.324140.</span>
+<span class="sd">       http://www.cs.cornell.edu/home/kleinber/auth.pdf.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;hits() not defined for graphs with multiedges.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="c1"># choose fixed starting vector if not given</span>
+    <span class="k">if</span> <span class="n">nstart</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">nstart</span>
+        <span class="c1"># normalize starting vector</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>  <span class="c1"># power iteration: make up to max_iter iterations</span>
+        <span class="n">hlast</span> <span class="o">=</span> <span class="n">h</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">hlast</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">hlast</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># this &quot;matrix multiply&quot; looks odd because it is</span>
+        <span class="c1"># doing a left multiply a^T=hlast^T*G</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+                <span class="n">a</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hlast</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># now multiply h=Ga</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+                <span class="n">h</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">+=</span> <span class="n">a</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span> <span class="o">*</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># normalize vector</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+        <span class="c1"># normalize vector</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+        <span class="c1"># check convergence, l1 norm</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">-</span> <span class="n">hlast</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">h</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">PowerIterationFailedConvergence</span><span class="p">(</span><span class="n">max_iter</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*=</span> <span class="n">s</span>
+    <span class="k">return</span> <span class="n">h</span><span class="p">,</span> <span class="n">a</span></div>
+
+
+<div class="viewcode-block" id="authority_matrix"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.link_analysis.hits_alg.authority_matrix.html#networkx.algorithms.link_analysis.hits_alg.authority_matrix">[docs]</a><span class="k">def</span> <span class="nf">authority_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the HITS authority matrix.&quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">M</span></div>
+
+
+<div class="viewcode-block" id="hub_matrix"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.link_analysis.hits_alg.hub_matrix.html#networkx.algorithms.link_analysis.hits_alg.hub_matrix">[docs]</a><span class="k">def</span> <span class="nf">hub_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the HITS hub matrix.&quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">M</span> <span class="o">*</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="hits_numpy"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.link_analysis.hits_alg.hits_numpy.html#networkx.algorithms.link_analysis.hits_alg.hits_numpy">[docs]</a><span class="k">def</span> <span class="nf">hits_numpy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns HITS hubs and authorities values for nodes.</span>
+
+<span class="sd">    The HITS algorithm computes two numbers for a node.</span>
+<span class="sd">    Authorities estimates the node value based on the incoming links.</span>
+<span class="sd">    Hubs estimates the node value based on outgoing links.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A NetworkX graph</span>
+
+<span class="sd">    normalized : bool (default=True)</span>
+<span class="sd">       Normalize results by the sum of all of the values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (hubs,authorities) : two-tuple of dictionaries</span>
+<span class="sd">       Two dictionaries keyed by node containing the hub and authority</span>
+<span class="sd">       values.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; h,a=nx.hits(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The eigenvector calculation uses NumPy&#39;s interface to LAPACK.</span>
+
+<span class="sd">    The HITS algorithm was designed for directed graphs but this</span>
+<span class="sd">    algorithm does not check if the input graph is directed and will</span>
+<span class="sd">    execute on undirected graphs.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A. Langville and C. Meyer,</span>
+<span class="sd">       &quot;A survey of eigenvector methods of web information retrieval.&quot;</span>
+<span class="sd">       http://citeseer.ist.psu.edu/713792.html</span>
+<span class="sd">    .. [2] Jon Kleinberg,</span>
+<span class="sd">       Authoritative sources in a hyperlinked environment</span>
+<span class="sd">       Journal of the ACM 46 (5): 604-32, 1999.</span>
+<span class="sd">       doi:10.1145/324133.324140.</span>
+<span class="sd">       http://www.cs.cornell.edu/home/kleinber/auth.pdf.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;hits_numpy() requires NumPy: http://scipy.org/&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">hub_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="n">e</span><span class="p">,</span> <span class="n">ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># index of maximum eigenvalue</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ev</span><span class="p">[:,</span> <span class="n">m</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">authority_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="n">e</span><span class="p">,</span> <span class="n">ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># index of maximum eigenvalue</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ev</span><span class="p">[:,</span> <span class="n">m</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="n">h</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="n">h</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">hubs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">h</span><span class="p">)))</span>
+    <span class="n">authorities</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">hubs</span><span class="p">,</span> <span class="n">authorities</span></div>
+
+
+<div class="viewcode-block" id="hits_scipy"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.link_analysis.hits_alg.hits_scipy.html#networkx.algorithms.link_analysis.hits_alg.hits_scipy">[docs]</a><span class="k">def</span> <span class="nf">hits_scipy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns HITS hubs and authorities values for nodes.</span>
+
+<span class="sd">    The HITS algorithm computes two numbers for a node.</span>
+<span class="sd">    Authorities estimates the node value based on the incoming links.</span>
+<span class="sd">    Hubs estimates the node value based on outgoing links.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A NetworkX graph</span>
+
+<span class="sd">    max_iter : integer, optional</span>
+<span class="sd">      Maximum number of iterations in power method.</span>
+
+<span class="sd">    tol : float, optional</span>
+<span class="sd">      Error tolerance used to check convergence in power method iteration.</span>
+
+<span class="sd">    nstart : dictionary, optional</span>
+<span class="sd">      Starting value of each node for power method iteration.</span>
+
+<span class="sd">    normalized : bool (default=True)</span>
+<span class="sd">       Normalize results by the sum of all of the values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (hubs,authorities) : two-tuple of dictionaries</span>
+<span class="sd">       Two dictionaries keyed by node containing the hub and authority</span>
+<span class="sd">       values.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G=nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; h,a=nx.hits(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This implementation uses SciPy sparse matrices.</span>
+
+<span class="sd">    The eigenvector calculation is done by the power iteration method</span>
+<span class="sd">    and has no guarantee of convergence.  The iteration will stop</span>
+<span class="sd">    after max_iter iterations or an error tolerance of</span>
+<span class="sd">    number_of_nodes(G)*tol has been reached.</span>
+
+<span class="sd">    The HITS algorithm was designed for directed graphs but this</span>
+<span class="sd">    algorithm does not check if the input graph is directed and will</span>
+<span class="sd">    execute on undirected graphs.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    PowerIterationFailedConvergence</span>
+<span class="sd">        If the algorithm fails to converge to the specified tolerance</span>
+<span class="sd">        within the specified number of iterations of the power iteration</span>
+<span class="sd">        method.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A. Langville and C. Meyer,</span>
+<span class="sd">       &quot;A survey of eigenvector methods of web information retrieval.&quot;</span>
+<span class="sd">       http://citeseer.ist.psu.edu/713792.html</span>
+<span class="sd">    .. [2] Jon Kleinberg,</span>
+<span class="sd">       Authoritative sources in a hyperlinked environment</span>
+<span class="sd">       Journal of the ACM 46 (5): 604-632, 1999.</span>
+<span class="sd">       doi:10.1145/324133.324140.</span>
+<span class="sd">       http://www.cs.cornell.edu/home/kleinber/auth.pdf.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy.sparse</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;hits_scipy() requires SciPy: http://scipy.org/&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># should be square</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">M</span>  <span class="c1"># authority matrix</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">n</span>  <span class="c1"># initial guess</span>
+    <span class="c1"># power iteration on authority matrix</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">xlast</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">A</span> <span class="o">*</span> <span class="n">x</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="c1"># check convergence, l1 norm</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">xlast</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">max_iter</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">PowerIterationFailedConvergence</span><span class="p">(</span><span class="n">max_iter</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="c1"># h=M*a</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="n">h</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">hubs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">h</span><span class="p">)))</span>
+    <span class="n">authorities</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">hubs</span><span class="p">,</span> <span class="n">authorities</span></div>
+
+<span class="c1"># fixture for nose tests</span>
+
+
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;NumPy not available&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;SciPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

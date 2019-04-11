@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.connectivity.kcomponents &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.connectivity.kcomponents</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.connectivity.kcomponents</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Moody and White algorithm for k-components</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">not_implemented_for</span>
+<span class="c1"># Define the default maximum flow function.</span>
+<span class="kn">from</span> <span class="nn">networkx.algorithms.flow</span> <span class="k">import</span> <span class="n">edmonds_karp</span>
+<span class="n">default_flow_func</span> <span class="o">=</span> <span class="n">edmonds_karp</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;Jordi Torrents &lt;jtorrents@milnou.net&gt;&#39;</span><span class="p">])</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;k_components&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="k_components"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.connectivity.kcomponents.k_components.html#networkx.algorithms.connectivity.kcomponents.k_components">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">k_components</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the k-component structure of a graph G.</span>
+
+<span class="sd">    A `k`-component is a maximal subgraph of a graph G that has, at least,</span>
+<span class="sd">    node connectivity `k`: we need to remove at least `k` nodes to break it</span>
+<span class="sd">    into more components. `k`-components have an inherent hierarchical</span>
+<span class="sd">    structure because they are nested in terms of connectivity: a connected</span>
+<span class="sd">    graph can contain several 2-components, each of which can contain</span>
+<span class="sd">    one or more 3-components, and so forth.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    flow_func : function</span>
+<span class="sd">        Function to perform the underlying flow computations. Default value</span>
+<span class="sd">        :meth:`edmonds_karp`. This function performs better in sparse graphs with</span>
+<span class="sd">        right tailed degree distributions. :meth:`shortest_augmenting_path` will</span>
+<span class="sd">        perform better in denser graphs.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    k_components : dict</span>
+<span class="sd">        Dictionary with all connectivity levels `k` in the input Graph as keys</span>
+<span class="sd">        and a list of sets of nodes that form a k-component of level `k` as</span>
+<span class="sd">        values.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented:</span>
+<span class="sd">        If the input graph is directed.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # Petersen graph has 10 nodes and it is triconnected, thus all</span>
+<span class="sd">    &gt;&gt;&gt; # nodes are in a single component on all three connectivity levels</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.petersen_graph()</span>
+<span class="sd">    &gt;&gt;&gt; k_components = nx.k_components(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Moody and White [1]_ (appendix A) provide an algorithm for identifying</span>
+<span class="sd">    k-components in a graph, which is based on Kanevsky&#39;s algorithm [2]_</span>
+<span class="sd">    for finding all minimum-size node cut-sets of a graph (implemented in</span>
+<span class="sd">    :meth:`all_node_cuts` function):</span>
+
+<span class="sd">        1. Compute node connectivity, k, of the input graph G.</span>
+
+<span class="sd">        2. Identify all k-cutsets at the current level of connectivity using</span>
+<span class="sd">           Kanevsky&#39;s algorithm.</span>
+
+<span class="sd">        3. Generate new graph components based on the removal of</span>
+<span class="sd">           these cutsets. Nodes in a cutset belong to both sides</span>
+<span class="sd">           of the induced cut.</span>
+
+<span class="sd">        4. If the graph is neither complete nor trivial, return to 1;</span>
+<span class="sd">           else end.</span>
+
+<span class="sd">    This implementation also uses some heuristics (see [3]_ for details)</span>
+<span class="sd">    to speed up the computation.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    node_connectivity</span>
+<span class="sd">    all_node_cuts</span>
+<span class="sd">    biconnected_components : special case of this function when k=2</span>
+<span class="sd">    k_edge_components : similar to this function, but uses edge-connectivity</span>
+<span class="sd">        instead of node-connectivity</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1]  Moody, J. and D. White (2003). Social cohesion and embeddedness:</span>
+<span class="sd">            A hierarchical conception of social groups.</span>
+<span class="sd">            American Sociological Review 68(1), 103--28.</span>
+<span class="sd">            http://www2.asanet.org/journals/ASRFeb03MoodyWhite.pdf</span>
+
+<span class="sd">    .. [2]  Kanevsky, A. (1993). Finding all minimum-size separating vertex</span>
+<span class="sd">            sets in a graph. Networks 23(6), 533--541.</span>
+<span class="sd">            http://onlinelibrary.wiley.com/doi/10.1002/net.3230230604/abstract</span>
+
+<span class="sd">    .. [3]  Torrents, J. and F. Ferraro (2015). Structural Cohesion:</span>
+<span class="sd">            Visualization and Heuristics for Fast Computation.</span>
+<span class="sd">            https://arxiv.org/pdf/1503.04476v1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Dictionary with connectivity level (k) as keys and a list of</span>
+    <span class="c1"># sets of nodes that form a k-component as values. Note that</span>
+    <span class="c1"># k-compoents can overlap (but only k - 1 nodes).</span>
+    <span class="n">k_components</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1"># Define default flow function</span>
+    <span class="k">if</span> <span class="n">flow_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">flow_func</span> <span class="o">=</span> <span class="n">default_flow_func</span>
+    <span class="c1"># Bicomponents as a base to check for higher order k-components</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="c1"># isolated nodes have connectivity 0</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">k_components</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+    <span class="n">bicomponents</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">biconnected_component_subgraphs</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">bicomponent</span> <span class="ow">in</span> <span class="n">bicomponents</span><span class="p">:</span>
+        <span class="n">bicomp</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">bicomponent</span><span class="p">)</span>
+        <span class="c1"># avoid considering dyads as bicomponents</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bicomp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">k_components</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bicomp</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">B</span> <span class="ow">in</span> <span class="n">bicomponents</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">node_connectivity</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="n">flow_func</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">k_components</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">nodes</span><span class="p">()))</span>
+        <span class="c1"># Perform cuts in a DFS like order.</span>
+        <span class="n">cuts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">all_node_cuts</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="n">flow_func</span><span class="p">))</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">_generate_partition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">cuts</span><span class="p">,</span> <span class="n">k</span><span class="p">))]</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">parent_k</span><span class="p">,</span> <span class="n">partition</span><span class="p">)</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+                <span class="n">this_k</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">node_connectivity</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="n">flow_func</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">this_k</span> <span class="o">&gt;</span> <span class="n">parent_k</span> <span class="ow">and</span> <span class="n">this_k</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">k_components</span><span class="p">[</span><span class="n">this_k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">nodes</span><span class="p">()))</span>
+                <span class="n">cuts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">all_node_cuts</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">this_k</span><span class="p">,</span> <span class="n">flow_func</span><span class="o">=</span><span class="n">flow_func</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">cuts</span><span class="p">:</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">this_k</span><span class="p">,</span> <span class="n">_generate_partition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">cuts</span><span class="p">,</span> <span class="n">this_k</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="c1"># This is necessary because k-components may only be reported at their</span>
+    <span class="c1"># maximum k level. But we want to return a dictionary in which keys are</span>
+    <span class="c1"># connectivity levels and values list of sets of components, without</span>
+    <span class="c1"># skipping any connectivity level. Also, it&#39;s possible that subsets of</span>
+    <span class="c1"># an already detected k-component appear at a level k. Checking for this</span>
+    <span class="c1"># in the while loop above penalizes the common case. Thus we also have to</span>
+    <span class="c1"># _consolidate all connectivity levels in _reconstruct_k_components.</span>
+    <span class="k">return</span> <span class="n">_reconstruct_k_components</span><span class="p">(</span><span class="n">k_components</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_consolidate</span><span class="p">(</span><span class="n">sets</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Merge sets that share k or more elements.</span>
+
+<span class="sd">    See: http://rosettacode.org/wiki/Set_consolidation</span>
+
+<span class="sd">    The iterative python implementation posted there is</span>
+<span class="sd">    faster than this because of the overhead of building a</span>
+<span class="sd">    Graph and calling nx.connected_components, but it&#39;s not</span>
+<span class="sd">    clear for us if we can use it in NetworkX because there</span>
+<span class="sd">    is no licence for the code.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sets</span><span class="p">)}</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">component</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">cuts</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">has_nbrs_in_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">partition</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">({</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">k</span><span class="p">}</span> <span class="o">-</span>
+             <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">cuts</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cut</span><span class="p">})</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">H</span><span class="p">):</span>
+        <span class="n">component</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">cuts</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">cut</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">has_nbrs_in_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">cc</span><span class="p">):</span>
+                    <span class="n">component</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">():</span>
+            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">_consolidate</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">component</span>
+
+
+<span class="k">def</span> <span class="nf">_reconstruct_k_components</span><span class="p">(</span><span class="n">k_comps</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">max_k</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">k_comps</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">max_k</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">k</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k_comps</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">k</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nodes_at_k</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">to_add</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_at_k</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">c</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">to_add</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">to_add</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">k</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">build_k_number_dict</span><span class="p">(</span><span class="n">kcomps</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">comps</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">kcomps</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">comp</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

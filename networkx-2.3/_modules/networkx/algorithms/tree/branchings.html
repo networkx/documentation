@@ -1,0 +1,922 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.tree.branchings &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.tree.branchings</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.tree.branchings</h1><div class="highlight"><pre>
+<span></span><span class="c1"># encoding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Algorithms for finding optimum branchings and spanning arborescences.</span>
+
+<span class="sd">This implementation is based on:</span>
+
+<span class="sd">    J. Edmonds, Optimum branchings, J. Res. Natl. Bur. Standards 71B (1967),</span>
+<span class="sd">    233–240. URL: http://archive.org/details/jresv71Bn4p233</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># TODO: Implement method from Gabow, Galil, Spence and Tarjan:</span>
+<span class="c1">#</span>
+<span class="c1">#@article{</span>
+<span class="c1">#    year={1986},</span>
+<span class="c1">#    issn={0209-9683},</span>
+<span class="c1">#    journal={Combinatorica},</span>
+<span class="c1">#    volume={6},</span>
+<span class="c1">#    number={2},</span>
+<span class="c1">#    doi={10.1007/BF02579168},</span>
+<span class="c1">#    title={Efficient algorithms for finding minimum spanning trees in</span>
+<span class="c1">#        undirected and directed graphs},</span>
+<span class="c1">#    url={https://doi.org/10.1007/BF02579168},</span>
+<span class="c1">#    publisher={Springer-Verlag},</span>
+<span class="c1">#    keywords={68 B 15; 68 C 05},</span>
+<span class="c1">#    author={Gabow, Harold N. and Galil, Zvi and Spencer, Thomas and Tarjan,</span>
+<span class="c1">#        Robert E.},</span>
+<span class="c1">#    pages={109-122},</span>
+<span class="c1">#    language={English}</span>
+<span class="c1">#}</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">py_random_state</span>
+
+<span class="kn">from</span> <span class="nn">.recognition</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;branching_weight&#39;</span><span class="p">,</span> <span class="s1">&#39;greedy_branching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;maximum_branching&#39;</span><span class="p">,</span> <span class="s1">&#39;minimum_branching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;maximum_spanning_arborescence&#39;</span><span class="p">,</span> <span class="s1">&#39;minimum_spanning_arborescence&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Edmonds&#39;</span>
+<span class="p">]</span>
+
+<span class="n">KINDS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">])</span>
+
+<span class="n">STYLES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;branching&#39;</span><span class="p">:</span> <span class="s1">&#39;branching&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;arborescence&#39;</span><span class="p">:</span> <span class="s1">&#39;arborescence&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;spanning arborescence&#39;</span><span class="p">:</span> <span class="s1">&#39;arborescence&#39;</span>
+<span class="p">}</span>
+
+<span class="n">INF</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+
+
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_string</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">L</span><span class="p">)])</span>
+
+
+<span class="k">def</span> <span class="nf">_min_weight</span><span class="p">(</span><span class="n">weight</span><span class="p">):</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">weight</span>
+
+
+<span class="k">def</span> <span class="nf">_max_weight</span><span class="p">(</span><span class="n">weight</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">weight</span>
+
+
+<div class="viewcode-block" id="branching_weight"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.branching_weight.html#networkx.algorithms.tree.branchings.branching_weight">[docs]</a><span class="k">def</span> <span class="nf">branching_weight</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the total weight of a branching.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="greedy_branching"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.greedy_branching.html#networkx.algorithms.tree.branchings.greedy_branching">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">greedy_branching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a branching obtained through a greedy algorithm.</span>
+
+<span class="sd">    This algorithm is wrong, and cannot give a proper optimal branching.</span>
+<span class="sd">    However, we include it for pedagogical reasons, as it can be helpful to</span>
+<span class="sd">    see what its outputs are.</span>
+
+<span class="sd">    The output is a branching, and possibly, a spanning arborescence. However,</span>
+<span class="sd">    it is not guaranteed to be optimal in either case.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : DiGraph</span>
+<span class="sd">        The directed graph to scan.</span>
+<span class="sd">    attr : str</span>
+<span class="sd">        The attribute to use as weights. If None, then each edge will be</span>
+<span class="sd">        treated equally with a weight of 1.</span>
+<span class="sd">    default : float</span>
+<span class="sd">        When `attr` is not None, then if an edge does not have that attribute,</span>
+<span class="sd">        `default` specifies what value it should take.</span>
+<span class="sd">    kind : str</span>
+<span class="sd">        The type of optimum to search for: &#39;min&#39; or &#39;max&#39; greedy branching.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    B : directed graph</span>
+<span class="sd">        The greedily obtained branching.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">KINDS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;Unknown value for `kind`.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;min&#39;</span><span class="p">:</span>
+        <span class="n">reverse</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">reverse</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">attr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Generate a random string the graph probably won&#39;t have.</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">random_string</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">))</span>
+             <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+
+    <span class="c1"># We sort by weight, but also by nodes to normalize behavior across runs.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">edges</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="c1"># This will fail in Python 3.x if the nodes are of varying types.</span>
+        <span class="c1"># In that case, we use the arbitrary order.</span>
+        <span class="n">edges</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+
+    <span class="c1"># The branching begins with a forest of no edges.</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">B</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="c1"># Now we add edges greedily so long we maintain the branching.</span>
+    <span class="n">uf</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">UnionFind</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edges</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">uf</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">==</span> <span class="n">uf</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+            <span class="c1"># Adding this edge would form a directed cycle.</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">B</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># The edge would increase the degree to be greater than one.</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If attr was None, then don&#39;t insert weights...</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">attr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">uf</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+<span class="k">class</span> <span class="nc">MultiDiGraph_EdgeKey</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MultiDiGraph which assigns unique keys to every edge.</span>
+
+<span class="sd">    Adds a dictionary edge_index which maps edge keys to (u, v, data) tuples.</span>
+
+<span class="sd">    This is not a complete implementation. For Edmonds algorithm, we only use</span>
+<span class="sd">    add_node and add_edge, so that is all that is implemented here. During</span>
+<span class="sd">    additions, any specified keys are ignored---this means that you also</span>
+<span class="sd">    cannot update edge attributes through add_node and add_edge.</span>
+
+<span class="sd">    Why do we need this? Edmonds algorithm requires that we track edges, even</span>
+<span class="sd">    as we change the head and tail of an edge, and even changing the weight</span>
+<span class="sd">    of edges. We must reliably track edges across graph mutations.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MultiDiGraph_EdgeKey</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">=</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cls</span> <span class="o">=</span> <span class="bp">cls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">keydict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">keydict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">keydict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">succ</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">keydict</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remove_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbunch</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nbunch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_for_edge</span><span class="p">,</span> <span class="n">v_for_edge</span><span class="p">,</span> <span class="n">key_for_edge</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Key is now required.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">u_for_edge</span><span class="p">,</span> <span class="n">v_for_edge</span><span class="p">,</span> <span class="n">key_for_edge</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span><span class="p">:</span>
+            <span class="n">uu</span><span class="p">,</span> <span class="n">vv</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">u</span> <span class="o">!=</span> <span class="n">uu</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="n">vv</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Key </span><span class="si">{0!r}</span><span class="s2"> is already in use.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">key</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">add_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ebunch_to_add</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">ebunch_to_add</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remove_edge_with_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Invalid edge key </span><span class="si">{0!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cls</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">remove_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ebunch</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<span class="k">def</span> <span class="nf">get_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the edge keys of the unique path between u and v.</span>
+
+<span class="sd">    This is not a generic function. G must be a branching and an instance of</span>
+<span class="sd">    MultiDiGraph_EdgeKey.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="c1"># We are guaranteed that there is only one edge connected every node</span>
+    <span class="c1"># in the shortest path.</span>
+
+    <span class="k">def</span> <span class="nf">first_key</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">vv</span><span class="p">):</span>
+        <span class="c1"># Needed for 2.x/3.x compatibilitity</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="n">vv</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="c1"># Normalize behavior</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">first_key</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">vv</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+    <span class="k">return</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span>
+
+
+<div class="viewcode-block" id="Edmonds"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.Edmonds.html#networkx.algorithms.tree.branchings.Edmonds">[docs]</a><span class="k">class</span> <span class="nc">Edmonds</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Edmonds algorithm for finding optimal branchings and spanning arborescences.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Edmonds.__init__"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.Edmonds.html#networkx.algorithms.tree.branchings.Edmonds.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G_original</span> <span class="o">=</span> <span class="n">G</span>
+
+        <span class="c1"># Need to fix this. We need the whole tree.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># The final answer.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Since we will be creating graphs with new nodes, we need to make</span>
+        <span class="c1"># sure that our node names do not conflict with the real node names.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">random_string</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_</span><span class="si">{0}</span><span class="s1">&#39;</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">preserve_attrs</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">KINDS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;Unknown value for `kind`.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Store inputs.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">kind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span>
+
+        <span class="c1"># Determine how we are going to transform the weights.</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;min&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trans</span> <span class="o">=</span> <span class="n">trans</span> <span class="o">=</span> <span class="n">_min_weight</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trans</span> <span class="o">=</span> <span class="n">trans</span> <span class="o">=</span> <span class="n">_max_weight</span>
+
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Generate a random attr the graph probably won&#39;t have.</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">random_string</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="c1"># This is the actual attribute used by the algorithm.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">attr</span>
+
+        <span class="c1"># This attribute is used to store whether a particular edge is still</span>
+        <span class="c1"># a candidate. We generate a random attr to remove clashes with</span>
+        <span class="c1"># preserved edges</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidate_attr</span> <span class="o">=</span> <span class="s1">&#39;candidate_&#39;</span> <span class="o">+</span> <span class="n">random_string</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="c1"># The object we manipulate at each step is a multidigraph.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">G</span> <span class="o">=</span> <span class="n">MultiDiGraph_EdgeKey</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_original</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="n">attr</span><span class="p">:</span> <span class="n">trans</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">))}</span>
+
+            <span class="k">if</span> <span class="n">preserve_attrs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">d_k</span><span class="p">,</span> <span class="n">d_v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">d_k</span> <span class="o">!=</span> <span class="n">attr</span><span class="p">:</span>
+                        <span class="n">d</span><span class="p">[</span><span class="n">d_k</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_v</span>
+
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># These are the &quot;buckets&quot; from the paper.</span>
+        <span class="c1">#</span>
+        <span class="c1"># As in the paper, G^i are modified versions of the original graph.</span>
+        <span class="c1"># D^i and E^i are nodes and edges of the maximal edges that are</span>
+        <span class="c1"># consistent with G^i. These are dashed edges in figures A-F of the</span>
+        <span class="c1"># paper. In this implementation, we store D^i and E^i together as a</span>
+        <span class="c1"># graph B^i. So we will have strictly more B^i than the paper does.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">=</span> <span class="n">MultiDiGraph_EdgeKey</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="o">.</span><span class="n">edge_index</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span> <span class="o">=</span> <span class="p">[]</span>        <span class="c1"># G^i</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">branchings</span> <span class="o">=</span> <span class="p">[]</span>    <span class="c1"># B^i</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uf</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">UnionFind</span><span class="p">()</span>
+
+        <span class="c1"># A list of lists of edge indexes. Each list is a circuit for graph G^i.</span>
+        <span class="c1"># Note the edge list will not, in general, be a circuit in graph G^0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">circuits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Stores the index of the minimum edge in the circuit found in G^i and B^i.</span>
+        <span class="c1"># The ordering of the edges seems to preserve the weight ordering from G^0.</span>
+        <span class="c1"># So even if the circuit does not form a circuit in G^0, it is still true</span>
+        <span class="c1"># that the minimum edge of the circuit in G^i is still the minimum edge</span>
+        <span class="c1"># in circuit G^0 (depsite their weights being different).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minedge_circuit</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">find_optimum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span>
+                     <span class="n">style</span><span class="o">=</span><span class="s1">&#39;branching&#39;</span><span class="p">,</span> <span class="n">preserve_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a branching from G.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        attr : str</span>
+<span class="sd">            The edge attribute used to in determining optimality.</span>
+<span class="sd">        default : float</span>
+<span class="sd">            The value of the edge attribute used if an edge does not have</span>
+<span class="sd">            the attribute `attr`.</span>
+<span class="sd">        kind : {&#39;min&#39;, &#39;max&#39;}</span>
+<span class="sd">            The type of optimum to search for, either &#39;min&#39; or &#39;max&#39;.</span>
+<span class="sd">        style : {&#39;branching&#39;, &#39;arborescence&#39;}</span>
+<span class="sd">            If &#39;branching&#39;, then an optimal branching is found. If `style` is</span>
+<span class="sd">            &#39;arborescence&#39;, then a branching is found, such that if the</span>
+<span class="sd">            branching is also an arborescence, then the branching is an</span>
+<span class="sd">            optimal spanning arborescences. A given graph G need not have</span>
+<span class="sd">            an optimal spanning arborescence.</span>
+<span class="sd">        preserve_attrs : bool</span>
+<span class="sd">            If True, preserve the other edge attributes of the original</span>
+<span class="sd">            graph (that are not the one passed to `attr`)</span>
+<span class="sd">        seed : integer, random_state, or None (default)</span>
+<span class="sd">            Indicator of random number generation state.</span>
+<span class="sd">            See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        H : (multi)digraph</span>
+<span class="sd">            The branching.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">style</span><span class="p">,</span> <span class="n">preserve_attrs</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+        <span class="n">uf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uf</span>
+
+        <span class="c1"># This enormous while loop could use some refactoring...</span>
+
+        <span class="n">G</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()))</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span>
+        <span class="n">G_pred</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">pred</span>
+
+        <span class="k">def</span> <span class="nf">desired_edge</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Find the edge directed toward v with maximal weight.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">edge</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="o">-</span><span class="n">INF</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">new_weight</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">new_weight</span> <span class="o">&gt;</span> <span class="n">weight</span><span class="p">:</span>
+                    <span class="n">weight</span> <span class="o">=</span> <span class="n">new_weight</span>
+                    <span class="n">edge</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">new_weight</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">edge</span><span class="p">,</span> <span class="n">weight</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># (I1): Choose a node v in G^i not in D^i.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="c1"># If there are no more new nodes to consider, then we *should*</span>
+                <span class="c1"># meet the break condition (b) from the paper:</span>
+                <span class="c1">#   (b) every node of G^i is in D^i and E^i is a branching</span>
+                <span class="c1"># Construction guarantees that it&#39;s a branching.</span>
+                <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+                    <span class="k">assert</span><span class="p">(</span><span class="n">is_branching</span><span class="p">(</span><span class="n">B</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">branchings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+                    <span class="c1"># Add these to keep the lengths equal. Element i is the</span>
+                    <span class="c1"># circuit at level i that was merged to form branching i+1.</span>
+                    <span class="c1"># There is no circuit for the last level.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">minedge_circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">:</span>
+                    <span class="c1">#print(&quot;v in D&quot;, v)</span>
+                    <span class="k">continue</span>
+
+            <span class="c1"># Put v into bucket D^i.</span>
+            <span class="c1">#print(&quot;Adding node {0}&quot;.format(v))</span>
+            <span class="n">D</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+            <span class="n">edge</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">desired_edge</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="c1">#print(&quot;Max edge is {0!r}&quot;.format(edge))</span>
+            <span class="k">if</span> <span class="n">edge</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># If there is no edge, continue with a new node at (I1).</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Determine if adding the edge to E^i would mean its no longer</span>
+                <span class="c1"># a branching. Presently, v has indegree 0 in B---it is a root.</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">uf</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">==</span> <span class="n">uf</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="c1"># Then adding the edge will create a circuit. Then B</span>
+                    <span class="c1"># contains a unique path P from v to u. So condition (a)</span>
+                    <span class="c1"># from the paper does hold. We need to store the circuit</span>
+                    <span class="c1"># for future reference.</span>
+                    <span class="n">Q_nodes</span><span class="p">,</span> <span class="n">Q_edges</span> <span class="o">=</span> <span class="n">get_path</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+                    <span class="n">Q_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Then B with the edge is still a branching and condition</span>
+                    <span class="c1"># (a) from the paper does not hold.</span>
+                    <span class="n">Q_nodes</span><span class="p">,</span> <span class="n">Q_edges</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+                <span class="c1"># Conditions for adding the edge.</span>
+                <span class="c1"># If weight &lt; 0, then it cannot help in finding a maximum branching.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">==</span> <span class="s1">&#39;branching&#39;</span> <span class="ow">and</span> <span class="n">weight</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">acceptable</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">acceptable</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="c1">#print(&quot;Edge is acceptable: {0}&quot;.format(acceptable))</span>
+                <span class="k">if</span> <span class="n">acceptable</span><span class="p">:</span>
+                    <span class="n">dd</span> <span class="o">=</span> <span class="p">{</span><span class="n">attr</span><span class="p">:</span> <span class="n">weight</span><span class="p">}</span>
+                    <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="o">**</span><span class="n">dd</span><span class="p">)</span>
+                    <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">edge</span><span class="p">[</span><span class="mi">2</span><span class="p">]][</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_attr</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">uf</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">Q_edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1">#print(&quot;Edge introduced a simple cycle:&quot;)</span>
+                        <span class="c1">#print(Q_nodes, Q_edges)</span>
+
+                        <span class="c1"># Move to method</span>
+                        <span class="c1"># Previous meaning of u and v is no longer important.</span>
+
+                        <span class="c1"># Apply (I2).</span>
+                        <span class="c1"># Get the edge in the cycle with the minimum weight.</span>
+                        <span class="c1"># Also, save the incoming weights for each node.</span>
+                        <span class="n">minweight</span> <span class="o">=</span> <span class="n">INF</span>
+                        <span class="n">minedge</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="n">Q_incoming_weight</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">for</span> <span class="n">edge_key</span> <span class="ow">in</span> <span class="n">Q_edges</span><span class="p">:</span>
+                            <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">edge_key</span><span class="p">]</span>
+                            <span class="n">w</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+                            <span class="n">Q_incoming_weight</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
+                            <span class="k">if</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="n">minweight</span><span class="p">:</span>
+                                <span class="n">minweight</span> <span class="o">=</span> <span class="n">w</span>
+                                <span class="n">minedge</span> <span class="o">=</span> <span class="n">edge_key</span>
+
+                        <span class="bp">self</span><span class="o">.</span><span class="n">circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Q_edges</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">minedge_circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">minedge</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                        <span class="c1"># Always need the branching with circuits.</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">branchings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+                        <span class="c1"># Now we mutate it.</span>
+                        <span class="n">new_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+
+                        <span class="c1">#print(minweight, minedge, Q_incoming_weight)</span>
+
+                        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+                        <span class="n">new_edges</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">Q_incoming_weight</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Q_incoming_weight</span><span class="p">:</span>
+                                    <span class="c1"># Circuit edge, do nothing for now.</span>
+                                    <span class="c1"># Eventually delete it.</span>
+                                    <span class="k">continue</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="c1"># Outgoing edge. Make it from new node</span>
+                                    <span class="n">dd</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                                    <span class="n">new_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_node</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dd</span><span class="p">))</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Q_incoming_weight</span><span class="p">:</span>
+                                    <span class="c1"># Incoming edge. Change its weight</span>
+                                    <span class="n">w</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+                                    <span class="n">w</span> <span class="o">+=</span> <span class="n">minweight</span> <span class="o">-</span> <span class="n">Q_incoming_weight</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                                    <span class="n">dd</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                                    <span class="n">dd</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
+                                    <span class="n">new_edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">new_node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dd</span><span class="p">))</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="c1"># Outside edge. No modification necessary.</span>
+                                    <span class="k">continue</span>
+
+                        <span class="n">G</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">Q_nodes</span><span class="p">)</span>
+                        <span class="n">B</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">Q_nodes</span><span class="p">)</span>
+                        <span class="n">D</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">Q_nodes</span><span class="p">))</span>
+
+                        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">new_edges</span><span class="p">:</span>
+                            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_attr</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                                <span class="k">del</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">candidate_attr</span><span class="p">]</span>
+                                <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+                                <span class="n">uf</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+                        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># (I3) Branch construction.</span>
+        <span class="c1"># print(self.level)</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_original</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">is_root</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">edgekeys</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Returns True if `u` is a root node in G.</span>
+
+<span class="sd">            Node `u` will be a root node if its in-degree, restricted to the</span>
+<span class="sd">            specified edges, is equal to 0.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+                <span class="c1">#print(G.nodes(), u)</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0!r}</span><span class="s1"> not in G&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">edgekey</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">edgekey</span> <span class="ow">in</span> <span class="n">edgekeys</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">edgekey</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="c1"># Start with the branching edges in the last level.</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">branchings</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">]</span><span class="o">.</span><span class="n">edge_index</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">-=</span> <span class="mi">1</span>
+
+            <span class="c1"># The current level is i, and we start counting from 0.</span>
+
+            <span class="c1"># We need the node at level i+1 that results from merging a circuit</span>
+            <span class="c1"># at level i. randomname_0 is the first merged node and this</span>
+            <span class="c1"># happens at level 1. That is, randomname_0 is a node at level 1</span>
+            <span class="c1"># that results from merging a circuit at level 0.</span>
+            <span class="n">merged_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+
+            <span class="c1"># The circuit at level i that was merged as a node the graph</span>
+            <span class="c1"># at level i+1.</span>
+            <span class="n">circuit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">circuits</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">]</span>
+            <span class="c1"># print</span>
+            <span class="c1">#print(merged_node, self.level, circuit)</span>
+            <span class="c1">#print(&quot;before&quot;, edges)</span>
+            <span class="c1"># Note, we ask if it is a root in the full graph, not the branching.</span>
+            <span class="c1"># The branching alone doesn&#39;t have all the edges.</span>
+
+            <span class="n">isroot</span><span class="p">,</span> <span class="n">edgekey</span> <span class="o">=</span> <span class="n">is_root</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                                      <span class="n">merged_node</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+            <span class="n">edges</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">isroot</span><span class="p">:</span>
+                <span class="n">minedge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minedge_circuit</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">minedge</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span>
+
+                <span class="c1"># Remove the edge in the cycle with minimum weight.</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">minedge</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># We have identified an edge at next higher level that</span>
+                <span class="c1"># transitions into the merged node at the level. That edge</span>
+                <span class="c1"># transitions to some corresponding node at the current level.</span>
+                <span class="c1"># We want to remove an edge from the cycle that transitions</span>
+                <span class="c1"># into the corresponding node.</span>
+                <span class="c1">#print(&quot;edgekey is: &quot;, edgekey)</span>
+                <span class="c1">#print(&quot;circuit is: &quot;, circuit)</span>
+                <span class="c1"># The branching at level i</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">]</span>
+                <span class="c1"># print(G.edge_index)</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">edgekey</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">edgekey</span> <span class="ow">in</span> <span class="n">circuit</span><span class="p">:</span>
+                    <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">edgekey</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find edge incoming to merged node.&quot;</span><span class="p">)</span>
+                <span class="c1">#print(&quot;not a root. removing {0}&quot;.format(edgekey))</span>
+
+                <span class="n">edges</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edgekey</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span>
+
+        <span class="n">H</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_original</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">edgekey</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">edge_index</span><span class="p">[</span><span class="n">edgekey</span><span class="p">]</span>
+            <span class="n">dd</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">])}</span>
+
+            <span class="c1"># Optionally, preserve the other edge attributes of the original</span>
+            <span class="c1"># graph</span>
+            <span class="k">if</span> <span class="n">preserve_attrs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate_attr</span><span class="p">]:</span>
+                        <span class="n">dd</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="c1"># TODO: make this preserve the key.</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="o">**</span><span class="n">dd</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">H</span></div>
+
+
+<div class="viewcode-block" id="maximum_branching"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.maximum_branching.html#networkx.algorithms.tree.branchings.maximum_branching">[docs]</a><span class="k">def</span> <span class="nf">maximum_branching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">preserve_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">ed</span> <span class="o">=</span> <span class="n">Edmonds</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">ed</span><span class="o">.</span><span class="n">find_optimum</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;branching&#39;</span><span class="p">,</span>
+                        <span class="n">preserve_attrs</span><span class="o">=</span><span class="n">preserve_attrs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+<div class="viewcode-block" id="minimum_branching"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.minimum_branching.html#networkx.algorithms.tree.branchings.minimum_branching">[docs]</a><span class="k">def</span> <span class="nf">minimum_branching</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">preserve_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">ed</span> <span class="o">=</span> <span class="n">Edmonds</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">ed</span><span class="o">.</span><span class="n">find_optimum</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;branching&#39;</span><span class="p">,</span>
+                        <span class="n">preserve_attrs</span><span class="o">=</span><span class="n">preserve_attrs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+<div class="viewcode-block" id="maximum_spanning_arborescence"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.maximum_spanning_arborescence.html#networkx.algorithms.tree.branchings.maximum_spanning_arborescence">[docs]</a><span class="k">def</span> <span class="nf">maximum_spanning_arborescence</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                  <span class="n">preserve_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">ed</span> <span class="o">=</span> <span class="n">Edmonds</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">ed</span><span class="o">.</span><span class="n">find_optimum</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;arborescence&#39;</span><span class="p">,</span>
+                        <span class="n">preserve_attrs</span><span class="o">=</span><span class="n">preserve_attrs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_arborescence</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;No maximum spanning arborescence in G.&#39;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+<div class="viewcode-block" id="minimum_spanning_arborescence"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.tree.branchings.minimum_spanning_arborescence.html#networkx.algorithms.tree.branchings.minimum_spanning_arborescence">[docs]</a><span class="k">def</span> <span class="nf">minimum_spanning_arborescence</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                  <span class="n">preserve_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">ed</span> <span class="o">=</span> <span class="n">Edmonds</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">ed</span><span class="o">.</span><span class="n">find_optimum</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;arborescence&#39;</span><span class="p">,</span>
+                        <span class="n">preserve_attrs</span><span class="o">=</span><span class="n">preserve_attrs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_arborescence</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;No minimum spanning arborescence in G.&#39;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+<span class="n">docstring_branching</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Returns a </span><span class="si">{kind}</span><span class="s2"> </span><span class="si">{style}</span><span class="s2"> from G.</span>
+
+<span class="s2">Parameters</span>
+<span class="s2">----------</span>
+<span class="s2">G : (multi)digraph-like</span>
+<span class="s2">    The graph to be searched.</span>
+<span class="s2">attr : str</span>
+<span class="s2">    The edge attribute used to in determining optimality.</span>
+<span class="s2">default : float</span>
+<span class="s2">    The value of the edge attribute used if an edge does not have</span>
+<span class="s2">    the attribute `attr`.</span>
+<span class="s2">preserve_attrs : bool</span>
+<span class="s2">    If True, preserve the other attributes of the original graph (that are not</span>
+<span class="s2">    passed to `attr`)</span>
+
+<span class="s2">Returns</span>
+<span class="s2">-------</span>
+<span class="s2">B : (multi)digraph-like</span>
+<span class="s2">    A </span><span class="si">{kind}</span><span class="s2"> </span><span class="si">{style}</span><span class="s2">.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">docstring_arborescence</span> <span class="o">=</span> <span class="n">docstring_branching</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Raises</span>
+<span class="s2">------</span>
+<span class="s2">NetworkXException</span>
+<span class="s2">    If the graph does not contain a </span><span class="si">{kind}</span><span class="s2"> </span><span class="si">{style}</span><span class="s2">.</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">maximum_branching</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> \
+    <span class="n">docstring_branching</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;maximum&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;branching&#39;</span><span class="p">)</span>
+
+<span class="n">minimum_branching</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> \
+    <span class="n">docstring_branching</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;minimum&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;branching&#39;</span><span class="p">)</span>
+
+<span class="n">maximum_spanning_arborescence</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> \
+    <span class="n">docstring_arborescence</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;maximum&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;spanning arborescence&#39;</span><span class="p">)</span>
+
+<span class="n">minimum_spanning_arborescence</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> \
+    <span class="n">docstring_arborescence</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;minimum&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;spanning arborescence&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

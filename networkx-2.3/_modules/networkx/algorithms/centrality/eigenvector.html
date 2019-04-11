@@ -1,0 +1,457 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.centrality.eigenvector &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.centrality.eigenvector</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.centrality.eigenvector</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#    Copyright (C) 2004-2019 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors:</span>
+<span class="c1">#     Aric Hagberg &lt;aric.hagberg@gmail.com&gt;</span>
+<span class="c1">#     Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#     Sasha Gutfraind &lt;ag362@cornell.edu&gt;</span>
+<span class="sd">&quot;&quot;&quot;Functions for computing eigenvector centrality.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">not_implemented_for</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eigenvector_centrality&#39;</span><span class="p">,</span> <span class="s1">&#39;eigenvector_centrality_numpy&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="eigenvector_centrality"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html#networkx.algorithms.centrality.eigenvector_centrality">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">eigenvector_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the graph `G`.</span>
+
+<span class="sd">    Eigenvector centrality computes the centrality for a node based on the</span>
+<span class="sd">    centrality of its neighbors. The eigenvector centrality for node $i$ is</span>
+<span class="sd">    the $i$-th element of the vector $x$ defined by the equation</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        Ax = \lambda x</span>
+
+<span class="sd">    where $A$ is the adjacency matrix of the graph `G` with eigenvalue</span>
+<span class="sd">    $\lambda$. By virtue of the Perron–Frobenius theorem, there is a unique</span>
+<span class="sd">    solution $x$, all of whose entries are positive, if $\lambda$ is the</span>
+<span class="sd">    largest eigenvalue of the adjacency matrix $A$ ([2]_).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A networkx graph</span>
+
+<span class="sd">    max_iter : integer, optional (default=100)</span>
+<span class="sd">      Maximum number of iterations in power method.</span>
+
+<span class="sd">    tol : float, optional (default=1.0e-6)</span>
+<span class="sd">      Error tolerance used to check convergence in power method iteration.</span>
+
+<span class="sd">    nstart : dictionary, optional (default=None)</span>
+<span class="sd">      Starting value of eigenvector iteration for each node.</span>
+
+<span class="sd">    weight : None or string, optional (default=None)</span>
+<span class="sd">      If None, all edge weights are considered equal.</span>
+<span class="sd">      Otherwise holds the name of the edge attribute used as weight.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes : dictionary</span>
+<span class="sd">       Dictionary of nodes with eigenvector centrality as the value.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; centrality = nx.eigenvector_centrality(G)</span>
+<span class="sd">    &gt;&gt;&gt; sorted((v, &#39;{:0.2f}&#39;.format(c)) for v, c in centrality.items())</span>
+<span class="sd">    [(0, &#39;0.37&#39;), (1, &#39;0.60&#39;), (2, &#39;0.60&#39;), (3, &#39;0.37&#39;)]</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If the graph `G` is the null graph.</span>
+
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If each value in `nstart` is zero.</span>
+
+<span class="sd">    PowerIterationFailedConvergence</span>
+<span class="sd">        If the algorithm fails to converge to the specified tolerance</span>
+<span class="sd">        within the specified number of iterations of the power iteration</span>
+<span class="sd">        method.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    eigenvector_centrality_numpy</span>
+<span class="sd">    pagerank</span>
+<span class="sd">    hits</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The measure was introduced by [1]_ and is discussed in [2]_.</span>
+
+<span class="sd">    The power iteration method is used to compute the eigenvector and</span>
+<span class="sd">    convergence is **not** guaranteed. Our method stops after ``max_iter``</span>
+<span class="sd">    iterations or when the change in the computed vector between two</span>
+<span class="sd">    iterations is smaller than an error tolerance of</span>
+<span class="sd">    ``G.number_of_nodes() * tol``. This implementation uses ($A + I$)</span>
+<span class="sd">    rather than the adjacency matrix $A$ because it shifts the spectrum</span>
+<span class="sd">    to enable discerning the correct eigenvector even for networks with</span>
+<span class="sd">    multiple dominant eigenvalues.</span>
+
+<span class="sd">    For directed graphs this is &quot;left&quot; eigenvector centrality which corresponds</span>
+<span class="sd">    to the in-edges in the graph. For out-edges eigenvector centrality</span>
+<span class="sd">    first reverse the graph with ``G.reverse()``.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Phillip Bonacich.</span>
+<span class="sd">       &quot;Power and Centrality: A Family of Measures.&quot;</span>
+<span class="sd">       *American Journal of Sociology* 92(5):1170–1182, 1986</span>
+<span class="sd">       &lt;http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf&gt;</span>
+<span class="sd">    .. [2] Mark E. J. Newman.</span>
+<span class="sd">       *Networks: An Introduction.*</span>
+<span class="sd">       Oxford University Press, USA, 2010, pp. 169.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s1">&#39;cannot compute centrality for the&#39;</span>
+                                          <span class="s1">&#39; null graph&#39;</span><span class="p">)</span>
+    <span class="c1"># If no initial vector is provided, start with the all-ones vector.</span>
+    <span class="k">if</span> <span class="n">nstart</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nstart</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nstart</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;initial vector cannot have all zero values&#39;</span><span class="p">)</span>
+    <span class="c1"># Normalize the initial vector so that each entry is in [0, 1]. This is</span>
+    <span class="c1"># guaranteed to never have a divide-by-zero error by the previous line.</span>
+    <span class="n">nstart_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nstart</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">/</span> <span class="n">nstart_sum</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nstart</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">nnodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+    <span class="c1"># make up to max_iter iterations</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="n">xlast</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xlast</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Start with xlast times I to iterate with (A+I)</span>
+        <span class="c1"># do the multiplication y^T = x^T A (left eigenvector)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">weight</span> <span class="k">else</span> <span class="mi">1</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span> <span class="o">+=</span> <span class="n">xlast</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">w</span>
+        <span class="c1"># Normalize the vector. The normalization denominator `norm`</span>
+        <span class="c1"># should never be zero by the Perron--Frobenius</span>
+        <span class="c1"># theorem. However, in case it is due to numerical error, we</span>
+        <span class="c1"># assume the norm to be one instead.</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">z</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="ow">or</span> <span class="mi">1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">/</span> <span class="n">norm</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="c1"># Check for convergence (in the L_1 norm).</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">-</span> <span class="n">xlast</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">nnodes</span> <span class="o">*</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span>
+    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">PowerIterationFailedConvergence</span><span class="p">(</span><span class="n">max_iter</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="eigenvector_centrality_numpy"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality_numpy.html#networkx.algorithms.centrality.eigenvector_centrality_numpy">[docs]</a><span class="k">def</span> <span class="nf">eigenvector_centrality_numpy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the graph G.</span>
+
+<span class="sd">    Eigenvector centrality computes the centrality for a node based on the</span>
+<span class="sd">    centrality of its neighbors. The eigenvector centrality for node $i$ is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        Ax = \lambda x</span>
+
+<span class="sd">    where $A$ is the adjacency matrix of the graph G with eigenvalue $\lambda$.</span>
+<span class="sd">    By virtue of the Perron–Frobenius theorem, there is a unique and positive</span>
+<span class="sd">    solution if $\lambda$ is the largest eigenvalue associated with the</span>
+<span class="sd">    eigenvector of the adjacency matrix $A$ ([2]_).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">      A networkx graph</span>
+
+<span class="sd">    weight : None or string, optional (default=None)</span>
+<span class="sd">      The name of the edge attribute used as weight.</span>
+<span class="sd">      If None, all edge weights are considered equal.</span>
+
+<span class="sd">    max_iter : integer, optional (default=100)</span>
+<span class="sd">      Maximum number of iterations in power method.</span>
+
+<span class="sd">    tol : float, optional (default=1.0e-6)</span>
+<span class="sd">       Relative accuracy for eigenvalues (stopping criterion).</span>
+<span class="sd">       The default value of 0 implies machine precision.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes : dictionary</span>
+<span class="sd">       Dictionary of nodes with eigenvector centrality as the value.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; centrality = nx.eigenvector_centrality_numpy(G)</span>
+<span class="sd">    &gt;&gt;&gt; print([&#39;{} {:0.2f}&#39;.format(node, centrality[node]) for node in centrality])</span>
+<span class="sd">    [&#39;0 0.37&#39;, &#39;1 0.60&#39;, &#39;2 0.60&#39;, &#39;3 0.37&#39;]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    eigenvector_centrality</span>
+<span class="sd">    pagerank</span>
+<span class="sd">    hits</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The measure was introduced by [1]_.</span>
+
+<span class="sd">    This algorithm uses the SciPy sparse eigenvalue solver (ARPACK) to</span>
+<span class="sd">    find the largest eigenvalue/eigenvector pair.</span>
+
+<span class="sd">    For directed graphs this is &quot;left&quot; eigenvector centrality which corresponds</span>
+<span class="sd">    to the in-edges in the graph. For out-edges eigenvector centrality</span>
+<span class="sd">    first reverse the graph with ``G.reverse()``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If the graph ``G`` is the null graph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Phillip Bonacich:</span>
+<span class="sd">       Power and Centrality: A Family of Measures.</span>
+<span class="sd">       American Journal of Sociology 92(5):1170–1182, 1986</span>
+<span class="sd">       http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf</span>
+<span class="sd">    .. [2] Mark E. J. Newman:</span>
+<span class="sd">       Networks: An Introduction.</span>
+<span class="sd">       Oxford University Press, USA, 2010, pp. 169.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">linalg</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s1">&#39;cannot compute centrality for the&#39;</span>
+                                          <span class="s1">&#39; null graph&#39;</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+                                  <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">eigenvalue</span><span class="p">,</span> <span class="n">eigenvector</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eigs</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;LR&#39;</span><span class="p">,</span>
+                                          <span class="n">maxiter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+    <span class="n">largest</span> <span class="o">=</span> <span class="n">eigenvector</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">largest</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">largest</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">largest</span> <span class="o">/</span> <span class="n">norm</span><span class="p">))</span></div>
+
+
+<span class="c1"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;SciPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

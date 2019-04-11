@@ -1,0 +1,619 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.readwrite.graph6 &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.readwrite.graph6</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.readwrite.graph6</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Original author: D. Eppstein, UC Irvine, August 12, 2003.</span>
+<span class="c1"># The original code at http://www.ics.uci.edu/~eppstein/PADS/ is public domain.</span>
+<span class="c1">#    Copyright (C) 2004-2019 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    Tomas Gavenciak &lt;gavento@ucw.cz&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Tomas Gavenciak &lt;gavento@ucw.cz&gt;</span>
+<span class="c1">#          Aric Hagberg &lt;aric.hagberg@lanl.gov&gt;</span>
+<span class="sd">&quot;&quot;&quot;Functions for reading and writing graphs in the *graph6* format.</span>
+
+<span class="sd">The *graph6* file format is suitable for small graphs or large dense</span>
+<span class="sd">graphs. For large sparse graphs, use the *sparse6* format.</span>
+
+<span class="sd">For more information, see the `graph6`_ homepage.</span>
+
+<span class="sd">.. _graph6: http://users.cecs.anu.edu.au/~bdm/data/formats.html</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">islice</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="k">import</span> <span class="n">NetworkXError</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">open_file</span><span class="p">,</span> <span class="n">not_implemented_for</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;from_graph6_bytes&#39;</span><span class="p">,</span> <span class="s1">&#39;read_graph6&#39;</span><span class="p">,</span> <span class="s1">&#39;to_graph6_bytes&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;write_graph6&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_graph6_bytes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield bytes in the graph6 encoding of a graph.</span>
+
+<span class="sd">    `G` is an undirected simple graph. `nodes` is the list of nodes for</span>
+<span class="sd">    which the node-induced subgraph will be encoded; if `nodes` is the</span>
+<span class="sd">    list of all nodes in the graph, the entire graph will be</span>
+<span class="sd">    encoded. `header` is a Boolean that specifies whether to generate</span>
+<span class="sd">    the header ``b&#39;&gt;&gt;graph6&lt;&lt;&#39;`` before the remaining data.</span>
+
+<span class="sd">    This function generates `bytes` objects in the following order:</span>
+
+<span class="sd">    1. the header (if requested),</span>
+<span class="sd">    2. the encoding of the number of nodes,</span>
+<span class="sd">    3. each character, one-at-a-time, in the encoding of the requested</span>
+<span class="sd">       node-induced subgraph,</span>
+<span class="sd">    4. a newline character.</span>
+
+<span class="sd">    This function raises :exc:`ValueError` if the graph is too large for</span>
+<span class="sd">    the graph6 format (that is, greater than ``2 ** 36`` nodes).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">36</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;graph6 is only defined if number of nodes is less &#39;</span>
+                         <span class="s1">&#39;than 2 ** 36&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">header</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="sa">b</span><span class="s1">&#39;&gt;&gt;graph6&lt;&lt;&#39;</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">n_to_data</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="nb">str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">d</span> <span class="o">+</span> <span class="mi">63</span><span class="p">))</span>
+    <span class="c1"># This generates the same as `(v in G[u] for u, v in combinations(G, 2))`,</span>
+    <span class="c1"># but in &quot;column-major&quot; order instead of &quot;row-major&quot; order.</span>
+    <span class="n">bits</span> <span class="o">=</span> <span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+    <span class="n">chunk</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">bits</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">while</span> <span class="n">chunk</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">b</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span> <span class="o">-</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chunk</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="nb">str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="n">d</span> <span class="o">+</span> <span class="mi">63</span><span class="p">))</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">bits</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">yield</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+
+<div class="viewcode-block" id="from_graph6_bytes"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.graph6.from_graph6_bytes.html#networkx.readwrite.graph6.from_graph6_bytes">[docs]</a><span class="k">def</span> <span class="nf">from_graph6_bytes</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read a simple undirected graph in graph6 format from string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    string : string</span>
+<span class="sd">       Data in graph6 format, without a trailing newline.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : Graph</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the string is unable to be parsed in graph6 format</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        If any character ``c`` in the input string does not satisfy</span>
+<span class="sd">        ``63 &lt;= ord(c) &lt; 127``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.from_graph6_bytes(b&#39;A_&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; sorted(G.edges())</span>
+<span class="sd">    [(0, 1)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    read_graph6, write_graph6</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Graph6 specification</span>
+<span class="sd">           &lt;http://users.cecs.anu.edu.au/~bdm/data/formats.html&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">bits</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Returns sequence of individual bits from 6-bit-per-value</span>
+<span class="sd">        list of data values.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">d</span> <span class="o">&gt;&gt;</span> <span class="n">i</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&gt;&gt;graph6&lt;&lt;&#39;</span><span class="p">):</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="mi">10</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="mi">63</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">string</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="o">-</span> <span class="mi">63</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">string</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="o">&gt;</span> <span class="mi">63</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;each input character must be in range(63, 127)&#39;</span><span class="p">)</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data_to_n</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">nd</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="o">//</span> <span class="mi">6</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nd</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
+            <span class="s1">&#39;Expected </span><span class="si">%d</span><span class="s1"> bits but got </span><span class="si">%d</span><span class="s1"> in graph6&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span><span class="p">))</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)],</span> <span class="n">bits</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="to_graph6_bytes"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.graph6.to_graph6_bytes.html#networkx.readwrite.graph6.to_graph6_bytes">[docs]</a><span class="k">def</span> <span class="nf">to_graph6_bytes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a simple undirected graph to bytes in graph6 format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Graph (undirected)</span>
+
+<span class="sd">    nodes: list or iterable</span>
+<span class="sd">       Nodes are labeled 0...n-1 in the order provided.  If None the ordering</span>
+<span class="sd">       given by ``G.nodes()`` is used.</span>
+
+<span class="sd">    header: bool</span>
+<span class="sd">       If True add &#39;&gt;&gt;graph6&lt;&lt;&#39; bytes to head of data.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If the graph is directed or is a multigraph.</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        If the graph has at least ``2 ** 36`` nodes; the graph6 format</span>
+<span class="sd">        is only defined for graphs of order less than ``2 ** 36``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; nx.to_graph6_bytes(nx.path_graph(2)) # doctest: +SKIP</span>
+<span class="sd">    b&#39;&gt;&gt;graph6&lt;&lt;A_\\n&#39;</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    from_graph6_bytes, read_graph6, write_graph6_bytes</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The returned bytes end with a newline character.</span>
+
+<span class="sd">    The format does not support edge or node labels, parallel edges or</span>
+<span class="sd">    self loops. If self loops are present they are silently ignored.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Graph6 specification</span>
+<span class="sd">           &lt;http://users.cecs.anu.edu.au/~bdm/data/formats.html&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">convert_node_labels_to_integers</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+    <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_generate_graph6_bytes</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">header</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="read_graph6"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.graph6.read_graph6.html#networkx.readwrite.graph6.read_graph6">[docs]</a><span class="nd">@open_file</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">read_graph6</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read simple undirected graphs in graph6 format from path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : file or string</span>
+<span class="sd">       File or filename to write.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : Graph or list of Graphs</span>
+<span class="sd">       If the file contains multiple lines then a list of graphs is returned</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the string is unable to be parsed in graph6 format</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    You can read a graph6 file by giving the path to the file::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tempfile</span>
+<span class="sd">        &gt;&gt;&gt; with tempfile.NamedTemporaryFile() as f:</span>
+<span class="sd">        ...     _ = f.write(b&#39;&gt;&gt;graph6&lt;&lt;A_\\n&#39;)</span>
+<span class="sd">        ...     _ = f.seek(0)</span>
+<span class="sd">        ...     G = nx.read_graph6(f.name)</span>
+<span class="sd">        &gt;&gt;&gt; list(G.edges())</span>
+<span class="sd">        [(0, 1)]</span>
+
+<span class="sd">    You can also read a graph6 file by giving an open file-like object::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tempfile</span>
+<span class="sd">        &gt;&gt;&gt; with tempfile.NamedTemporaryFile() as f:</span>
+<span class="sd">        ...     _ = f.write(b&#39;&gt;&gt;graph6&lt;&lt;A_\\n&#39;)</span>
+<span class="sd">        ...     _ = f.seek(0)</span>
+<span class="sd">        ...     G = nx.read_graph6(f)</span>
+<span class="sd">        &gt;&gt;&gt; list(G.edges())</span>
+<span class="sd">        [(0, 1)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    from_graph6_bytes, write_graph6</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Graph6 specification</span>
+<span class="sd">           &lt;http://users.cecs.anu.edu.au/~bdm/data/formats.html&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">glist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">glist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">from_graph6_bytes</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">glist</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">glist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">glist</span></div>
+
+
+<div class="viewcode-block" id="write_graph6"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.graph6.write_graph6.html#networkx.readwrite.graph6.write_graph6">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="nd">@open_file</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">write_graph6</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a simple undirected graph to a path in graph6 format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Graph (undirected)</span>
+
+<span class="sd">    path : str</span>
+<span class="sd">       The path naming the file to which to write the graph.</span>
+
+<span class="sd">    nodes: list or iterable</span>
+<span class="sd">       Nodes are labeled 0...n-1 in the order provided.  If None the ordering</span>
+<span class="sd">       given by ``G.nodes()`` is used.</span>
+
+<span class="sd">    header: bool</span>
+<span class="sd">       If True add &#39;&gt;&gt;graph6&lt;&lt;&#39; string to head of data</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If the graph is directed or is a multigraph.</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        If the graph has at least ``2 ** 36`` nodes; the graph6 format</span>
+<span class="sd">        is only defined for graphs of order less than ``2 ** 36``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    You can write a graph6 file by giving the path to a file::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tempfile</span>
+<span class="sd">        &gt;&gt;&gt; with tempfile.NamedTemporaryFile() as f:</span>
+<span class="sd">        ...     nx.write_graph6(nx.path_graph(2), f.name)</span>
+<span class="sd">        ...     _ = f.seek(0)</span>
+<span class="sd">        ...     print(f.read())  # doctest: +SKIP</span>
+<span class="sd">        b&#39;&gt;&gt;graph6&lt;&lt;A_\\n&#39;</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    from_graph6_bytes, read_graph6</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function writes a newline character after writing the encoding</span>
+<span class="sd">    of the graph.</span>
+
+<span class="sd">    The format does not support edge or node labels, parallel edges or</span>
+<span class="sd">    self loops.  If self loops are present they are silently ignored.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Graph6 specification</span>
+<span class="sd">           &lt;http://users.cecs.anu.edu.au/~bdm/data/formats.html&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">write_graph6_file</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span></div>
+
+
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;directed&#39;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s1">&#39;multigraph&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">write_graph6_file</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a simple undirected graph to a file-like object in graph6 format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Graph (undirected)</span>
+
+<span class="sd">    f : file-like object</span>
+<span class="sd">       The file to write.</span>
+
+<span class="sd">    nodes: list or iterable</span>
+<span class="sd">       Nodes are labeled 0...n-1 in the order provided.  If None the ordering</span>
+<span class="sd">       given by ``G.nodes()`` is used.</span>
+
+<span class="sd">    header: bool</span>
+<span class="sd">       If True add &#39;&gt;&gt;graph6&lt;&lt;&#39; string to head of data</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If the graph is directed or is a multigraph.</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        If the graph has at least ``2 ** 36`` nodes; the graph6 format</span>
+<span class="sd">        is only defined for graphs of order less than ``2 ** 36``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    You can write a graph6 file by giving an open file-like object::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tempfile</span>
+<span class="sd">        &gt;&gt;&gt; with tempfile.NamedTemporaryFile() as f:</span>
+<span class="sd">        ...     nx.write_graph6(nx.path_graph(2), f)</span>
+<span class="sd">        ...     _ = f.seek(0)</span>
+<span class="sd">        ...     print(f.read())  # doctest: +SKIP</span>
+<span class="sd">        b&#39;&gt;&gt;graph6&lt;&lt;A_\\n&#39;</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    from_graph6_bytes, read_graph6</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function writes a newline character after writing the encoding</span>
+<span class="sd">    of the graph.</span>
+
+<span class="sd">    The format does not support edge or node labels, parallel edges or</span>
+<span class="sd">    self loops.  If self loops are present they are silently ignored.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Graph6 specification</span>
+<span class="sd">           &lt;http://users.cecs.anu.edu.au/~bdm/data/formats.html&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">convert_node_labels_to_integers</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">_generate_graph6_bytes</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">data_to_n</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read initial one-, four- or eight-unit value from graph6</span>
+<span class="sd">    integer sequence.</span>
+
+<span class="sd">    Return (value, rest of seq.)&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">62</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">62</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">30</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">+</span>
+            <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">8</span><span class="p">:])</span>
+
+
+<span class="k">def</span> <span class="nf">n_to_data</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert an integer to one-, four- or eight-unit graph6 sequence.</span>
+
+<span class="sd">    This function is undefined if `n` is not in ``range(2 ** 36)``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">62</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">258047</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">63</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># if n &lt;= 68719476735:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">63</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">30</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">,</span> <span class="n">n</span> <span class="o">&amp;</span> <span class="mh">0x3f</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

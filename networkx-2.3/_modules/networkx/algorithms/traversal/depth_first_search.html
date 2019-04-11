@@ -1,0 +1,630 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.traversal.depth_first_search &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.traversal.depth_first_search</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.traversal.depth_first_search</h1><div class="highlight"><pre>
+<span></span><span class="c1"># depth_first_search.py - depth-first traversals of a graph</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2004-2019 NetworkX developers.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of NetworkX.</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed under a BSD license; see LICENSE.txt for more</span>
+<span class="c1"># information.</span>
+<span class="c1">#</span>
+<span class="c1"># Author:</span>
+<span class="c1">#   Aric Hagberg &lt;aric.hagberg@gmail.com&gt;</span>
+<span class="sd">&quot;&quot;&quot;Basic algorithms for depth-first searching the nodes of a graph.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dfs_edges&#39;</span><span class="p">,</span> <span class="s1">&#39;dfs_tree&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;dfs_predecessors&#39;</span><span class="p">,</span> <span class="s1">&#39;dfs_successors&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;dfs_preorder_nodes&#39;</span><span class="p">,</span> <span class="s1">&#39;dfs_postorder_nodes&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;dfs_labeled_edges&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="dfs_edges"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_edges.html#networkx.algorithms.traversal.depth_first_search.dfs_edges">[docs]</a><span class="k">def</span> <span class="nf">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Iterate over edges in a depth-first-search (DFS).</span>
+
+<span class="sd">    Perform a depth-first-search over the nodes of G and yield</span>
+<span class="sd">    the edges in order. This may not generate all edges in G (see edge_dfs).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search and return edges in</span>
+<span class="sd">       the component reachable from source.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    edges: generator</span>
+<span class="sd">       A generator of edges in the depth-first-search.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.dfs_edges(G, source=0))</span>
+<span class="sd">    [(0, 1), (1, 2), (2, 3), (3, 4)]</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.dfs_edges(G, source=0, depth_limit=2))</span>
+<span class="sd">    [(0, 1), (1, 2)]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a source is not specified then a source is chosen arbitrarily and</span>
+<span class="sd">    repeatedly until all components in the graph are searched.</span>
+
+<span class="sd">    The implementation of this function is adapted from David Eppstein&#39;s</span>
+<span class="sd">    depth-first search function in `PADS`_, with modifications</span>
+<span class="sd">    to allow depth limits based on the Wikipedia article</span>
+<span class="sd">    &quot;`Depth-limited search`_&quot;.</span>
+
+<span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS</span>
+<span class="sd">    .. _Depth-limited search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dfs_preorder_nodes</span>
+<span class="sd">    dfs_postorder_nodes</span>
+<span class="sd">    dfs_labeled_edges</span>
+<span class="sd">    edge_dfs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># edges for all components</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># edges for components with source</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">depth_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">depth_limit</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">start</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">start</span><span class="p">]))]</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">,</span> <span class="n">depth_now</span><span class="p">,</span> <span class="n">children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span>
+                    <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">depth_now</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">child</span><span class="p">,</span> <span class="n">depth_now</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">child</span><span class="p">])))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="dfs_tree"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_tree.html#networkx.algorithms.traversal.depth_first_search.dfs_tree">[docs]</a><span class="k">def</span> <span class="nf">dfs_tree</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns oriented tree constructed from a depth-first-search from source.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    T : NetworkX DiGraph</span>
+<span class="sd">       An oriented tree</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; T = nx.dfs_tree(G, source=0, depth_limit=2)</span>
+<span class="sd">    &gt;&gt;&gt; list(T.edges())</span>
+<span class="sd">    [(0, 1), (1, 2)]</span>
+<span class="sd">    &gt;&gt;&gt; T = nx.dfs_tree(G, source=0)</span>
+<span class="sd">    &gt;&gt;&gt; list(T.edges())</span>
+<span class="sd">    [(0, 1), (1, 2), (2, 3), (3, 4)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">T</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">T</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="dfs_predecessors"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_predecessors.html#networkx.algorithms.traversal.depth_first_search.dfs_predecessors">[docs]</a><span class="k">def</span> <span class="nf">dfs_predecessors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns dictionary of predecessors in depth-first-search from source.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search and return edges in</span>
+<span class="sd">       the component reachable from source.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pred: dict</span>
+<span class="sd">       A dictionary with nodes as keys and predecessor nodes as values.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; nx.dfs_predecessors(G, source=0)</span>
+<span class="sd">    {1: 0, 2: 1, 3: 2}</span>
+<span class="sd">    &gt;&gt;&gt; nx.dfs_predecessors(G, source=0, depth_limit=2)</span>
+<span class="sd">    {1: 0, 2: 1}</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a source is not specified then a source is chosen arbitrarily and</span>
+<span class="sd">    repeatedly until all components in the graph are searched.</span>
+
+<span class="sd">    The implementation of this function is adapted from David Eppstein&#39;s</span>
+<span class="sd">    depth-first search function in `PADS`_, with modifications</span>
+<span class="sd">    to allow depth limits based on the Wikipedia article</span>
+<span class="sd">    &quot;`Depth-limited search`_&quot;.</span>
+
+<span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS</span>
+<span class="sd">    .. _Depth-limited search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="dfs_successors"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_successors.html#networkx.algorithms.traversal.depth_first_search.dfs_successors">[docs]</a><span class="k">def</span> <span class="nf">dfs_successors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns dictionary of successors in depth-first-search from source.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search and return edges in</span>
+<span class="sd">       the component reachable from source.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    succ: dict</span>
+<span class="sd">       A dictionary with nodes as keys and list of successor nodes as values.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; nx.dfs_successors(G, source=0)</span>
+<span class="sd">    {0: [1], 1: [2], 2: [3], 3: [4]}</span>
+<span class="sd">    &gt;&gt;&gt; nx.dfs_successors(G, source=0, depth_limit=2)</span>
+<span class="sd">    {0: [1], 1: [2]}</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a source is not specified then a source is chosen arbitrarily and</span>
+<span class="sd">    repeatedly until all components in the graph are searched.</span>
+
+<span class="sd">    The implementation of this function is adapted from David Eppstein&#39;s</span>
+<span class="sd">    depth-first search function in `PADS`_, with modifications</span>
+<span class="sd">    to allow depth limits based on the Wikipedia article</span>
+<span class="sd">    &quot;`Depth-limited search`_&quot;.</span>
+
+<span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS</span>
+<span class="sd">    .. _Depth-limited search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="n">depth_limit</span><span class="p">):</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dfs_postorder_nodes"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_postorder_nodes.html#networkx.algorithms.traversal.depth_first_search.dfs_postorder_nodes">[docs]</a><span class="k">def</span> <span class="nf">dfs_postorder_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate nodes in a depth-first-search post-ordering starting at source.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search and return edges in</span>
+<span class="sd">       the component reachable from source.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes: generator</span>
+<span class="sd">       A generator of nodes in a depth-first-search post-ordering.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.dfs_postorder_nodes(G, source=0))</span>
+<span class="sd">    [4, 3, 2, 1, 0]</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.dfs_postorder_nodes(G, source=0, depth_limit=2))</span>
+<span class="sd">    [1, 0]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a source is not specified then a source is chosen arbitrarily and</span>
+<span class="sd">    repeatedly until all components in the graph are searched.</span>
+
+<span class="sd">    The implementation of this function is adapted from David Eppstein&#39;s</span>
+<span class="sd">    depth-first search function in `PADS`_, with modifications</span>
+<span class="sd">    to allow depth limits based on the Wikipedia article</span>
+<span class="sd">    &quot;`Depth-limited search`_&quot;.</span>
+
+<span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS</span>
+<span class="sd">    .. _Depth-limited search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dfs_edges</span>
+<span class="sd">    dfs_preorder_nodes</span>
+<span class="sd">    dfs_labeled_edges</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="n">depth_limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">edges</span> <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="s1">&#39;reverse&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dfs_preorder_nodes"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_preorder_nodes.html#networkx.algorithms.traversal.depth_first_search.dfs_preorder_nodes">[docs]</a><span class="k">def</span> <span class="nf">dfs_preorder_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate nodes in a depth-first-search pre-ordering starting at source.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search and return edges in</span>
+<span class="sd">       the component reachable from source.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes: generator</span>
+<span class="sd">       A generator of nodes in a depth-first-search pre-ordering.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.dfs_preorder_nodes(G, source=0))</span>
+<span class="sd">    [0, 1, 2, 3, 4]</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.dfs_preorder_nodes(G, source=0, depth_limit=2))</span>
+<span class="sd">    [0, 1, 2]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a source is not specified then a source is chosen arbitrarily and</span>
+<span class="sd">    repeatedly until all components in the graph are searched.</span>
+
+<span class="sd">    The implementation of this function is adapted from David Eppstein&#39;s</span>
+<span class="sd">    depth-first search function in `PADS`_, with modifications</span>
+<span class="sd">    to allow depth limits based on the Wikipedia article</span>
+<span class="sd">    &quot;`Depth-limited search`_&quot;.</span>
+
+<span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS</span>
+<span class="sd">    .. _Depth-limited search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dfs_edges</span>
+<span class="sd">    dfs_postorder_nodes</span>
+<span class="sd">    dfs_labeled_edges</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="n">depth_limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">edges</span> <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="s1">&#39;forward&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="dfs_labeled_edges"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.depth_first_search.dfs_labeled_edges.html#networkx.algorithms.traversal.depth_first_search.dfs_labeled_edges">[docs]</a><span class="k">def</span> <span class="nf">dfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Iterate over edges in a depth-first-search (DFS) labeled by type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node, optional</span>
+<span class="sd">       Specify starting node for depth-first search and return edges in</span>
+<span class="sd">       the component reachable from source.</span>
+
+<span class="sd">    depth_limit : int, optional (default=len(G))</span>
+<span class="sd">       Specify the maximum search depth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    edges: generator</span>
+<span class="sd">       A generator of triples of the form (*u*, *v*, *d*), where (*u*,</span>
+<span class="sd">       *v*) is the edge being explored in the depth-first search and *d*</span>
+<span class="sd">       is one of the strings &#39;forward&#39;, &#39;nontree&#39;, or &#39;reverse&#39;. A</span>
+<span class="sd">       &#39;forward&#39; edge is one in which *u* has been visited but *v* has</span>
+<span class="sd">       not. A &#39;nontree&#39; edge is one in which both *u* and *v* have been</span>
+<span class="sd">       visited but the edge is not in the DFS tree. A &#39;reverse&#39; edge is</span>
+<span class="sd">       on in which both *u* and *v* have been visited and the edge is in</span>
+<span class="sd">       the DFS tree.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    The labels reveal the complete transcript of the depth-first search</span>
+<span class="sd">    algorithm in more detail than, for example, :func:`dfs_edges`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from pprint import pprint</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.DiGraph([(0, 1), (1, 2), (2, 1)])</span>
+<span class="sd">        &gt;&gt;&gt; pprint(list(nx.dfs_labeled_edges(G, source=0)))</span>
+<span class="sd">        [(0, 0, &#39;forward&#39;),</span>
+<span class="sd">         (0, 1, &#39;forward&#39;),</span>
+<span class="sd">         (1, 2, &#39;forward&#39;),</span>
+<span class="sd">         (2, 1, &#39;nontree&#39;),</span>
+<span class="sd">         (1, 2, &#39;reverse&#39;),</span>
+<span class="sd">         (0, 1, &#39;reverse&#39;),</span>
+<span class="sd">         (0, 0, &#39;reverse&#39;)]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If a source is not specified then a source is chosen arbitrarily and</span>
+<span class="sd">    repeatedly until all components in the graph are searched.</span>
+
+<span class="sd">    The implementation of this function is adapted from David Eppstein&#39;s</span>
+<span class="sd">    depth-first search function in `PADS`_, with modifications</span>
+<span class="sd">    to allow depth limits based on the Wikipedia article</span>
+<span class="sd">    &quot;`Depth-limited search`_&quot;.</span>
+
+<span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS</span>
+<span class="sd">    .. _Depth-limited search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dfs_edges</span>
+<span class="sd">    dfs_preorder_nodes</span>
+<span class="sd">    dfs_postorder_nodes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Based on http://www.ics.uci.edu/~eppstein/PADS/DFS.py</span>
+    <span class="c1"># by D. Eppstein, July 2004.</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># edges for all components</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># edges for components with source</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">depth_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">depth_limit</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">start</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">start</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">start</span><span class="p">]))]</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="n">parent</span><span class="p">,</span> <span class="n">depth_now</span><span class="p">,</span> <span class="n">children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">child</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="s1">&#39;nontree&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="s1">&#39;forward&#39;</span>
+                    <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">depth_now</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">child</span><span class="p">,</span> <span class="n">depth_now</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">child</span><span class="p">])))</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">stack</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">parent</span><span class="p">,</span> <span class="s1">&#39;reverse&#39;</span>
+        <span class="k">yield</span> <span class="n">start</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="s1">&#39;reverse&#39;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

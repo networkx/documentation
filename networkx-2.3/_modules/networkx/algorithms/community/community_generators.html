@@ -1,0 +1,626 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.community.community_generators &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.community.community_generators</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.community.community_generators</h1><div class="highlight"><pre>
+<span></span><span class="c1"># generators.py - functions for generating graphs with community structure</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2011 Ben Edwards &lt;bedwards@cs.unm.edu&gt;.</span>
+<span class="c1"># Copyright 2011 Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1"># Copyright 2015 NetworkX developers.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of NetworkX.</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed under a BSD license; see LICENSE.txt for more</span>
+<span class="c1"># information.</span>
+<span class="sd">&quot;&quot;&quot;Functions for generating graphs with community structure.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="c1"># HACK In order to accommodate both SciPy and non-SciPy implementations,</span>
+<span class="c1"># we need to wrap the SciPy implementation of the zeta function with an</span>
+<span class="c1"># extra parameter, `tolerance`, which will be ignored.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">zeta</span> <span class="k">as</span> <span class="n">_zeta</span>
+
+    <span class="k">def</span> <span class="nf">zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">zeta</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Hurwitz zeta function, or the Riemann zeta function of two</span>
+<span class="sd">        arguments.</span>
+
+<span class="sd">        ``x`` must be greater than one and ``q`` must be positive.</span>
+
+<span class="sd">        This function repeatedly computes subsequent partial sums until</span>
+<span class="sd">        convergence, as decided by ``tolerance``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">z_prev</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">z_prev</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">z_prev</span> <span class="o">=</span> <span class="n">z</span>
+            <span class="n">z</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="n">k</span> <span class="o">+</span> <span class="n">q</span><span class="p">)</span> <span class="o">**</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">z</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;LFR_benchmark_graph&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_zipf_rv_below</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a random value chosen from the Zipf distribution,</span>
+<span class="sd">    guaranteed to be less than or equal to the value ``threshold``.</span>
+
+<span class="sd">    Repeatedly draws values from the Zipf distribution until the</span>
+<span class="sd">    threshold is met, then returns that value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">zipf_rv</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">result</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">zipf_rv</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">_powerlaw_sequence</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of numbers obeying a power law distribution, with</span>
+<span class="sd">    some additional restrictions.</span>
+
+<span class="sd">    ``gamma`` and ``low`` are the parameters for the Zipf distribution.</span>
+
+<span class="sd">    ``high`` is the maximum allowed value for values draw from the Zipf</span>
+<span class="sd">    distribution. For more information, see :func:`_zipf_rv_below`.</span>
+
+<span class="sd">    ``condition`` and ``length`` are Boolean-valued functions on</span>
+<span class="sd">    lists. While generating the list, random values are drawn and</span>
+<span class="sd">    appended to the list until ``length`` is satisfied by the created</span>
+<span class="sd">    list. Once ``condition`` is satisfied, the sequence generated in</span>
+<span class="sd">    this way is returned.</span>
+
+<span class="sd">    ``max_iters`` indicates the number of times to generate a list</span>
+<span class="sd">    satisfying ``length``. If the number of iterations exceeds this</span>
+<span class="sd">    value, :exc:`~networkx.exception.ExceededMaxIterations` is raised.</span>
+
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">length</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+            <span class="n">seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_zipf_rv_below</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">seed</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">seq</span>
+    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">ExceededMaxIterations</span><span class="p">(</span><span class="s2">&quot;Could not create power law sequence&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># TODO Needs documentation.</span>
+<span class="k">def</span> <span class="nf">_generate_min_degree</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">average_degree</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span>
+                         <span class="n">max_iters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a minimum degree from the given average degree.&quot;&quot;&quot;</span>
+    <span class="n">min_deg_top</span> <span class="o">=</span> <span class="n">max_degree</span>
+    <span class="n">min_deg_bot</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">min_deg_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_deg_top</span> <span class="o">-</span> <span class="n">min_deg_bot</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">min_deg_bot</span>
+    <span class="n">itrs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">mid_avg_deg</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mid_avg_deg</span> <span class="o">-</span> <span class="n">average_degree</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">itrs</span> <span class="o">&gt;</span> <span class="n">max_iters</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">ExceededMaxIterations</span><span class="p">(</span><span class="s2">&quot;Could not match average_degree&quot;</span><span class="p">)</span>
+        <span class="n">mid_avg_deg</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">min_deg_mid</span><span class="p">),</span> <span class="n">max_degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">mid_avg_deg</span> <span class="o">+=</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">gamma</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">zeta</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">min_deg_mid</span><span class="p">,</span>
+                                                      <span class="n">tolerance</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mid_avg_deg</span> <span class="o">&gt;</span> <span class="n">average_degree</span><span class="p">:</span>
+            <span class="n">min_deg_top</span> <span class="o">=</span> <span class="n">min_deg_mid</span>
+            <span class="n">min_deg_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_deg_top</span> <span class="o">-</span> <span class="n">min_deg_bot</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">min_deg_bot</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">min_deg_bot</span> <span class="o">=</span> <span class="n">min_deg_mid</span>
+            <span class="n">min_deg_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_deg_top</span> <span class="o">-</span> <span class="n">min_deg_bot</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">min_deg_bot</span>
+        <span class="n">itrs</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># return int(min_deg_mid + 0.5)</span>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">min_deg_mid</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_generate_communities</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">,</span> <span class="n">community_sizes</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of sets, each of which represents a community in</span>
+<span class="sd">    the graph.</span>
+
+<span class="sd">    ``degree_seq`` is the degree sequence that must be met by the</span>
+<span class="sd">    graph.</span>
+
+<span class="sd">    ``community_sizes`` is the community size distribution that must be</span>
+<span class="sd">    met by the generated list of sets.</span>
+
+<span class="sd">    ``mu`` is a float in the interval [0, 1] indicating the fraction of</span>
+<span class="sd">    intra-community edges incident to each node.</span>
+
+<span class="sd">    ``max_iters`` is the number of times to try to add a node to a</span>
+<span class="sd">    community. This must be greater than the length of</span>
+<span class="sd">    ``degree_seq``, otherwise this function will always fail. If</span>
+<span class="sd">    the number of iterations exceeds this value,</span>
+<span class="sd">    :exc:`~networkx.exception.ExceededMaxIterations` is raised.</span>
+
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    The communities returned by this are sets of integers in the set {0,</span>
+<span class="sd">    ..., *n* - 1}, where *n* is the length of ``degree_seq``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This assumes the nodes in the graph will be natural numbers.</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">community_sizes</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">)</span>
+    <span class="n">free</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">free</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">community_sizes</span><span class="p">)))</span>
+        <span class="c1"># s = int(degree_seq[v] * (1 - mu) + 0.5)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">degree_seq</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">))</span>
+        <span class="c1"># If the community is large enough, add the node to the chosen</span>
+        <span class="c1"># community. Otherwise, return it to the list of unaffiliated</span>
+        <span class="c1"># nodes.</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="n">community_sizes</span><span class="p">[</span><span class="n">c</span><span class="p">]:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">free</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="c1"># If the community is too big, remove a node from it.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">community_sizes</span><span class="p">[</span><span class="n">c</span><span class="p">]:</span>
+            <span class="n">free</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">free</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Could not assign communities; try increasing min_community&#39;</span>
+    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">ExceededMaxIterations</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LFR_benchmark_graph"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.community_generators.LFR_benchmark_graph.html#networkx.algorithms.community.community_generators.LFR_benchmark_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">LFR_benchmark_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">tau1</span><span class="p">,</span> <span class="n">tau2</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">average_degree</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">min_degree</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_degree</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_community</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">max_community</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-7</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                        <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the LFR benchmark graph for testing community-finding</span>
+<span class="sd">    algorithms.</span>
+
+<span class="sd">    This algorithm proceeds as follows:</span>
+
+<span class="sd">    1) Find a degree sequence with a power law distribution, and minimum</span>
+<span class="sd">       value ``min_degree``, which has approximate average degree</span>
+<span class="sd">       ``average_degree``. This is accomplished by either</span>
+
+<span class="sd">       a) specifying ``min_degree`` and not ``average_degree``,</span>
+<span class="sd">       b) specifying ``average_degree`` and not ``min_degree``, in which</span>
+<span class="sd">          case a suitable minimum degree will be found.</span>
+
+<span class="sd">       ``max_degree`` can also be specified, otherwise it will be set to</span>
+<span class="sd">       ``n``. Each node *u* will have `\mu \mathrm{deg}(u)` edges</span>
+<span class="sd">       joining it to nodes in communities other than its own and `(1 -</span>
+<span class="sd">       \mu) \mathrm{deg}(u)` edges joining it to nodes in its own</span>
+<span class="sd">       community.</span>
+<span class="sd">    2) Generate community sizes according to a power law distribution</span>
+<span class="sd">       with exponent ``tau2``. If ``min_community`` and</span>
+<span class="sd">       ``max_community`` are not specified they will be selected to be</span>
+<span class="sd">       ``min_degree`` and ``max_degree``, respectively.  Community sizes</span>
+<span class="sd">       are generated until the sum of their sizes equals ``n``.</span>
+<span class="sd">    3) Each node will be randomly assigned a community with the</span>
+<span class="sd">       condition that the community is large enough for the node&#39;s</span>
+<span class="sd">       intra-community degree, `(1 - \mu) \mathrm{deg}(u)` as</span>
+<span class="sd">       described in step 2. If a community grows too large, a random node</span>
+<span class="sd">       will be selected for reassignment to a new community, until all</span>
+<span class="sd">       nodes have been assigned a community.</span>
+<span class="sd">    4) Each node *u* then adds `(1 - \mu) \mathrm{deg}(u)`</span>
+<span class="sd">       intra-community edges and `\mu \mathrm{deg}(u)` inter-community</span>
+<span class="sd">       edges.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Number of nodes in the created graph.</span>
+
+<span class="sd">    tau1 : float</span>
+<span class="sd">        Power law exponent for the degree distribution of the created</span>
+<span class="sd">        graph. This value must be strictly greater than one.</span>
+
+<span class="sd">    tau2 : float</span>
+<span class="sd">        Power law exponent for the community size distribution in the</span>
+<span class="sd">        created graph. This value must be strictly greater than one.</span>
+
+<span class="sd">    mu : float</span>
+<span class="sd">        Fraction of intra-community edges incident to each node. This</span>
+<span class="sd">        value must be in the interval [0, 1].</span>
+
+<span class="sd">    average_degree : float</span>
+<span class="sd">        Desired average degree of nodes in the created graph. This value</span>
+<span class="sd">        must be in the interval [0, *n*]. Exactly one of this and</span>
+<span class="sd">        ``min_degree`` must be specified, otherwise a</span>
+<span class="sd">        :exc:`NetworkXError` is raised.</span>
+
+<span class="sd">    min_degree : int</span>
+<span class="sd">        Minimum degree of nodes in the created graph. This value must be</span>
+<span class="sd">        in the interval [0, *n*]. Exactly one of this and</span>
+<span class="sd">        ``average_degree`` must be specified, otherwise a</span>
+<span class="sd">        :exc:`NetworkXError` is raised.</span>
+
+<span class="sd">    max_degree : int</span>
+<span class="sd">        Maximum degree of nodes in the created graph. If not specified,</span>
+<span class="sd">        this is set to ``n``, the total number of nodes in the graph.</span>
+
+<span class="sd">    min_community : int</span>
+<span class="sd">        Minimum size of communities in the graph. If not specified, this</span>
+<span class="sd">        is set to ``min_degree``.</span>
+
+<span class="sd">    max_community : int</span>
+<span class="sd">        Maximum size of communities in the graph. If not specified, this</span>
+<span class="sd">        is set to ``n``, the total number of nodes in the graph.</span>
+
+<span class="sd">    tol : float</span>
+<span class="sd">        Tolerance when comparing floats, specifically when comparing</span>
+<span class="sd">        average degree values.</span>
+
+<span class="sd">    max_iters : int</span>
+<span class="sd">        Maximum number of iterations to try to create the community sizes,</span>
+<span class="sd">        degree distribution, and community affiliations.</span>
+
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        The LFR benchmark graph generated according to the specified</span>
+<span class="sd">        parameters.</span>
+
+<span class="sd">        Each node in the graph has a node attribute ``&#39;community&#39;`` that</span>
+<span class="sd">        stores the community (that is, the set of nodes) that includes</span>
+<span class="sd">        it.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If any of the parameters do not meet their upper and lower bounds:</span>
+
+<span class="sd">        - ``tau1`` and ``tau2`` must be strictly greater than 1.</span>
+<span class="sd">        - ``mu`` must be in [0, 1].</span>
+<span class="sd">        - ``max_degree`` must be in {1, ..., *n*}.</span>
+<span class="sd">        - ``min_community`` and ``max_community`` must be in {0, ...,</span>
+<span class="sd">          *n*}.</span>
+
+<span class="sd">        If not exactly one of ``average_degree`` and ``min_degree`` is</span>
+<span class="sd">        specified.</span>
+
+<span class="sd">        If ``min_degree`` is not specified and a suitable ``min_degree``</span>
+<span class="sd">        cannot be found.</span>
+
+<span class="sd">    ExceededMaxIterations</span>
+<span class="sd">        If a valid degree sequence cannot be created within</span>
+<span class="sd">        ``max_iters`` number of iterations.</span>
+
+<span class="sd">        If a valid set of community sizes cannot be created within</span>
+<span class="sd">        ``max_iters`` number of iterations.</span>
+
+<span class="sd">        If a valid community assignment cannot be created within ``10 *</span>
+<span class="sd">        n * max_iters`` number of iterations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Basic usage::</span>
+
+<span class="sd">        &gt;&gt;&gt; from networkx.algorithms.community import LFR_benchmark_graph</span>
+<span class="sd">        &gt;&gt;&gt; n = 250</span>
+<span class="sd">        &gt;&gt;&gt; tau1 = 3</span>
+<span class="sd">        &gt;&gt;&gt; tau2 = 1.5</span>
+<span class="sd">        &gt;&gt;&gt; mu = 0.1</span>
+<span class="sd">        &gt;&gt;&gt; G = LFR_benchmark_graph(n, tau1, tau2, mu, average_degree=5,</span>
+<span class="sd">        ...                         min_community=20, seed=10)</span>
+
+<span class="sd">    Continuing the example above, you can get the communities from the</span>
+<span class="sd">    node attributes of the graph::</span>
+
+<span class="sd">        &gt;&gt;&gt; communities = {frozenset(G.nodes[v][&#39;community&#39;]) for v in G}</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm differs slightly from the original way it was</span>
+<span class="sd">    presented in [1].</span>
+
+<span class="sd">    1) Rather than connecting the graph via a configuration model then</span>
+<span class="sd">       rewiring to match the intra-community and inter-community</span>
+<span class="sd">       degrees, we do this wiring explicitly at the end, which should be</span>
+<span class="sd">       equivalent.</span>
+<span class="sd">    2) The code posted on the author&#39;s website [2] calculates the random</span>
+<span class="sd">       power law distributed variables and their average using</span>
+<span class="sd">       continuous approximations, whereas we use the discrete</span>
+<span class="sd">       distributions here as both degree and community size are</span>
+<span class="sd">       discrete.</span>
+
+<span class="sd">    Though the authors describe the algorithm as quite robust, testing</span>
+<span class="sd">    during development indicates that a somewhat narrower parameter set</span>
+<span class="sd">    is likely to successfully produce a graph. Some suggestions have</span>
+<span class="sd">    been provided in the event of exceptions.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] &quot;Benchmark graphs for testing community detection algorithms&quot;,</span>
+<span class="sd">           Andrea Lancichinetti, Santo Fortunato, and Filippo Radicchi,</span>
+<span class="sd">           Phys. Rev. E 78, 046110 2008</span>
+<span class="sd">    .. [2] http://santo.fortunato.googlepages.com/inthepress2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Perform some basic parameter validation.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tau1</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;tau1 must be greater than one&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tau2</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;tau2 must be greater than one&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">mu</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;mu must be in the interval [0, 1]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Validate parameters for generating the degree sequence.</span>
+    <span class="k">if</span> <span class="n">max_degree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_degree</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">max_degree</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;max_degree must be in the interval (0, n]&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">min_degree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">average_degree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Must assign exactly one of min_degree and&quot;</span>
+                               <span class="s2">&quot; average_degree&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">min_degree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_degree</span> <span class="o">=</span> <span class="n">_generate_min_degree</span><span class="p">(</span><span class="n">tau1</span><span class="p">,</span> <span class="n">average_degree</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">,</span>
+                                          <span class="n">tol</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">)</span>
+
+    <span class="c1"># Generate a degree sequence with a power law distribution.</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">min_degree</span><span class="p">,</span> <span class="n">max_degree</span>
+
+    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span> <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span>
+    <span class="n">deg_seq</span> <span class="o">=</span> <span class="n">_powerlaw_sequence</span><span class="p">(</span><span class="n">tau1</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span>
+                                 <span class="n">length</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+
+    <span class="c1"># Validate parameters for generating the community size sequence.</span>
+    <span class="k">if</span> <span class="n">min_community</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">min_community</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">deg_seq</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_community</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_community</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">deg_seq</span><span class="p">)</span>
+
+    <span class="c1"># Generate a community size sequence with a power law distribution.</span>
+    <span class="c1">#</span>
+    <span class="c1"># TODO The original code incremented the number of iterations each</span>
+    <span class="c1"># time a new Zipf random value was drawn from the distribution. This</span>
+    <span class="c1"># differed from the way the number of iterations was incremented in</span>
+    <span class="c1"># `_powerlaw_degree_sequence`, so this code was changed to match</span>
+    <span class="c1"># that one. As a result, this code is allowed many more chances to</span>
+    <span class="c1"># generate a valid community size sequence.</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">min_community</span><span class="p">,</span> <span class="n">max_community</span>
+
+    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span> <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span>
+
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span> <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span>
+    <span class="n">comms</span> <span class="o">=</span> <span class="n">_powerlaw_sequence</span><span class="p">(</span><span class="n">tau2</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span>
+                               <span class="n">length</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+
+    <span class="c1"># Generate the communities based on the given degree sequence and</span>
+    <span class="c1"># community sizes.</span>
+    <span class="n">max_iters</span> <span class="o">*=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">communities</span> <span class="o">=</span> <span class="n">_generate_communities</span><span class="p">(</span><span class="n">deg_seq</span><span class="p">,</span> <span class="n">comms</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+
+    <span class="c1"># Finally, generate the benchmark graph based on the given</span>
+    <span class="c1"># communities, joining nodes according to the intra- and</span>
+    <span class="c1"># inter-community degrees.</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">communities</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">round</span><span class="p">(</span><span class="n">deg_seq</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">deg_seq</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;community&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,1186 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.drawing.layout &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.drawing.layout</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.drawing.layout</h1><div class="highlight"><pre>
+<span></span><span class="c1">#    Copyright (C) 2004-2019 by</span>
+<span class="c1">#    Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#    Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#    Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#    Richard Penney &lt;rwpenney@users.sourceforge.net&gt;</span>
+<span class="c1">#    All rights reserved.</span>
+<span class="c1">#    BSD license.</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Aric Hagberg &lt;aric.hagberg@gmail.com&gt;,</span>
+<span class="c1">#          Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">******</span>
+<span class="sd">Layout</span>
+<span class="sd">******</span>
+
+<span class="sd">Node positioning algorithms for graph drawing.</span>
+
+<span class="sd">For `random_layout()` the possible resulting shape</span>
+<span class="sd">is a square of side [0, scale] (default: [0, 1])</span>
+<span class="sd">Changing `center` shifts the layout by that amount.</span>
+
+<span class="sd">For the other layout routines, the extent is</span>
+<span class="sd">[center - scale, center + scale] (default: [-1, 1]).</span>
+
+<span class="sd">Warning: Most layout routines have only been tested in 2-dimensions.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="k">import</span> <span class="n">random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;bipartite_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;circular_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;kamada_kawai_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;random_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;rescale_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;shell_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;spring_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;spectral_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;planar_layout&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;fruchterman_reingold_layout&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="c1"># Some boilerplate code.</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+        <span class="n">empty_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">empty_graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span>
+
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;length of center coordinates must match dimension of layout&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="n">center</span>
+
+
+<div class="viewcode-block" id="random_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.random_layout.html#networkx.drawing.layout.random_layout">[docs]</a><span class="nd">@random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes uniformly at random in the unit square.</span>
+
+<span class="sd">    For every node, a position is generated by choosing each of dim</span>
+<span class="sd">    coordinates uniformly at random on the interval [0.0, 1.0).</span>
+
+<span class="sd">    NumPy (http://scipy.org) is required for this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+
+<span class="sd">    seed : int, RandomState instance or None  optional (default=None)</span>
+<span class="sd">        Set the random state for deterministic node layouts.</span>
+<span class="sd">        If int, `seed` is the seed used by the random number generator,</span>
+<span class="sd">        if numpy.random.RandomState instance, `seed` is the random</span>
+<span class="sd">        number generator,</span>
+<span class="sd">        if None, the random number generator is the RandomState instance used</span>
+<span class="sd">        by numpy.random.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.lollipop_graph(4, 3)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.random_layout(G)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="n">dim</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">pos</span></div>
+
+
+<div class="viewcode-block" id="circular_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.circular_layout.html#networkx.drawing.layout.circular_layout">[docs]</a><span class="k">def</span> <span class="nf">circular_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="c1"># dim=2 only</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes on a circle.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+<span class="sd">        If dim&gt;2, the remaining dimensions are set to zero</span>
+<span class="sd">        in the returned positions.</span>
+<span class="sd">        If dim&lt;2, a ValueError is raised.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    -------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If dim &lt; 2</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.circular_layout(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm currently only works in two dimensions and does not</span>
+<span class="sd">    try to minimize edge crossings.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">if</span> <span class="n">dim</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;cannot handle dimensions &lt; 2&#39;</span><span class="p">)</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="n">paddims</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">):</span> <span class="n">center</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Discard the extra angle since it matches 0 radians.</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="n">paddims</span><span class="p">))])</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">pos</span></div>
+
+
+<div class="viewcode-block" id="shell_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.shell_layout.html#networkx.drawing.layout.shell_layout">[docs]</a><span class="k">def</span> <span class="nf">shell_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nlist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes in concentric circles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    nlist : list of lists</span>
+<span class="sd">       List of node lists for each shell.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout, currently only dim=2 is supported.</span>
+<span class="sd">        Other dimension values result in a ValueError.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    -------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If dim != 2</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; shells = [[0], [1, 2, 3]]</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.shell_layout(G, shells)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm currently only works in two dimensions and does not</span>
+<span class="sd">    try to minimize edge crossings.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">if</span> <span class="n">dim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;can only handle 2 dimensions&#39;</span><span class="p">)</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="p">):</span> <span class="n">center</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">nlist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># draw the whole graph in one shell</span>
+        <span class="n">nlist</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nlist</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># single node at center</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># else start at r=1</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">npos</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">nlist</span><span class="p">:</span>
+        <span class="c1"># Discard the extra angle since it matches 0 radians.</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)])</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">nlist</span><span class="p">))</span> <span class="o">+</span> <span class="n">center</span>
+        <span class="n">npos</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+        <span class="n">radius</span> <span class="o">+=</span> <span class="mf">1.0</span>
+
+    <span class="k">return</span> <span class="n">npos</span></div>
+
+
+<div class="viewcode-block" id="bipartite_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.bipartite_layout.html#networkx.drawing.layout.bipartite_layout">[docs]</a><span class="k">def</span> <span class="nf">bipartite_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">,</span>
+                     <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aspect_ratio</span><span class="o">=</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes in two straight lines.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    nodes : list or container</span>
+<span class="sd">        Nodes in one node set of the bipartite graph.</span>
+<span class="sd">        This set will be placed on left or top.</span>
+
+<span class="sd">    align : string (default=&#39;vertical&#39;)</span>
+<span class="sd">        The alignment of nodes. Vertical or horizontal.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    aspect_ratio : number (default=4/3):</span>
+<span class="sd">        The ratio of the width to the height of the layout.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.bipartite.gnmk_random_graph(3, 5, 10, seed=123)</span>
+<span class="sd">    &gt;&gt;&gt; top = nx.bipartite.sets(G)[0]</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.bipartite_layout(G, top)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm currently only works in two dimensions and does not</span>
+<span class="sd">    try to minimize edge crossings.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">height</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">aspect_ratio</span> <span class="o">*</span> <span class="n">height</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">height</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">bottom</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">top</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">top</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">bottom</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">align</span> <span class="o">==</span> <span class="s1">&#39;vertical&#39;</span><span class="p">:</span>
+        <span class="n">left_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+        <span class="n">right_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+        <span class="n">left_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+        <span class="n">right_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+
+        <span class="n">top_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">left_xs</span><span class="p">,</span> <span class="n">left_ys</span><span class="p">])</span> <span class="o">-</span> <span class="n">offset</span>
+        <span class="n">bottom_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">right_xs</span><span class="p">,</span> <span class="n">right_ys</span><span class="p">])</span> <span class="o">-</span> <span class="n">offset</span>
+
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">top_pos</span><span class="p">,</span> <span class="n">bottom_pos</span><span class="p">])</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pos</span>
+
+    <span class="k">if</span> <span class="n">align</span> <span class="o">==</span> <span class="s1">&#39;horizontal&#39;</span><span class="p">:</span>
+        <span class="n">top_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+        <span class="n">bottom_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+        <span class="n">top_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+        <span class="n">bottom_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+
+        <span class="n">top_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">top_xs</span><span class="p">,</span> <span class="n">top_ys</span><span class="p">])</span> <span class="o">-</span> <span class="n">offset</span>
+        <span class="n">bottom_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">bottom_xs</span><span class="p">,</span> <span class="n">bottom_ys</span><span class="p">])</span> <span class="o">-</span> <span class="n">offset</span>
+
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">top_pos</span><span class="p">,</span> <span class="n">bottom_pos</span><span class="p">])</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pos</span>
+
+    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;align must be either vertical or horizontal.&#39;</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<span class="nd">@random_state</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fruchterman_reingold_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span>
+                                <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                                <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+                                <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span>
+                                <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes using Fruchterman-Reingold force-directed algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    k : float (default=None)</span>
+<span class="sd">        Optimal distance between nodes.  If None the distance is set to</span>
+<span class="sd">        1/sqrt(n) where n is the number of nodes.  Increase this value</span>
+<span class="sd">        to move nodes farther apart.</span>
+
+<span class="sd">    pos : dict or None  optional (default=None)</span>
+<span class="sd">        Initial positions for nodes as a dictionary with node as keys</span>
+<span class="sd">        and values as a coordinate list or tuple.  If None, then use</span>
+<span class="sd">        random initial positions.</span>
+
+<span class="sd">    fixed : list or None  optional (default=None)</span>
+<span class="sd">        Nodes to keep fixed at initial position.</span>
+
+<span class="sd">    iterations : int  optional (default=50)</span>
+<span class="sd">        Maximum number of iterations taken</span>
+
+<span class="sd">    threshold: float optional (default = 1e-4)</span>
+<span class="sd">        Threshold for relative error in node position changes.</span>
+<span class="sd">        The iteration stops if the error is below this threshold.</span>
+
+<span class="sd">    weight : string or None   optional (default=&#39;weight&#39;)</span>
+<span class="sd">        The edge attribute that holds the numerical value used for</span>
+<span class="sd">        the edge weight.  If None, then all edge weights are 1.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions. Not used unless `fixed is None`.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+<span class="sd">        Not used unless `fixed is None`.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+
+<span class="sd">    seed : int, RandomState instance or None  optional (default=None)</span>
+<span class="sd">        Set the random state for deterministic node layouts.</span>
+<span class="sd">        If int, `seed` is the seed used by the random number generator,</span>
+<span class="sd">        if numpy.random.RandomState instance, `seed` is the random</span>
+<span class="sd">        number generator,</span>
+<span class="sd">        if None, the random number generator is the RandomState instance used</span>
+<span class="sd">        by numpy.random.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.spring_layout(G)</span>
+
+<span class="sd">    # The same using longer but equivalent function name</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.fruchterman_reingold_layout(G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nfixed</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">))))</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">nfixed</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">fixed</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Determine size of existing domain to adjust initial positions</span>
+        <span class="n">dom_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">coord</span> <span class="k">for</span> <span class="n">pos_tup</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">pos_tup</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dom_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dom_size</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">pos_arr</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="n">dim</span><span class="p">)</span> <span class="o">*</span> <span class="n">dom_size</span> <span class="o">+</span> <span class="n">center</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">:</span>
+                <span class="n">pos_arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pos_arr</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">arbitrary_element</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span> <span class="n">center</span><span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Sparse matrix</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>  <span class="c1"># sparse solver for large graphs</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We must adjust k by domain size for layouts not near 1x1</span>
+            <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">dom_size</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_sparse_fruchterman_reingold</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">pos_arr</span><span class="p">,</span> <span class="n">fixed</span><span class="p">,</span>
+                                           <span class="n">iterations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span>
+                                           <span class="n">dim</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We must adjust k by domain size for layouts not near 1x1</span>
+            <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">dom_size</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_fruchterman_reingold</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">pos_arr</span><span class="p">,</span> <span class="n">fixed</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span>
+                                    <span class="n">threshold</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+
+<span class="n">spring_layout</span> <span class="o">=</span> <span class="n">fruchterman_reingold_layout</span>
+
+
+<span class="nd">@random_state</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_fruchterman_reingold</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                          <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Position nodes in adjacency matrix A using Fruchterman-Reingold</span>
+    <span class="c1"># Entry point for NetworkX graph is fruchterman_reingold_layout()</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;fruchterman_reingold() takes an adjacency matrix as input&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># random initial positions</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># make sure positions are of same type as matrix</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># optimal distance between nodes</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">nnodes</span><span class="p">)</span>
+    <span class="c1"># the initial &quot;temperature&quot;  is about .1 of domain area (=1x1)</span>
+    <span class="c1"># this is the largest step allowed in the dynamics.</span>
+    <span class="c1"># We need to calculate this in case our fixed positions force our domain</span>
+    <span class="c1"># to be much bigger than 1x1</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="c1"># simple cooling scheme.</span>
+    <span class="c1"># linearly step down by dt on each iteration so last iteration is size dt.</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># the inscrutable (but fast) version</span>
+    <span class="c1"># this is still O(V^2)</span>
+    <span class="c1"># could use multilevel methods to speed this up significantly</span>
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="c1"># matrix of difference between points</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">pos</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="c1"># distance between points</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># enforce minimum distance of 0.01</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">distance</span><span class="p">)</span>
+        <span class="c1"># displacement &quot;force&quot;</span>
+        <span class="n">displacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,ij-&gt;ik&#39;</span><span class="p">,</span>
+                                 <span class="n">delta</span><span class="p">,</span>
+                                 <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span> <span class="o">/</span> <span class="n">distance</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">A</span> <span class="o">*</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">k</span><span class="p">))</span>
+        <span class="c1"># update positions</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">displacement</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
+        <span class="n">delta_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,i-&gt;ij&#39;</span><span class="p">,</span> <span class="n">displacement</span><span class="p">,</span> <span class="n">t</span> <span class="o">/</span> <span class="n">length</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># don&#39;t change positions of fixed nodes</span>
+            <span class="n">delta_pos</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">delta_pos</span>
+        <span class="c1"># cool temperature</span>
+        <span class="n">t</span> <span class="o">-=</span> <span class="n">dt</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">/</span> <span class="n">nnodes</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+
+<span class="nd">@random_state</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_sparse_fruchterman_reingold</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fixed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                 <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Position nodes in adjacency matrix A using Fruchterman-Reingold</span>
+    <span class="c1"># Entry point for NetworkX graph is fruchterman_reingold_layout()</span>
+    <span class="c1"># Sparse version</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;fruchterman_reingold() takes an adjacency matrix as input&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">spdiags</span><span class="p">,</span> <span class="n">coo_matrix</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ &quot;</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="c1"># make sure we have a LIst of Lists representation</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">tolil</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="n">coo_matrix</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="o">.</span><span class="n">tolil</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># random initial positions</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">seed</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># make sure positions are of same type as matrix</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># no fixed nodes</span>
+    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># optimal distance between nodes</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">nnodes</span><span class="p">)</span>
+    <span class="c1"># the initial &quot;temperature&quot;  is about .1 of domain area (=1x1)</span>
+    <span class="c1"># this is the largest step allowed in the dynamics.</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">0.1</span>
+    <span class="c1"># simple cooling scheme.</span>
+    <span class="c1"># linearly step down by dt on each iteration so last iteration is size dt.</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">displacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="n">nnodes</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">displacement</span> <span class="o">*=</span> <span class="mi">0</span>
+        <span class="c1"># loop over rows</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fixed</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># difference between this row&#39;s node position and all others</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">pos</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="c1"># distance between points</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">delta</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="c1"># enforce minimum distance of 0.01</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
+            <span class="c1"># the adjacency matrix row</span>
+            <span class="n">Ai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">getrowview</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+            <span class="c1"># displacement &quot;force&quot;</span>
+            <span class="n">displacement</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span>\
+                <span class="p">(</span><span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">k</span> <span class="o">/</span> <span class="n">distance</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">Ai</span> <span class="o">*</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">k</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># update positions</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">displacement</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">length</span><span class="p">)</span>
+        <span class="n">delta_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">displacement</span> <span class="o">*</span> <span class="n">t</span> <span class="o">/</span> <span class="n">length</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">delta_pos</span>
+        <span class="c1"># cool temperature</span>
+        <span class="n">t</span> <span class="o">-=</span> <span class="n">dt</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">/</span> <span class="n">nnodes</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">pos</span>
+
+
+<div class="viewcode-block" id="kamada_kawai_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.kamada_kawai_layout.html#networkx.drawing.layout.kamada_kawai_layout">[docs]</a><span class="k">def</span> <span class="nf">kamada_kawai_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span>
+                        <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes using Kamada-Kawai path-length cost-function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    dist : float (default=None)</span>
+<span class="sd">        A two-level dictionary of optimal distances between nodes,</span>
+<span class="sd">        indexed by source and destination node.</span>
+<span class="sd">        If None, the distance is computed using shortest_path_length().</span>
+
+<span class="sd">    pos : dict or None  optional (default=None)</span>
+<span class="sd">        Initial positions for nodes as a dictionary with node as keys</span>
+<span class="sd">        and values as a coordinate list or tuple.  If None, then use</span>
+<span class="sd">        circular_layout() for dim &gt;= 2 and a linear layout for dim == 1.</span>
+
+<span class="sd">    weight : string or None   optional (default=&#39;weight&#39;)</span>
+<span class="sd">        The edge attribute that holds the numerical value used for</span>
+<span class="sd">        the edge weight.  If None, then all edge weights are 1.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.kamada_kawai_layout(G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="n">nNodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">))</span>
+    <span class="n">dist_mtx</span> <span class="o">=</span> <span class="mf">1e6</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">nNodes</span><span class="p">,</span> <span class="n">nNodes</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">nr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">rdist</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">nr</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">nc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">nc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rdist</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">dist_mtx</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">nc</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">circular_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">pt</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">pt</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)))}</span>
+    <span class="n">pos_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">])</span>
+
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">_kamada_kawai_solve</span><span class="p">(</span><span class="n">dist_mtx</span><span class="p">,</span> <span class="n">pos_arr</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span></div>
+
+
+<span class="k">def</span> <span class="nf">_kamada_kawai_solve</span><span class="p">(</span><span class="n">dist_mtx</span><span class="p">,</span> <span class="n">pos_arr</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="c1"># Anneal node locations based on the Kamada-Kawai cost-function,</span>
+    <span class="c1"># using the supplied matrix of preferred inter-node distances,</span>
+    <span class="c1"># and starting locations.</span>
+
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">minimize</span>
+
+    <span class="n">meanwt</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">costargs</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">dist_mtx</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">dist_mtx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mf">1e-3</span><span class="p">),</span>
+                <span class="n">meanwt</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="n">optresult</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">_kamada_kawai_costfn</span><span class="p">,</span> <span class="n">pos_arr</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                         <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="n">costargs</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">optresult</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dim</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_kamada_kawai_costfn</span><span class="p">(</span><span class="n">pos_vec</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">invdist</span><span class="p">,</span> <span class="n">meanweight</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+    <span class="c1"># Cost-function and gradient for Kamada-Kawai layout algorithm</span>
+    <span class="n">nNodes</span> <span class="o">=</span> <span class="n">invdist</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pos_arr</span> <span class="o">=</span> <span class="n">pos_vec</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nNodes</span><span class="p">,</span> <span class="n">dim</span><span class="p">))</span>
+
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">pos_arr</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">pos_arr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">nodesep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,ij-&gt;ijk&#39;</span><span class="p">,</span>
+                          <span class="n">delta</span><span class="p">,</span>
+                          <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">nodesep</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nNodes</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span><span class="p">))</span>
+
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">nodesep</span> <span class="o">*</span> <span class="n">invdist</span> <span class="o">-</span> <span class="mf">1.0</span>
+    <span class="n">offset</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">diag_indices</span><span class="p">(</span><span class="n">nNodes</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">cost</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">offset</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ij,ijk-&gt;ik&#39;</span><span class="p">,</span> <span class="n">invdist</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span> <span class="o">-</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ij,ijk-&gt;jk&#39;</span><span class="p">,</span> <span class="n">invdist</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">direction</span><span class="p">))</span>
+
+    <span class="c1"># Additional parabolic term to encourage mean position to be near origin:</span>
+    <span class="n">sumpos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pos_arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">cost</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">meanweight</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sumpos</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">+=</span> <span class="n">meanweight</span> <span class="o">*</span> <span class="n">sumpos</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="spectral_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.spectral_layout.html#networkx.drawing.layout.spectral_layout">[docs]</a><span class="k">def</span> <span class="nf">spectral_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes using the eigenvectors of the graph Laplacian.</span>
+
+<span class="sd">    Using the unnormalized Laplacion, the layout shows possible clusters of</span>
+<span class="sd">    nodes which are an approximation of the ratio cut. If dim is the number of</span>
+<span class="sd">    dimensions then the positions are the entries of the dim eigenvectors</span>
+<span class="sd">    corresponding to the ascending eigenvalues starting from the second one.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    weight : string or None   optional (default=&#39;weight&#39;)</span>
+<span class="sd">        The edge attribute that holds the numerical value used for</span>
+<span class="sd">        the edge weight.  If None, then all edge weights are 1.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.spectral_layout(G)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Directed graphs will be considered as undirected graphs when</span>
+<span class="sd">    positioning the nodes.</span>
+
+<span class="sd">    For larger graphs (&gt;500 nodes) this will use the SciPy sparse</span>
+<span class="sd">    eigenvalue solver (ARPACK).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># handle some special cases that break the eigensolvers</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">center</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Sparse matrix</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>  <span class="c1"># dense solver is faster for small graphs</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">)</span>
+        <span class="c1"># Symmetrize directed graphs</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_sparse_spectral</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="c1"># Dense matrix</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+        <span class="c1"># Symmetrize directed graphs</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">A</span> <span class="o">+=</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_spectral</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pos</span></div>
+
+
+<span class="k">def</span> <span class="nf">_spectral</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="c1"># Input adjacency matrix A</span>
+    <span class="c1"># Uses dense eigenvalue solver from numpy</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;spectral() takes an adjacency matrix as input&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># form Laplacian matrix</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nnodes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">I</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># diagonal of degrees</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">D</span> <span class="o">-</span> <span class="n">A</span>
+
+    <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="c1"># sort and keep smallest nonzero</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="n">dim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># 0 index is zero eigenvalue</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">index</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_sparse_spectral</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="c1"># Input adjacency matrix A</span>
+    <span class="c1"># Uses sparse eigenvalue solver from scipy</span>
+    <span class="c1"># Could use multilevel methods here, see Koren &quot;On spectral graph drawing&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">spdiags</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse.linalg.eigen</span> <span class="k">import</span> <span class="n">eigsh</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nnodes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;sparse_spectral() takes an adjacency matrix as input&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># form Laplacian matrix</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">spdiags</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nnodes</span><span class="p">,</span> <span class="n">nnodes</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">D</span> <span class="o">-</span> <span class="n">A</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># number of Lanczos vectors for ARPACK solver.What is the right scaling?</span>
+    <span class="n">ncv</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)))</span>
+    <span class="c1"># return smallest k eigenvalues and eigenvectors</span>
+    <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">eigenvectors</span> <span class="o">=</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;SM&#39;</span><span class="p">,</span> <span class="n">ncv</span><span class="o">=</span><span class="n">ncv</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="n">k</span><span class="p">]</span>  <span class="c1"># 0 index is zero eigenvalue</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigenvectors</span><span class="p">[:,</span> <span class="n">index</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="planar_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.planar_layout.html#networkx.drawing.layout.planar_layout">[docs]</a><span class="k">def</span> <span class="nf">planar_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Position nodes without edge intersections.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G. If G is of type</span>
+<span class="sd">        PlanarEmbedding, the positions are selected accordingly.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph or list of nodes</span>
+<span class="sd">        A position will be assigned to every node in G. If G is of type</span>
+<span class="sd">        nx.PlanarEmbedding, the positions are selected accordingly.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        Scale factor for positions.</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    dim : int</span>
+<span class="sd">        Dimension of layout.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    nx.NetworkXException</span>
+<span class="sd">        If G is not planar</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.planar_layout(G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">if</span> <span class="n">dim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;can only handle 2 dimensions&#39;</span><span class="p">)</span>
+
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">PlanarEmbedding</span><span class="p">):</span>
+        <span class="n">embedding</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_planar</span><span class="p">,</span> <span class="n">embedding</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">check_planarity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_planar</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXException</span><span class="p">(</span><span class="s2">&quot;G is not planar.&quot;</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">combinatorial_embedding_to_pos</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+    <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">row_stack</span><span class="p">((</span><span class="n">pos</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">node_list</span><span class="p">))</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="n">center</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">node_list</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="rescale_layout"><a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.rescale_layout.html#networkx.drawing.layout.rescale_layout">[docs]</a><span class="k">def</span> <span class="nf">rescale_layout</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns scaled position array to (-scale, scale) in all axes.</span>
+
+<span class="sd">    The function acts on NumPy arrays which hold position information.</span>
+<span class="sd">    Each position is one row of the array. The dimension of the space</span>
+<span class="sd">    equals the number of columns. Each coordinate in one column.</span>
+
+<span class="sd">    To rescale, the mean (center) is subtracted from each axis separately.</span>
+<span class="sd">    Then all values are scaled so that the largest magnitude value</span>
+<span class="sd">    from all axes equals `scale` (thus, the aspect ratio is preserved).</span>
+<span class="sd">    The resulting NumPy Array is returned (order of rows unchanged).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pos : numpy array</span>
+<span class="sd">        positions to be scaled. Each row is a position.</span>
+
+<span class="sd">    scale : number (default: 1)</span>
+<span class="sd">        The size of the resulting extent in all directions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : numpy array</span>
+<span class="sd">        scaled positions. Each row is a position.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Find max length over all dimensions</span>
+    <span class="n">lim</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># max coordinate for all axes</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">lim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">lim</span><span class="p">)</span>
+    <span class="c1"># rescale to (-scale, scale) in all directions, preserves aspect</span>
+    <span class="k">if</span> <span class="n">lim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span> <span class="o">/</span> <span class="n">lim</span>
+    <span class="k">return</span> <span class="n">pos</span></div>
+
+
+<span class="c1"># fixture for nose tests</span>
+<span class="k">def</span> <span class="nf">setup_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nose</span> <span class="k">import</span> <span class="n">SkipTest</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">numpy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;NumPy not available&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">scipy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SkipTest</span><span class="p">(</span><span class="s2">&quot;SciPy not available&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

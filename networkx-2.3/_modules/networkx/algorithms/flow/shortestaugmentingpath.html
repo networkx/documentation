@@ -1,0 +1,511 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.algorithms.flow.shortestaugmentingpath &mdash; NetworkX 2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Search within NetworkX 2.3 documentation"
+          href="../../../../_static/opensearch.xml"/>
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> NetworkX
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../news.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../credits.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../auto_examples/index.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NetworkX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.algorithms.flow.shortestaugmentingpath</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.algorithms.flow.shortestaugmentingpath</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Shortest augmenting path algorithm for maximum flow problems.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;ysitu &lt;ysitu@users.noreply.github.com&gt;&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2014 ysitu &lt;ysitu@users.noreply.github.com&gt;</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1"># BSD license.</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.edmondskarp</span> <span class="k">import</span> <span class="n">edmonds_karp_core</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;shortest_augmenting_path&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">shortest_augmenting_path_impl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">two_phase</span><span class="p">,</span>
+                                  <span class="n">cutoff</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementation of the shortest augmenting path algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;node </span><span class="si">%s</span><span class="s1"> not in graph&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;node </span><span class="si">%s</span><span class="s1"> not in graph&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">t</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s1">&#39;source and sink are the same node&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">residual</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">build_residual_network</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">residual</span>
+
+    <span class="n">R_nodes</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">nodes</span>
+    <span class="n">R_pred</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">pred</span>
+    <span class="n">R_succ</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">succ</span>
+
+    <span class="c1"># Initialize/reset the residual network.</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">e</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Initialize heights of the nodes.</span>
+    <span class="n">heights</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+    <span class="k">while</span> <span class="n">q</span><span class="p">:</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+        <span class="n">height</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">heights</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]:</span>
+                <span class="n">heights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+                <span class="n">q</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">height</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">heights</span><span class="p">:</span>
+        <span class="c1"># t is not reachable from s in the residual network. The maximum flow</span>
+        <span class="c1"># must be zero.</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">R</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Initialize heights and &#39;current edge&#39; data structures of the nodes.</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">heights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">heights</span> <span class="k">else</span> <span class="n">n</span>
+        <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;curr_edge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CurrentEdge</span><span class="p">(</span><span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
+
+    <span class="c1"># Initialize counts of nodes in each level.</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">inf</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;inf&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">augment</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Augment flow along a path from s to t.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Determine the path residual capacity.</span>
+        <span class="n">flow</span> <span class="o">=</span> <span class="n">inf</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">flow</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">flow</span><span class="p">,</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">])</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">if</span> <span class="n">flow</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">&gt;</span> <span class="n">inf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span>
+                <span class="s1">&#39;Infinite capacity path, flow unbounded above.&#39;</span><span class="p">)</span>
+        <span class="c1"># Augment flow along the path.</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+            <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+            <span class="n">R_succ</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">flow</span>
+
+    <span class="k">def</span> <span class="nf">relabel</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Relabel a node to create an admissible edge.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]:</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">height</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">cutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Phase 1: Look for shortest augmenting paths using depth-first search.</span>
+
+    <span class="n">flow_value</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">n</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">two_phase</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">m</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span> <span class="o">**</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)))</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">d</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
+        <span class="n">curr_edge</span> <span class="o">=</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;curr_edge&#39;</span><span class="p">]</span>
+        <span class="c1"># Depth-first search for the next node on the path to t.</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="o">=</span> <span class="n">curr_edge</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">height</span> <span class="o">==</span> <span class="n">R_nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">and</span>
+                    <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;flow&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;capacity&#39;</span><span class="p">]):</span>
+                <span class="c1"># Advance to the next node following an admissible edge.</span>
+                <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">break</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">curr_edge</span><span class="o">.</span><span class="n">move_to_next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">counts</span><span class="p">[</span><span class="n">height</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">counts</span><span class="p">[</span><span class="n">height</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># Gap heuristic: If relabeling causes a level to become</span>
+                    <span class="c1"># empty, a minimum cut has been identified. The algorithm</span>
+                    <span class="c1"># can now be terminated.</span>
+                    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flow_value</span>
+                    <span class="k">return</span> <span class="n">R</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="n">relabel</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">height</span> <span class="o">&gt;=</span> <span class="n">d</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">two_phase</span><span class="p">:</span>
+                        <span class="c1"># t is disconnected from s in the residual network. No</span>
+                        <span class="c1"># more augmenting paths exist.</span>
+                        <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flow_value</span>
+                        <span class="k">return</span> <span class="n">R</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># t is at least d steps away from s. End of phase 1.</span>
+                        <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="n">counts</span><span class="p">[</span><span class="n">height</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">R_nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">s</span><span class="p">:</span>
+                    <span class="c1"># After relabeling, the last edge on the path is no longer</span>
+                    <span class="c1"># admissible. Retreat one step to look for an alternative.</span>
+                    <span class="n">path</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">break</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="n">t</span><span class="p">:</span>
+            <span class="c1"># t is reached. Augment flow along the path and reset it for a new</span>
+            <span class="c1"># depth-first search.</span>
+            <span class="n">flow_value</span> <span class="o">+=</span> <span class="n">augment</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">flow_value</span> <span class="o">&gt;=</span> <span class="n">cutoff</span><span class="p">:</span>
+                <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flow_value</span>
+                <span class="k">return</span> <span class="n">R</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">s</span>
+
+    <span class="c1"># Phase 2: Look for shortest augmenting paths using breadth-first search.</span>
+    <span class="n">flow_value</span> <span class="o">+=</span> <span class="n">edmonds_karp_core</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">cutoff</span> <span class="o">-</span> <span class="n">flow_value</span><span class="p">)</span>
+
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;flow_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">flow_value</span>
+    <span class="k">return</span> <span class="n">R</span>
+
+
+<div class="viewcode-block" id="shortest_augmenting_path"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.shortest_augmenting_path.html#networkx.algorithms.flow.shortest_augmenting_path">[docs]</a><span class="k">def</span> <span class="nf">shortest_augmenting_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span> <span class="n">residual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">value_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">two_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Find a maximum single-commodity flow using the shortest augmenting path</span>
+<span class="sd">    algorithm.</span>
+
+<span class="sd">    This function returns the residual network resulting after computing</span>
+<span class="sd">    the maximum flow. See below for details about the conventions</span>
+<span class="sd">    NetworkX uses for defining residual networks.</span>
+
+<span class="sd">    This algorithm has a running time of $O(n^2 m)$ for $n$ nodes and $m$</span>
+<span class="sd">    edges.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        Edges of the graph are expected to have an attribute called</span>
+<span class="sd">        &#39;capacity&#39;. If this attribute is not present, the edge is</span>
+<span class="sd">        considered to have infinite capacity.</span>
+
+<span class="sd">    s : node</span>
+<span class="sd">        Source node for the flow.</span>
+
+<span class="sd">    t : node</span>
+<span class="sd">        Sink node for the flow.</span>
+
+<span class="sd">    capacity : string</span>
+<span class="sd">        Edges of the graph G are expected to have an attribute capacity</span>
+<span class="sd">        that indicates how much flow the edge can support. If this</span>
+<span class="sd">        attribute is not present, the edge is considered to have</span>
+<span class="sd">        infinite capacity. Default value: &#39;capacity&#39;.</span>
+
+<span class="sd">    residual : NetworkX graph</span>
+<span class="sd">        Residual network on which the algorithm is to be executed. If None, a</span>
+<span class="sd">        new residual network is created. Default value: None.</span>
+
+<span class="sd">    value_only : bool</span>
+<span class="sd">        If True compute only the value of the maximum flow. This parameter</span>
+<span class="sd">        will be ignored by this algorithm because it is not applicable.</span>
+
+<span class="sd">    two_phase : bool</span>
+<span class="sd">        If True, a two-phase variant is used. The two-phase variant improves</span>
+<span class="sd">        the running time on unit-capacity networks from $O(nm)$ to</span>
+<span class="sd">        $O(\min(n^{2/3}, m^{1/2}) m)$. Default value: False.</span>
+
+<span class="sd">    cutoff : integer, float</span>
+<span class="sd">        If specified, the algorithm will terminate when the flow value reaches</span>
+<span class="sd">        or exceeds the cutoff. In this case, it may be unable to immediately</span>
+<span class="sd">        determine a minimum cut. Default value: None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    R : NetworkX DiGraph</span>
+<span class="sd">        Residual network after computing the maximum flow.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support MultiGraph and MultiDiGraph. If</span>
+<span class="sd">        the input graph is an instance of one of these two classes, a</span>
+<span class="sd">        NetworkXError is raised.</span>
+
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        If the graph has a path of infinite capacity, the value of a</span>
+<span class="sd">        feasible flow on the graph is unbounded above and the function</span>
+<span class="sd">        raises a NetworkXUnbounded.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :meth:`maximum_flow`</span>
+<span class="sd">    :meth:`minimum_cut`</span>
+<span class="sd">    :meth:`edmonds_karp`</span>
+<span class="sd">    :meth:`preflow_push`</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The residual network :samp:`R` from an input graph :samp:`G` has the</span>
+<span class="sd">    same nodes as :samp:`G`. :samp:`R` is a DiGraph that contains a pair</span>
+<span class="sd">    of edges :samp:`(u, v)` and :samp:`(v, u)` iff :samp:`(u, v)` is not a</span>
+<span class="sd">    self-loop, and at least one of :samp:`(u, v)` and :samp:`(v, u)` exists</span>
+<span class="sd">    in :samp:`G`.</span>
+
+<span class="sd">    For each edge :samp:`(u, v)` in :samp:`R`, :samp:`R[u][v][&#39;capacity&#39;]`</span>
+<span class="sd">    is equal to the capacity of :samp:`(u, v)` in :samp:`G` if it exists</span>
+<span class="sd">    in :samp:`G` or zero otherwise. If the capacity is infinite,</span>
+<span class="sd">    :samp:`R[u][v][&#39;capacity&#39;]` will have a high arbitrary finite value</span>
+<span class="sd">    that does not affect the solution of the problem. This value is stored in</span>
+<span class="sd">    :samp:`R.graph[&#39;inf&#39;]`. For each edge :samp:`(u, v)` in :samp:`R`,</span>
+<span class="sd">    :samp:`R[u][v][&#39;flow&#39;]` represents the flow function of :samp:`(u, v)` and</span>
+<span class="sd">    satisfies :samp:`R[u][v][&#39;flow&#39;] == -R[v][u][&#39;flow&#39;]`.</span>
+
+<span class="sd">    The flow value, defined as the total flow into :samp:`t`, the sink, is</span>
+<span class="sd">    stored in :samp:`R.graph[&#39;flow_value&#39;]`. If :samp:`cutoff` is not</span>
+<span class="sd">    specified, reachability to :samp:`t` using only edges :samp:`(u, v)` such</span>
+<span class="sd">    that :samp:`R[u][v][&#39;flow&#39;] &lt; R[u][v][&#39;capacity&#39;]` induces a minimum</span>
+<span class="sd">    :samp:`s`-:samp:`t` cut.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
+<span class="sd">    &gt;&gt;&gt; from networkx.algorithms.flow import shortest_augmenting_path</span>
+
+<span class="sd">    The functions that implement flow algorithms and output a residual</span>
+<span class="sd">    network, such as this one, are not imported to the base NetworkX</span>
+<span class="sd">    namespace, so you have to explicitly import them from the flow package.</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;x&#39;,&#39;a&#39;, capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;x&#39;,&#39;b&#39;, capacity=1.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;a&#39;,&#39;c&#39;, capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;b&#39;,&#39;c&#39;, capacity=5.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;b&#39;,&#39;d&#39;, capacity=4.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;d&#39;,&#39;e&#39;, capacity=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;c&#39;,&#39;y&#39;, capacity=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(&#39;e&#39;,&#39;y&#39;, capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; R = shortest_augmenting_path(G, &#39;x&#39;, &#39;y&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; flow_value = nx.maximum_flow_value(G, &#39;x&#39;, &#39;y&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; flow_value</span>
+<span class="sd">    3.0</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == R.graph[&#39;flow_value&#39;]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">shortest_augmenting_path_impl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">two_phase</span><span class="p">,</span>
+                                      <span class="n">cutoff</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;algorithm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;shortest_augmenting_path&#39;</span>
+    <span class="k">return</span> <span class="n">R</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2004-2019, NetworkX Developers
+      <span class="lastupdated">
+        Last updated on Apr 11, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
