@@ -16,5 +16,5 @@ for path in paths:
             if 'role="main" class="document"' in line:
                  in_file.write('\n<div class="admonition warning">')
                  in_file.write('\n<p class="admonition-title">Warning</p>')
-                 in_file.write('\n  <p>This documents an unmaintained version of NetworkX. Please upgrade to a maintained version and see <a href="https://networkx.github.io/documentation/stable/">the current NetworkX documentation</a>.</p>')
+                 in_file.write('\n  <p>This documents an unmaintained version of NetworkX. Please upgrade to a maintained version and see <a href="https://networkx.org/documentation/stable/">the current NetworkX documentation</a>.</p>')
                  in_file.write('\n</div>\n')

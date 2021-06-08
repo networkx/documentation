@@ -4,7 +4,7 @@ Write a dot file from a networkx graph for further processing with graphviz.
 
 You need to have either pygraphviz or pydotplus for this example.
 
-See http://networkx.github.io/documentation/latest/reference/drawing.html
+See https://networkx.org/documentation/latest/reference/drawing.html
 for more info.
 
 """
@@ -34,7 +34,7 @@ except ImportError:
     except ImportError:
         print()
         print("Both pygraphviz and pydotplus were not found ")
-        print("see http://networkx.github.io/documentation"
+        print("see https://networkx.org/documentation"
               "/latest/reference/drawing.html for info")
         print()
         raise
