@@ -24,7 +24,7 @@ sometimes called the Erdős-Rényi graph.
 import sys
 
 import matplotlib.pyplot as plt
-from networkx import nx
+import networkx as nx
 
 n = 10  # 10 nodes
 m = 20  # 20 edges

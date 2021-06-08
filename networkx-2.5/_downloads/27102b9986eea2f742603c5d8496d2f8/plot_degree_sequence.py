@@ -6,7 +6,7 @@ Degree Sequence
 Random graph from given degree sequence.
 """
 import matplotlib.pyplot as plt
-from networkx import nx
+import networkx as nx
 
 z = [5, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1]
 print(nx.is_graphical(z))
