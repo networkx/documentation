@@ -621,44 +621,75 @@ document.write(`
     <span class="n">wrapped_func</span><span class="o">.</span><span class="n">dispatchname</span> <span class="o">=</span> <span class="n">name</span>
 
 
-<div class="viewcode-block" id="_dispatch"><a class="viewcode-back" href="../../../reference/classes/generated/networkx.classes.backends._dispatch.html#networkx.classes.backends._dispatch">[docs]</a><span class="k">def</span> <span class="nf">_dispatch</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="_dispatch"><a class="viewcode-back" href="../../../reference/classes/generated/networkx.classes.backends._dispatch.html#networkx.classes.backends._dispatch">[docs]</a><span class="k">def</span> <span class="nf">_dispatch</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">graphs</span><span class="o">=</span><span class="s2">&quot;G&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dispatches to a backend algorithm</span>
 <span class="sd">    when the first argument is a backend graph-like object.</span>
+
+<span class="sd">    The algorithm name is assumed to be the name of the wrapped function unless</span>
+<span class="sd">    `name` is provided. This is useful to avoid name conflicts, as all</span>
+<span class="sd">    dispatched algorithms live in a single namespace.</span>
+
+<span class="sd">    If more than one graph is required for the algorithm, provide a comma-separated</span>
+<span class="sd">    string of variable names as `graphs`. These must be the same order and name</span>
+<span class="sd">    as the variables passed to the algorithm. Dispatching does not support graphs</span>
+<span class="sd">    which are not the first argument(s) to an algorithm.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Allow any of the following decorator forms:</span>
     <span class="c1">#  - @_dispatch</span>
     <span class="c1">#  - @_dispatch()</span>
-    <span class="c1">#  - @_dispatch(&quot;override_name&quot;)</span>
     <span class="c1">#  - @_dispatch(name=&quot;override_name&quot;)</span>
+    <span class="c1">#  - @_dispatch(graphs=&quot;G,H&quot;)</span>
+    <span class="c1">#  - @_dispatch(name=&quot;override_name&quot;, graphs=&quot;G,H&quot;)</span>
     <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">graphs</span> <span class="o">==</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_dispatch</span>
-        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_dispatch</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_dispatch</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">graphs</span><span class="o">=</span><span class="n">graphs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_dispatch</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;name&#39; and &#39;graphs&#39; must be passed by keyword&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
     <span class="c1"># If name not provided, use the name of the function</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
 
+    <span class="n">graph_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">graphs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;&#39;graphs&#39; must contain at least one variable name&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+
     <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
-            <span class="n">graph</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">graph</span> <span class="o">=</span> <span class="n">kwds</span><span class="p">[</span><span class="s2">&quot;G&quot;</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">() missing positional argument: &#39;G&#39;&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;__networkx_plugin__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">plugins</span><span class="p">:</span>
-            <span class="n">plugin_name</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">__networkx_plugin__</span>
-            <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
-                <span class="n">backend</span> <span class="o">=</span> <span class="n">plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">NetworkXNotImplemented</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not implemented by </span><span class="si">{</span><span class="n">plugin_name</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
+        <span class="c1"># Select overlap of args and graph_list</span>
+        <span class="n">graphs_resolved</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">graph_list</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+        <span class="c1"># Check for duplicates from kwds</span>
+        <span class="n">dups</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">kwds</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">graphs_resolved</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dups</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">() got multiple values for </span><span class="si">{</span><span class="n">dups</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+        <span class="c1"># Add items from kwds</span>
+        <span class="k">for</span> <span class="n">gname</span> <span class="ow">in</span> <span class="n">graph_list</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">graphs_resolved</span><span class="p">)</span> <span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">gname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwds</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">() missing required graph argument: </span><span class="si">{</span><span class="n">gname</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="n">graphs_resolved</span><span class="p">[</span><span class="n">gname</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwds</span><span class="p">[</span><span class="n">gname</span><span class="p">]</span>
+        <span class="c1"># Check if any graph comes from a plugin</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s2">&quot;__networkx_plugin__&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">graphs_resolved</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="c1"># Find common plugin name</span>
+            <span class="n">plugin_names</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s2">&quot;__networkx_plugin__&quot;</span><span class="p">,</span> <span class="s2">&quot;networkx&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">graphs_resolved</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">plugin_names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">() graphs must all be from the same plugin, found </span><span class="si">{</span><span class="n">plugin_names</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="n">plugin_name</span> <span class="o">=</span> <span class="n">plugin_names</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plugins</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to load plugin: </span><span class="si">{</span><span class="n">plugin_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+            <span class="n">backend</span> <span class="o">=</span> <span class="n">plugins</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NetworkXNotImplemented</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not implemented by </span><span class="si">{</span><span class="n">plugin_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
         <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
 
     <span class="c1"># Keep a handle to the original function to use when testing</span>
@@ -669,19 +700,23 @@ document.write(`
     <span class="k">return</span> <span class="n">wrapper</span></div>
 
 
-<span class="k">def</span> <span class="nf">test_override_dispatch</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Auto-converts the first argument into the backend equivalent,</span>
+<span class="k">def</span> <span class="nf">test_override_dispatch</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">graphs</span><span class="o">=</span><span class="s2">&quot;G&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Auto-converts graph arguments into the backend equivalent,</span>
 <span class="sd">    causing the dispatching mechanism to trigger for every</span>
 <span class="sd">    decorated algorithm.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">test_override_dispatch</span>
-        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">test_override_dispatch</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">graphs</span> <span class="o">==</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_dispatch</span>
+        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_dispatch</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">graphs</span><span class="o">=</span><span class="n">graphs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">test_override_dispatch</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;name&#39; and &#39;graphs&#39; must be passed by keyword&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
     <span class="c1"># If name not provided, use the name of the function</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="n">graph_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">graphs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;graphs&#39; must contain at least one variable name&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
 
     <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
 
@@ -696,14 +731,12 @@ document.write(`
             <span class="n">pytest</span><span class="o">.</span><span class="n">xfail</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not implemented by </span><span class="si">{</span><span class="n">plugin_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">bound</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
         <span class="n">bound</span><span class="o">.</span><span class="n">apply_defaults</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
-            <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">graph</span> <span class="o">=</span> <span class="n">kwds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;G&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">() missing positional argument: &#39;G&#39;&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
-        <span class="c1"># Convert graph into backend graph-like object</span>
+        <span class="c1"># Check that graph names are actually in the signature</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">graph_list</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid graph names: </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">graph_list</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">set</span><span class="p">(</span><span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># Convert graphs into backend graph-like object</span>
         <span class="c1">#   Include the weight label, if provided to the algorithm</span>
         <span class="n">weight</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="s2">&quot;weight&quot;</span> <span class="ow">in</span> <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">:</span>
@@ -714,8 +747,11 @@ document.write(`
                 <span class="n">weight</span> <span class="o">=</span> <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]:</span>
                 <span class="n">weight</span> <span class="o">=</span> <span class="s2">&quot;weight&quot;</span>
-        <span class="n">graph</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">convert_from_nx</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gname</span> <span class="ow">in</span> <span class="n">graph_list</span><span class="p">:</span>
+            <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="n">gname</span><span class="p">]</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">convert_from_nx</span><span class="p">(</span>
+                <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">[</span><span class="n">gname</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">**</span><span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">convert_to_nx</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="n">wrapper</span><span class="o">.</span><span class="n">_orig_func</span> <span class="o">=</span> <span class="n">func</span>
