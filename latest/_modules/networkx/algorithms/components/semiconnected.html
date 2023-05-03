@@ -520,19 +520,26 @@ document.write(`
 
 
 <div class="viewcode-block" id="is_semiconnected"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.components.is_semiconnected.html#networkx.algorithms.components.is_semiconnected">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">is_semiconnected</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">topo_order</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">is_semiconnected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the graph is semiconnected, False otherwise.</span>
 
-<span class="sd">    A graph is semiconnected if, and only if, for any pair of nodes, either one</span>
+<span class="sd">    A graph is semiconnected if and only if for any pair of nodes, either one</span>
 <span class="sd">    is reachable from the other, or they are mutually reachable.</span>
+
+<span class="sd">    This function uses a theorem that states that a DAG is semiconnected</span>
+<span class="sd">    if for any topological sort, for node $v_n$ in that sort, there is an</span>
+<span class="sd">    edge $(v_i, v_{i+1})$. That allows us to check if a non-DAG `G` is</span>
+<span class="sd">    semiconnected by condensing the graph: i.e. constructing a new graph `H`</span>
+<span class="sd">    with nodes being the strongly connected components of `G`, and edges</span>
+<span class="sd">    (scc_1, scc_2) if there is a edge $(v_1, v_2)$ in `G` for some</span>
+<span class="sd">    $v_1 \in scc_1$ and $v_2 \in scc_2$. That results in a DAG, so we compute</span>
+<span class="sd">    the topological sort of `H` and check if for every $n$ there is an edge</span>
+<span class="sd">    $(scc_n, scc_{n+1})$.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 <span class="sd">        A directed graph.</span>
-
-<span class="sd">    topo_order: list or tuple, optional</span>
-<span class="sd">        A topological order for G (if None, the function will compute one)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -571,11 +578,9 @@ document.write(`
     <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_weakly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">condensation</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">topo_order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">topo_order</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">condensation</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">topo_order</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">H</span><span class="p">)))</span></div>
 </pre></div>
 
                 </article>
