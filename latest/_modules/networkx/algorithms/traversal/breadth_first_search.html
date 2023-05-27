@@ -552,7 +552,7 @@ document.write(`
 <span class="sd">        given node, in any order.</span>
 
 <span class="sd">    depth_limit : int, optional(default=len(G))</span>
-<span class="sd">        Specify the maximum search depth</span>
+<span class="sd">        Specify the maximum search depth.</span>
 
 <span class="sd">    sort_neighbors : function</span>
 <span class="sd">        A function that takes the list of neighbors of given node as input, and</span>
@@ -581,25 +581,30 @@ document.write(`
 <span class="sd">    .. _PADS: http://www.ics.uci.edu/~eppstein/PADS/BFS.py</span>
 <span class="sd">    .. _Depth-limited-search: https://en.wikipedia.org/wiki/Depth-limited_search</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">sort_neighbors</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">neighbors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">neighbors</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span>
+    <span class="k">if</span> <span class="n">sort_neighbors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_neighbors</span> <span class="o">=</span> <span class="n">neighbors</span>
         <span class="n">neighbors</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">sort_neighbors</span><span class="p">(</span><span class="n">_neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">)))</span>
-
-    <span class="n">visited</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">depth_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">depth_limit</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="n">source</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">(</span><span class="n">source</span><span class="p">))])</span>
-    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
-        <span class="n">parent</span><span class="p">,</span> <span class="n">depth_now</span><span class="p">,</span> <span class="n">children</span> <span class="o">=</span> <span class="n">queue</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">child</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">children</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span>
-                <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">depth_now</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">child</span><span class="p">,</span> <span class="n">depth_now</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">(</span><span class="n">child</span><span class="p">)))</span>
-        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+
+    <span class="n">seen</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span><span class="p">}</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">next_parents_children</span> <span class="o">=</span> <span class="p">[(</span><span class="n">source</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">(</span><span class="n">source</span><span class="p">))]</span>
+    <span class="k">while</span> <span class="n">next_parents_children</span> <span class="ow">and</span> <span class="n">depth</span> <span class="o">&lt;</span> <span class="n">depth_limit</span><span class="p">:</span>
+        <span class="n">this_parents_children</span> <span class="o">=</span> <span class="n">next_parents_children</span>
+        <span class="n">next_parents_children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">parent</span><span class="p">,</span> <span class="n">children</span> <span class="ow">in</span> <span class="n">this_parents_children</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                    <span class="n">next_parents_children</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">child</span><span class="p">,</span> <span class="n">neighbors</span><span class="p">(</span><span class="n">child</span><span class="p">)))</span>
+                    <span class="k">yield</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">seen</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">return</span>
+        <span class="n">depth</span> <span class="o">+=</span> <span class="mi">1</span>
 
 
 <div class="viewcode-block" id="bfs_edges"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.breadth_first_search.bfs_edges.html#networkx.algorithms.traversal.breadth_first_search.bfs_edges">[docs]</a><span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span>
