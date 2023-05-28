@@ -513,6 +513,7 @@ document.write(`
                   
   <h1>Source code for networkx.algorithms.traversal.breadth_first_search</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Basic algorithms for breadth-first searching the nodes of a graph.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
@@ -524,6 +525,7 @@ document.write(`
     <span class="s2">&quot;bfs_successors&quot;</span><span class="p">,</span>
     <span class="s2">&quot;descendants_at_distance&quot;</span><span class="p">,</span>
     <span class="s2">&quot;bfs_layers&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bfs_labeled_edges&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -943,6 +945,87 @@ document.write(`
                     <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
                     <span class="n">next_layer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
         <span class="n">current_layer</span> <span class="o">=</span> <span class="n">next_layer</span></div>
+
+
+<span class="n">REVERSE_EDGE</span> <span class="o">=</span> <span class="s2">&quot;reverse&quot;</span>
+<span class="n">TREE_EDGE</span> <span class="o">=</span> <span class="s2">&quot;tree&quot;</span>
+<span class="n">FORWARD_EDGE</span> <span class="o">=</span> <span class="s2">&quot;forward&quot;</span>
+<span class="n">LEVEL_EDGE</span> <span class="o">=</span> <span class="s2">&quot;level&quot;</span>
+
+
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span>
+<span class="k">def</span> <span class="nf">bfs_labeled_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">sources</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iterate over edges in a breadth-first search (BFS) labeled by type.</span>
+
+<span class="sd">    We generate triple of the form (*u*, *v*, *d*), where (*u*, *v*) is the</span>
+<span class="sd">    edge being explored in the breadth-first search and *d* is one of the</span>
+<span class="sd">    strings &#39;tree&#39;, &#39;forward&#39;, &#39;level&#39;, or &#39;reverse&#39;.  A &#39;tree&#39; edge is one in</span>
+<span class="sd">    which *v* is first discovered and placed into the layer below *u*.  A</span>
+<span class="sd">    &#39;forward&#39; edge is one in which *u* is on the layer above *v* and *v* has</span>
+<span class="sd">    already been discovered.  A &#39;level&#39; edge is one in which both *u* and *v*</span>
+<span class="sd">    occur on the same layer.  A &#39;reverse&#39; edge is one in which *u* is on a layer</span>
+<span class="sd">    below *v*.</span>
+
+<span class="sd">    We emit each edge exactly once.  In an undirected graph, &#39;reverse&#39; edges do</span>
+<span class="sd">    not occur, because each is discovered either as a &#39;tree&#39; or &#39;forward&#39; edge.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A graph over which to find the layers using breadth-first search.</span>
+
+<span class="sd">    sources : node in `G` or list of nodes in `G`</span>
+<span class="sd">        Starting nodes for single source or multiple sources breadth-first search</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    edges: generator</span>
+<span class="sd">       A generator of triples (*u*, *v*, *d*) where (*u*, *v*) is the edge being</span>
+<span class="sd">       explored and *d* is described above.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.cycle_graph(4, create_using = nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.bfs_labeled_edges(G, 0))</span>
+<span class="sd">    [(0, 1, &#39;tree&#39;), (1, 2, &#39;tree&#39;), (2, 3, &#39;tree&#39;), (3, 0, &#39;reverse&#39;)]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(3)</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.bfs_labeled_edges(G, 0))</span>
+<span class="sd">    [(0, 1, &#39;tree&#39;), (0, 2, &#39;tree&#39;), (1, 2, &#39;level&#39;)]</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.bfs_labeled_edges(G, [0, 1]))</span>
+<span class="sd">    [(0, 1, &#39;level&#39;), (0, 2, &#39;tree&#39;), (1, 2, &#39;forward&#39;)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sources</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span><span class="p">]</span>
+
+    <span class="n">neighbors</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span>
+    <span class="n">directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">visit</span> <span class="o">=</span> <span class="n">visited</span><span class="o">.</span><span class="n">discard</span> <span class="k">if</span> <span class="n">directed</span> <span class="k">else</span> <span class="n">visited</span><span class="o">.</span><span class="n">add</span>
+    <span class="c1"># We use visited in a negative sense, so the visited set stays empty for the</span>
+    <span class="c1"># directed case and level edges are reported on their first occurrence in</span>
+    <span class="c1"># the undirected case.  Note our use of visited.discard -- this is built-in</span>
+    <span class="c1"># thus somewhat faster than a python-defined def nop(x): pass</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">}</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">depth</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="n">push</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">append</span>
+    <span class="n">pop</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span>
+    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">du</span> <span class="o">=</span> <span class="n">pop</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">depth</span><span class="p">:</span>
+                <span class="n">depth</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">dv</span> <span class="o">=</span> <span class="n">du</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">push</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">dv</span><span class="p">))</span>
+                <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">TREE_EDGE</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dv</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">du</span> <span class="o">==</span> <span class="n">dv</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">LEVEL_EDGE</span>
+                <span class="k">elif</span> <span class="n">du</span> <span class="o">&lt;</span> <span class="n">dv</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">FORWARD_EDGE</span>
+                <span class="k">elif</span> <span class="n">directed</span><span class="p">:</span>
+                    <span class="k">yield</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">REVERSE_EDGE</span>
+        <span class="n">visit</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="descendants_at_distance"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.breadth_first_search.descendants_at_distance.html#networkx.algorithms.traversal.breadth_first_search.descendants_at_distance">[docs]</a><span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span>
