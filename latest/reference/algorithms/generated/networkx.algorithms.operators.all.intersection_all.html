@@ -640,12 +640,33 @@ all graphs.</p>
 <dd class="field-odd"><dl class="simple">
 <dt>ValueError</dt><dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">graphs</span></code> is an empty list.</p>
 </dd>
+<dt>NetworkXError</dt><dd><p>In case of mixed type graphs, like MultiGraph and Graph, or directed and undirected graphs.</p>
+</dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
+<p>For operating on mixed type graphs, they should be converted to the same type.</p>
 <p>Attributes from the graph, nodes, and edges are not copied to the new
 graph.</p>
+<p>The resulting graph can be updated with attributes if desired. For example, code which adds the minimum attribute for each node across all graphs could work.
+&gt;&gt;&gt; g = nx.Graph()
+&gt;&gt;&gt; g.add_node(0, capacity=4)
+&gt;&gt;&gt; g.add_node(1, capacity=3)
+&gt;&gt;&gt; g.add_edge(0, 1)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gh</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">intersection_all</span><span class="p">([</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">new_node_attr</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">anyG</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;capacity&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">))</span> <span class="k">for</span> <span class="n">anyG</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">]))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">gh</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">new_node_attr</span><span class="p">,</span> <span class="s1">&#39;new_capacity&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gh</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">NodeDataView({0: {&#39;new_capacity&#39;: 2}, 1: {&#39;new_capacity&#39;: 3}})</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
