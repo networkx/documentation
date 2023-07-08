@@ -524,44 +524,67 @@ document.write(`
 <div class="viewcode-block" id="eigenvector_centrality"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality.html#networkx.algorithms.centrality.eigenvector_centrality">[docs]</a><span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span>
 <span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;multigraph&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">eigenvector_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the graph `G`.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the graph G.</span>
 
-<span class="sd">    Eigenvector centrality computes the centrality for a node based on the</span>
-<span class="sd">    centrality of its neighbors. The eigenvector centrality for node $i$ is</span>
-<span class="sd">    the $i$-th element of the vector $x$ defined by the equation</span>
+<span class="sd">    Eigenvector centrality computes the centrality for a node by adding</span>
+<span class="sd">    the centrality of its predecessors. The centrality for node $i$ is the</span>
+<span class="sd">    $i$-th element of a left eigenvector associated with the eigenvalue $\lambda$</span>
+<span class="sd">    of maximum modulus that is positive. Such an eigenvector $x$ is</span>
+<span class="sd">    defined up to a multiplicative constant by the equation</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        Ax = \lambda x</span>
+<span class="sd">         \lambda x^T = x^T A,</span>
 
-<span class="sd">    where $A$ is the adjacency matrix of the graph `G` with eigenvalue</span>
-<span class="sd">    $\lambda$. By virtue of the Perron–Frobenius theorem, there is a unique</span>
-<span class="sd">    solution $x$, all of whose entries are positive, if $\lambda$ is the</span>
-<span class="sd">    largest eigenvalue of the adjacency matrix $A$ ([2]_).</span>
+<span class="sd">    where $A$ is the adjacency matrix of the graph G. By definition of</span>
+<span class="sd">    row-column product, the equation above is equivalent to</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \lambda x_i = \sum_{j\to i}x_j.</span>
+
+<span class="sd">    That is, adding the eigenvector centralities of the predecessors of</span>
+<span class="sd">    $i$ one obtains the eigenvector centrality of $i$ multiplied by</span>
+<span class="sd">    $\lambda$. In the case of undirected graphs, $x$ also solves the familiar</span>
+<span class="sd">    right-eigenvector equation $Ax = \lambda x$.</span>
+
+<span class="sd">    By virtue of the Perron–Frobenius theorem [1]_, if G is strongly</span>
+<span class="sd">    connected there is a unique eigenvector $x$, and all its entries</span>
+<span class="sd">    are strictly positive.</span>
+
+<span class="sd">    If G is not strongly connected there might be several left</span>
+<span class="sd">    eigenvectors associated with $\lambda$, and some of their elements</span>
+<span class="sd">    might be zero.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : graph</span>
-<span class="sd">      A networkx graph</span>
+<span class="sd">      A networkx graph.</span>
 
 <span class="sd">    max_iter : integer, optional (default=100)</span>
-<span class="sd">      Maximum number of iterations in power method.</span>
+<span class="sd">      Maximum number of power iterations.</span>
 
 <span class="sd">    tol : float, optional (default=1.0e-6)</span>
-<span class="sd">      Error tolerance used to check convergence in power method iteration.</span>
+<span class="sd">      Error tolerance (in Euclidean norm) used to check convergence in</span>
+<span class="sd">      power iteration.</span>
 
 <span class="sd">    nstart : dictionary, optional (default=None)</span>
-<span class="sd">      Starting value of eigenvector iteration for each node.</span>
+<span class="sd">      Starting value of power iteration for each node. Must have a nonzero</span>
+<span class="sd">      projection on the desired eigenvector for the power method to converge.</span>
+<span class="sd">      If None, this implementation uses an all-ones vector, which is a safe</span>
+<span class="sd">      choice.</span>
 
 <span class="sd">    weight : None or string, optional (default=None)</span>
-<span class="sd">      If None, all edge weights are considered equal.</span>
-<span class="sd">      Otherwise holds the name of the edge attribute used as weight.</span>
-<span class="sd">      In this measure the weight is interpreted as the connection strength.</span>
+<span class="sd">      If None, all edge weights are considered equal. Otherwise holds the</span>
+<span class="sd">      name of the edge attribute used as weight. In this measure the</span>
+<span class="sd">      weight is interpreted as the connection strength.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    nodes : dictionary</span>
-<span class="sd">       Dictionary of nodes with eigenvector centrality as the value.</span>
+<span class="sd">       Dictionary of nodes with eigenvector centrality as the value. The</span>
+<span class="sd">       associated vector has unit Euclidian norm and the values are</span>
+<span class="sd">       nonegative.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -573,7 +596,7 @@ document.write(`
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    NetworkXPointlessConcept</span>
-<span class="sd">        If the graph `G` is the null graph.</span>
+<span class="sd">        If the graph G is the null graph.</span>
 
 <span class="sd">    NetworkXError</span>
 <span class="sd">        If each value in `nstart` is zero.</span>
@@ -591,30 +614,62 @@ document.write(`
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    The measure was introduced by [1]_ and is discussed in [2]_.</span>
+<span class="sd">    Eigenvector centrality was introduced by Landau [2]_ for chess</span>
+<span class="sd">    tournaments. It was later rediscovered by Wei [3]_ and then</span>
+<span class="sd">    popularized by Kendall [4]_ in the context of sport ranking. Berge</span>
+<span class="sd">    introduced a general definition for graphs based on social connections</span>
+<span class="sd">    [5]_. Bonacich [6]_ reintroduced again eigenvector centrality and made</span>
+<span class="sd">    it popular in link analysis.</span>
 
-<span class="sd">    The power iteration method is used to compute the eigenvector and</span>
-<span class="sd">    convergence is **not** guaranteed. Our method stops after ``max_iter``</span>
-<span class="sd">    iterations or when the change in the computed vector between two</span>
-<span class="sd">    iterations is smaller than an error tolerance of</span>
-<span class="sd">    ``G.number_of_nodes() * tol``. This implementation uses ($A + I$)</span>
-<span class="sd">    rather than the adjacency matrix $A$ because it shifts the spectrum</span>
-<span class="sd">    to enable discerning the correct eigenvector even for networks with</span>
-<span class="sd">    multiple dominant eigenvalues.</span>
+<span class="sd">    This function computes the left dominant eigenvector, which corresponds</span>
+<span class="sd">    to adding the centrality of predecessors: this is the usual approach.</span>
+<span class="sd">    To add the centrality of successors first reverse the graph with</span>
+<span class="sd">    ``G.reverse()``.</span>
 
-<span class="sd">    For directed graphs this is &quot;left&quot; eigenvector centrality which corresponds</span>
-<span class="sd">    to the in-edges in the graph. For out-edges eigenvector centrality</span>
-<span class="sd">    first reverse the graph with ``G.reverse()``.</span>
+<span class="sd">    The implementation uses power iteration [7]_ to compute a dominant</span>
+<span class="sd">    eigenvector starting from the provided vector `nstart`. Convergence is</span>
+<span class="sd">    guaranteed as long as `nstart` has a nonzero projection on a dominant</span>
+<span class="sd">    eigenvector, which certainly happens using the default value.</span>
+
+<span class="sd">    The method stops when the change in the computed vector between two</span>
+<span class="sd">    iterations is smaller than an error tolerance of ``G.number_of_nodes()</span>
+<span class="sd">    * tol`` or after ``max_iter`` iterations, but in the second case it</span>
+<span class="sd">    raises an exception.</span>
+
+<span class="sd">    This implementation uses $(A + I)$ rather than the adjacency matrix</span>
+<span class="sd">    $A$ because the change preserves eigenvectors, but it shifts the</span>
+<span class="sd">    spectrum, thus guaranteeing convergence even for networks with</span>
+<span class="sd">    negative eigenvalues of maximum modulus.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Phillip Bonacich.</span>
-<span class="sd">       &quot;Power and Centrality: A Family of Measures.&quot;</span>
-<span class="sd">       *American Journal of Sociology* 92(5):1170–1182, 1986</span>
-<span class="sd">       &lt;http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf&gt;</span>
-<span class="sd">    .. [2] Mark E. J. Newman.</span>
-<span class="sd">       *Networks: An Introduction.*</span>
-<span class="sd">       Oxford University Press, USA, 2010, pp. 169.</span>
+<span class="sd">    .. [1] Abraham Berman and Robert J. Plemmons.</span>
+<span class="sd">       &quot;Nonnegative Matrices in the Mathematical Sciences.&quot;</span>
+<span class="sd">       Classics in Applied Mathematics. SIAM, 1994.</span>
+
+<span class="sd">    .. [2] Edmund Landau.</span>
+<span class="sd">       &quot;Zur relativen Wertbemessung der Turnierresultate.&quot;</span>
+<span class="sd">       Deutsches Wochenschach, 11:366–369, 1895.</span>
+
+<span class="sd">    .. [3] Teh-Hsing Wei.</span>
+<span class="sd">       &quot;The Algebraic Foundations of Ranking Theory.&quot;</span>
+<span class="sd">       PhD thesis, University of Cambridge, 1952.</span>
+
+<span class="sd">    .. [4] Maurice G. Kendall.</span>
+<span class="sd">       &quot;Further contributions to the theory of paired comparisons.&quot;</span>
+<span class="sd">       Biometrics, 11(1):43–62, 1955.</span>
+<span class="sd">       https://www.jstor.org/stable/3001479</span>
+
+<span class="sd">    .. [5] Claude Berge</span>
+<span class="sd">       &quot;Théorie des graphes et ses applications.&quot;</span>
+<span class="sd">       Dunod, Paris, France, 1958.</span>
+
+<span class="sd">    .. [6] Phillip Bonacich.</span>
+<span class="sd">       &quot;Technique for analyzing overlapping memberships.&quot;</span>
+<span class="sd">       Sociological Methodology, 4:176–185, 1972.</span>
+<span class="sd">       https://www.jstor.org/stable/270732</span>
+
+<span class="sd">    .. [7] Power iteration:: https://en.wikipedia.org/wiki/Power_iteration</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -655,38 +710,59 @@ document.write(`
 <div class="viewcode-block" id="eigenvector_centrality_numpy"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.centrality.eigenvector_centrality_numpy.html#networkx.algorithms.centrality.eigenvector_centrality_numpy">[docs]</a><span class="k">def</span> <span class="nf">eigenvector_centrality_numpy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the graph G.</span>
 
-<span class="sd">    Eigenvector centrality computes the centrality for a node based on the</span>
-<span class="sd">    centrality of its neighbors. The eigenvector centrality for node $i$ is</span>
+<span class="sd">    Eigenvector centrality computes the centrality for a node by adding</span>
+<span class="sd">    the centrality of its predecessors. The centrality for node $i$ is the</span>
+<span class="sd">    $i$-th element of a left eigenvector associated with the eigenvalue $\lambda$</span>
+<span class="sd">    of maximum modulus that is positive. Such an eigenvector $x$ is</span>
+<span class="sd">    defined up to a multiplicative constant by the equation</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        Ax = \lambda x</span>
+<span class="sd">         \lambda x^T = x^T A,</span>
 
-<span class="sd">    where $A$ is the adjacency matrix of the graph G with eigenvalue $\lambda$.</span>
-<span class="sd">    By virtue of the Perron–Frobenius theorem, there is a unique and positive</span>
-<span class="sd">    solution if $\lambda$ is the largest eigenvalue associated with the</span>
-<span class="sd">    eigenvector of the adjacency matrix $A$ ([2]_).</span>
+<span class="sd">    where $A$ is the adjacency matrix of the graph G. By definition of</span>
+<span class="sd">    row-column product, the equation above is equivalent to</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \lambda x_i = \sum_{j\to i}x_j.</span>
+
+<span class="sd">    That is, adding the eigenvector centralities of the predecessors of</span>
+<span class="sd">    $i$ one obtains the eigenvector centrality of $i$ multiplied by</span>
+<span class="sd">    $\lambda$. In the case of undirected graphs, $x$ also solves the familiar</span>
+<span class="sd">    right-eigenvector equation $Ax = \lambda x$.</span>
+
+<span class="sd">    By virtue of the Perron–Frobenius theorem [1]_, if G is strongly</span>
+<span class="sd">    connected there is a unique eigenvector $x$, and all its entries</span>
+<span class="sd">    are strictly positive.</span>
+
+<span class="sd">    If G is not strongly connected there might be several left</span>
+<span class="sd">    eigenvectors associated with $\lambda$, and some of their elements</span>
+<span class="sd">    might be zero.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : graph</span>
-<span class="sd">      A networkx graph</span>
+<span class="sd">      A networkx graph.</span>
+
+<span class="sd">    max_iter : integer, optional (default=50)</span>
+<span class="sd">      Maximum number of Arnoldi update iterations allowed.</span>
+
+<span class="sd">    tol : float, optional (default=0)</span>
+<span class="sd">      Relative accuracy for eigenvalues (stopping criterion).</span>
+<span class="sd">      The default value of 0 implies machine precision.</span>
 
 <span class="sd">    weight : None or string, optional (default=None)</span>
-<span class="sd">      The name of the edge attribute used as weight.</span>
-<span class="sd">      If None, all edge weights are considered equal.</span>
-<span class="sd">      In this measure the weight is interpreted as the connection strength.</span>
-<span class="sd">    max_iter : integer, optional (default=100)</span>
-<span class="sd">      Maximum number of iterations in power method.</span>
-
-<span class="sd">    tol : float, optional (default=1.0e-6)</span>
-<span class="sd">       Relative accuracy for eigenvalues (stopping criterion).</span>
-<span class="sd">       The default value of 0 implies machine precision.</span>
+<span class="sd">      If None, all edge weights are considered equal. Otherwise holds the</span>
+<span class="sd">      name of the edge attribute used as weight. In this measure the</span>
+<span class="sd">      weight is interpreted as the connection strength.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    nodes : dictionary</span>
-<span class="sd">       Dictionary of nodes with eigenvector centrality as the value.</span>
+<span class="sd">       Dictionary of nodes with eigenvector centrality as the value. The</span>
+<span class="sd">       associated vector has unit Euclidian norm and the values are</span>
+<span class="sd">       nonegative.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -695,37 +771,72 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; print([f&quot;{node} {centrality[node]:0.2f}&quot; for node in centrality])</span>
 <span class="sd">    [&#39;0 0.37&#39;, &#39;1 0.60&#39;, &#39;2 0.60&#39;, &#39;3 0.37&#39;]</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If the graph G is the null graph.</span>
+
+<span class="sd">    ArpackNoConvergence</span>
+<span class="sd">        When the requested convergence is not obtained. The currently</span>
+<span class="sd">        converged eigenvalues and eigenvectors can be found as</span>
+<span class="sd">        eigenvalues and eigenvectors attributes of the exception object.</span>
+
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
+<span class="sd">    :func:`scipy.sparse.linalg.eigs`</span>
 <span class="sd">    eigenvector_centrality</span>
 <span class="sd">    :func:`~networkx.algorithms.link_analysis.pagerank_alg.pagerank`</span>
 <span class="sd">    :func:`~networkx.algorithms.link_analysis.hits_alg.hits`</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    The measure was introduced by [1]_.</span>
+<span class="sd">    Eigenvector centrality was introduced by Landau [2]_ for chess</span>
+<span class="sd">    tournaments. It was later rediscovered by Wei [3]_ and then</span>
+<span class="sd">    popularized by Kendall [4]_ in the context of sport ranking. Berge</span>
+<span class="sd">    introduced a general definition for graphs based on social connections</span>
+<span class="sd">    [5]_. Bonacich [6]_ reintroduced again eigenvector centrality and made</span>
+<span class="sd">    it popular in link analysis.</span>
 
-<span class="sd">    This algorithm uses the SciPy sparse eigenvalue solver (ARPACK) to</span>
-<span class="sd">    find the largest eigenvalue/eigenvector pair.</span>
+<span class="sd">    This function computes the left dominant eigenvector, which corresponds</span>
+<span class="sd">    to adding the centrality of predecessors: this is the usual approach.</span>
+<span class="sd">    To add the centrality of successors first reverse the graph with</span>
+<span class="sd">    ``G.reverse()``.</span>
 
-<span class="sd">    For directed graphs this is &quot;left&quot; eigenvector centrality which corresponds</span>
-<span class="sd">    to the in-edges in the graph. For out-edges eigenvector centrality</span>
-<span class="sd">    first reverse the graph with ``G.reverse()``.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    NetworkXPointlessConcept</span>
-<span class="sd">        If the graph ``G`` is the null graph.</span>
+<span class="sd">    This implementation uses the</span>
+<span class="sd">    :func:`SciPy sparse eigenvalue solver&lt;scipy.sparse.linalg.eigs&gt;` (ARPACK)</span>
+<span class="sd">    to find the largest eigenvalue/eigenvector pair using Arnoldi iterations</span>
+<span class="sd">    [7]_.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Phillip Bonacich:</span>
-<span class="sd">       Power and Centrality: A Family of Measures.</span>
-<span class="sd">       American Journal of Sociology 92(5):1170–1182, 1986</span>
-<span class="sd">       http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf</span>
-<span class="sd">    .. [2] Mark E. J. Newman:</span>
-<span class="sd">       Networks: An Introduction.</span>
-<span class="sd">       Oxford University Press, USA, 2010, pp. 169.</span>
+<span class="sd">    .. [1] Abraham Berman and Robert J. Plemmons.</span>
+<span class="sd">       &quot;Nonnegative Matrices in the Mathematical Sciences.&quot;</span>
+<span class="sd">       Classics in Applied Mathematics. SIAM, 1994.</span>
+
+<span class="sd">    .. [2] Edmund Landau.</span>
+<span class="sd">       &quot;Zur relativen Wertbemessung der Turnierresultate.&quot;</span>
+<span class="sd">       Deutsches Wochenschach, 11:366–369, 1895.</span>
+
+<span class="sd">    .. [3] Teh-Hsing Wei.</span>
+<span class="sd">       &quot;The Algebraic Foundations of Ranking Theory.&quot;</span>
+<span class="sd">       PhD thesis, University of Cambridge, 1952.</span>
+
+<span class="sd">    .. [4] Maurice G. Kendall.</span>
+<span class="sd">       &quot;Further contributions to the theory of paired comparisons.&quot;</span>
+<span class="sd">       Biometrics, 11(1):43–62, 1955.</span>
+<span class="sd">       https://www.jstor.org/stable/3001479</span>
+
+<span class="sd">    .. [5] Claude Berge</span>
+<span class="sd">       &quot;Théorie des graphes et ses applications.&quot;</span>
+<span class="sd">       Dunod, Paris, France, 1958.</span>
+
+<span class="sd">    .. [6] Phillip Bonacich.</span>
+<span class="sd">       &quot;Technique for analyzing overlapping memberships.&quot;</span>
+<span class="sd">       Sociological Methodology, 4:176–185, 1972.</span>
+<span class="sd">       https://www.jstor.org/stable/270732</span>
+
+<span class="sd">    .. [7] Arnoldi iteration:: https://en.wikipedia.org/wiki/Arnoldi_iteration</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
