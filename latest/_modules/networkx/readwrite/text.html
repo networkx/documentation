@@ -525,53 +525,72 @@ document.write(`
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;forest_str&quot;</span><span class="p">,</span> <span class="s2">&quot;generate_network_text&quot;</span><span class="p">,</span> <span class="s2">&quot;write_network_text&quot;</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">_AsciiBaseGlyphs</span><span class="p">:</span>
-    <span class="n">empty</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span>
-    <span class="n">newtree_last</span> <span class="o">=</span> <span class="s2">&quot;+-- &quot;</span>
-    <span class="n">newtree_mid</span> <span class="o">=</span> <span class="s2">&quot;+-- &quot;</span>
-    <span class="n">endof_forest</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
-    <span class="n">within_forest</span> <span class="o">=</span> <span class="s2">&quot;:   &quot;</span>
-    <span class="n">within_tree</span> <span class="o">=</span> <span class="s2">&quot;|   &quot;</span>
+<span class="k">class</span> <span class="nc">BaseGlyphs</span><span class="p">:</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">a</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span> <span class="o">!=</span> <span class="s2">&quot;as_dict&quot;</span>
+        <span class="p">}</span>
 
 
-<span class="k">class</span> <span class="nc">AsciiDirectedGlyphs</span><span class="p">(</span><span class="n">_AsciiBaseGlyphs</span><span class="p">):</span>
-    <span class="n">last</span> <span class="o">=</span> <span class="s2">&quot;L-&gt; &quot;</span>
-    <span class="n">mid</span> <span class="o">=</span> <span class="s2">&quot;|-&gt; &quot;</span>
-    <span class="n">backedge</span> <span class="o">=</span> <span class="s2">&quot;&lt;-&quot;</span>
+<span class="k">class</span> <span class="nc">AsciiBaseGlyphs</span><span class="p">(</span><span class="n">BaseGlyphs</span><span class="p">):</span>
+    <span class="n">empty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span>
+    <span class="n">newtree_last</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;+-- &quot;</span>
+    <span class="n">newtree_mid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;+-- &quot;</span>
+    <span class="n">endof_forest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
+    <span class="n">within_forest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;:   &quot;</span>
+    <span class="n">within_tree</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;|   &quot;</span>
 
 
-<span class="k">class</span> <span class="nc">AsciiUndirectedGlyphs</span><span class="p">(</span><span class="n">_AsciiBaseGlyphs</span><span class="p">):</span>
-    <span class="n">last</span> <span class="o">=</span> <span class="s2">&quot;L-- &quot;</span>
-    <span class="n">mid</span> <span class="o">=</span> <span class="s2">&quot;|-- &quot;</span>
-    <span class="n">backedge</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+<span class="k">class</span> <span class="nc">AsciiDirectedGlyphs</span><span class="p">(</span><span class="n">AsciiBaseGlyphs</span><span class="p">):</span>
+    <span class="n">last</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;L-&gt; &quot;</span>
+    <span class="n">mid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;|-&gt; &quot;</span>
+    <span class="n">backedge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&lt;-&quot;</span>
+    <span class="n">vertical_edge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;!&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">_UtfBaseGlyphs</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">AsciiUndirectedGlyphs</span><span class="p">(</span><span class="n">AsciiBaseGlyphs</span><span class="p">):</span>
+    <span class="n">last</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;L-- &quot;</span>
+    <span class="n">mid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;|-- &quot;</span>
+    <span class="n">backedge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+    <span class="n">vertical_edge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;|&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">UtfBaseGlyphs</span><span class="p">(</span><span class="n">BaseGlyphs</span><span class="p">):</span>
     <span class="c1"># Notes on available box and arrow characters</span>
     <span class="c1"># https://en.wikipedia.org/wiki/Box-drawing_character</span>
     <span class="c1"># https://stackoverflow.com/questions/2701192/triangle-arrow</span>
-    <span class="n">empty</span> <span class="o">=</span> <span class="s2">&quot;╙&quot;</span>
-    <span class="n">newtree_last</span> <span class="o">=</span> <span class="s2">&quot;╙── &quot;</span>
-    <span class="n">newtree_mid</span> <span class="o">=</span> <span class="s2">&quot;╟── &quot;</span>
-    <span class="n">endof_forest</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
-    <span class="n">within_forest</span> <span class="o">=</span> <span class="s2">&quot;╎   &quot;</span>
-    <span class="n">within_tree</span> <span class="o">=</span> <span class="s2">&quot;│   &quot;</span>
+    <span class="n">empty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;╙&quot;</span>
+    <span class="n">newtree_last</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;╙── &quot;</span>
+    <span class="n">newtree_mid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;╟── &quot;</span>
+    <span class="n">endof_forest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
+    <span class="n">within_forest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;╎   &quot;</span>
+    <span class="n">within_tree</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;│   &quot;</span>
 
 
-<span class="k">class</span> <span class="nc">UtfDirectedGlyphs</span><span class="p">(</span><span class="n">_UtfBaseGlyphs</span><span class="p">):</span>
-    <span class="n">last</span> <span class="o">=</span> <span class="s2">&quot;└─╼ &quot;</span>
-    <span class="n">mid</span> <span class="o">=</span> <span class="s2">&quot;├─╼ &quot;</span>
-    <span class="n">backedge</span> <span class="o">=</span> <span class="s2">&quot;╾&quot;</span>
+<span class="k">class</span> <span class="nc">UtfDirectedGlyphs</span><span class="p">(</span><span class="n">UtfBaseGlyphs</span><span class="p">):</span>
+    <span class="n">last</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;└─╼ &quot;</span>
+    <span class="n">mid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;├─╼ &quot;</span>
+    <span class="n">backedge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;╾&quot;</span>
+    <span class="n">vertical_edge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;╽&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">UtfUndirectedGlyphs</span><span class="p">(</span><span class="n">_UtfBaseGlyphs</span><span class="p">):</span>
-    <span class="n">last</span> <span class="o">=</span> <span class="s2">&quot;└── &quot;</span>
-    <span class="n">mid</span> <span class="o">=</span> <span class="s2">&quot;├── &quot;</span>
-    <span class="n">backedge</span> <span class="o">=</span> <span class="s2">&quot;─&quot;</span>
+<span class="k">class</span> <span class="nc">UtfUndirectedGlyphs</span><span class="p">(</span><span class="n">UtfBaseGlyphs</span><span class="p">):</span>
+    <span class="n">last</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;└── &quot;</span>
+    <span class="n">mid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;├── &quot;</span>
+    <span class="n">backedge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;─&quot;</span>
+    <span class="n">vertical_edge</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;│&quot;</span>
 
 
 <div class="viewcode-block" id="generate_network_text"><a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.text.generate_network_text.html#networkx.readwrite.text.generate_network_text">[docs]</a><span class="k">def</span> <span class="nf">generate_network_text</span><span class="p">(</span>
-    <span class="n">graph</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ascii_only</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">sources</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ascii_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">vertical_chains</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate lines in the &quot;network text&quot; format</span>
 
@@ -592,7 +611,7 @@ document.write(`
 
 <span class="sd">    2. Each reachable node will be printed exactly once on it&#39;s own line.</span>
 
-<span class="sd">    3. Edges are indicated in one of three ways:</span>
+<span class="sd">    3. Edges are indicated in one of four ways:</span>
 
 <span class="sd">        a. a parent &quot;L-style&quot; connection on the upper left. This corresponds to</span>
 <span class="sd">        a traversal in the directed DFS tree.</span>
@@ -606,6 +625,9 @@ document.write(`
 <span class="sd">        c. a child &quot;L-style&quot; connection on the lower right. Drawing of the</span>
 <span class="sd">        children are handled recursively.</span>
 
+<span class="sd">        d. if ``vertical_chains`` is true, and a parent node only has one child</span>
+<span class="sd">        a &quot;vertical-style&quot; edge is drawn between them.</span>
+
 <span class="sd">    4. The children of each node (wrt the directed DFS tree) are drawn</span>
 <span class="sd">    underneath and to the right of it. In the case that a child node has already</span>
 <span class="sd">    been drawn the connection is replaced with an ellipsis (&quot;...&quot;) to indicate</span>
@@ -613,6 +635,9 @@ document.write(`
 
 <span class="sd">    5. If a maximum depth is specified, an edge to nodes past this maximum</span>
 <span class="sd">    depth will be represented by an ellipsis.</span>
+
+<span class="sd">    6. If a a node has a truthy &quot;collapse&quot; value, then we do not traverse past</span>
+<span class="sd">    that node.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -636,10 +661,81 @@ document.write(`
 <span class="sd">    ascii_only : Boolean</span>
 <span class="sd">        If True only ASCII characters are used to construct the visualization</span>
 
+<span class="sd">    vertical_chains : Boolean</span>
+<span class="sd">        If True, chains of nodes will be drawn vertically when possible.</span>
+
 <span class="sd">    Yields</span>
 <span class="sd">    ------</span>
 <span class="sd">    str : a line of generated text</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; graph = nx.path_graph(10)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_node(&#39;A&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_node(&#39;B&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_node(&#39;C&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_node(&#39;D&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_edge(9, &#39;A&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_edge(9, &#39;B&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_edge(9, &#39;C&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_edge(&#39;C&#39;, &#39;D&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_edge(&#39;C&#39;, &#39;E&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; graph.add_edge(&#39;C&#39;, &#39;F&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph)</span>
+<span class="sd">    ╙── 0</span>
+<span class="sd">        └── 1</span>
+<span class="sd">            └── 2</span>
+<span class="sd">                └── 3</span>
+<span class="sd">                    └── 4</span>
+<span class="sd">                        └── 5</span>
+<span class="sd">                            └── 6</span>
+<span class="sd">                                └── 7</span>
+<span class="sd">                                    └── 8</span>
+<span class="sd">                                        └── 9</span>
+<span class="sd">                                            ├── A</span>
+<span class="sd">                                            ├── B</span>
+<span class="sd">                                            └── C</span>
+<span class="sd">                                                ├── D</span>
+<span class="sd">                                                ├── E</span>
+<span class="sd">                                                └── F</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph, vertical_chains=True)</span>
+<span class="sd">    ╙── 0</span>
+<span class="sd">        │</span>
+<span class="sd">        1</span>
+<span class="sd">        │</span>
+<span class="sd">        2</span>
+<span class="sd">        │</span>
+<span class="sd">        3</span>
+<span class="sd">        │</span>
+<span class="sd">        4</span>
+<span class="sd">        │</span>
+<span class="sd">        5</span>
+<span class="sd">        │</span>
+<span class="sd">        6</span>
+<span class="sd">        │</span>
+<span class="sd">        7</span>
+<span class="sd">        │</span>
+<span class="sd">        8</span>
+<span class="sd">        │</span>
+<span class="sd">        9</span>
+<span class="sd">        ├── A</span>
+<span class="sd">        ├── B</span>
+<span class="sd">        └── C</span>
+<span class="sd">            ├── D</span>
+<span class="sd">            ├── E</span>
+<span class="sd">            └── F</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NamedTuple</span>
+
+    <span class="k">class</span> <span class="nc">StackFrame</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+        <span class="n">parent</span><span class="p">:</span> <span class="n">Any</span>
+        <span class="n">node</span><span class="p">:</span> <span class="n">Any</span>
+        <span class="n">indents</span><span class="p">:</span> <span class="nb">list</span>
+        <span class="n">this_islast</span><span class="p">:</span> <span class="nb">bool</span>
+        <span class="n">this_vertical</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="n">collapse_attr</span> <span class="o">=</span> <span class="s2">&quot;collapse&quot;</span>
+
     <span class="n">is_directed</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
@@ -676,13 +772,14 @@ document.write(`
         <span class="c1"># Reverse the stack so sources are popped in the correct order.</span>
         <span class="n">last_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="p">[],</span> <span class="p">(</span><span class="n">idx</span> <span class="o">==</span> <span class="n">last_idx</span><span class="p">))</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+            <span class="n">StackFrame</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="p">[],</span> <span class="p">(</span><span class="n">idx</span> <span class="o">==</span> <span class="n">last_idx</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
         <span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="n">num_skipped_children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">seen_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
-            <span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">indents</span><span class="p">,</span> <span class="n">this_islast</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">indents</span><span class="p">,</span> <span class="n">this_islast</span><span class="p">,</span> <span class="n">this_vertical</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">Ellipsis</span><span class="p">:</span>
                 <span class="n">skip</span> <span class="o">=</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">seen_nodes</span>
@@ -697,12 +794,16 @@ document.write(`
                     <span class="k">if</span> <span class="n">num_skipped_children</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="ow">and</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="c1"># Append the ellipsis to be emitted last</span>
                         <span class="n">next_islast</span> <span class="o">=</span> <span class="kc">True</span>
-                        <span class="n">try_frame</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="bp">Ellipsis</span><span class="p">,</span> <span class="n">indents</span><span class="p">,</span> <span class="n">next_islast</span><span class="p">)</span>
+                        <span class="n">try_frame</span> <span class="o">=</span> <span class="n">StackFrame</span><span class="p">(</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="bp">Ellipsis</span><span class="p">,</span> <span class="n">indents</span><span class="p">,</span> <span class="n">next_islast</span><span class="p">,</span> <span class="kc">False</span>
+                        <span class="p">)</span>
                         <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">try_frame</span><span class="p">)</span>
 
                         <span class="c1"># Redo this frame, but not as a last object</span>
                         <span class="n">next_islast</span> <span class="o">=</span> <span class="kc">False</span>
-                        <span class="n">try_frame</span> <span class="o">=</span> <span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">indents</span><span class="p">,</span> <span class="n">next_islast</span><span class="p">)</span>
+                        <span class="n">try_frame</span> <span class="o">=</span> <span class="n">StackFrame</span><span class="p">(</span>
+                            <span class="n">parent</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">indents</span><span class="p">,</span> <span class="n">next_islast</span><span class="p">,</span> <span class="n">this_vertical</span>
+                        <span class="p">)</span>
                         <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">try_frame</span><span class="p">)</span>
                         <span class="k">continue</span>
 
@@ -714,6 +815,7 @@ document.write(`
                 <span class="c1"># Top level items (i.e. trees in the forest) get different</span>
                 <span class="c1"># glyphs to indicate they are not actually connected</span>
                 <span class="k">if</span> <span class="n">this_islast</span><span class="p">:</span>
+                    <span class="n">this_vertical</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="n">this_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">newtree_last</span><span class="p">]</span>
                     <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">endof_forest</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -721,14 +823,17 @@ document.write(`
                     <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">within_forest</span><span class="p">]</span>
 
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># For individual tree edges distinguish between directed and</span>
-                <span class="c1"># undirected cases</span>
-                <span class="k">if</span> <span class="n">this_islast</span><span class="p">:</span>
-                    <span class="n">this_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">last</span><span class="p">]</span>
-                    <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">endof_forest</span><span class="p">]</span>
+                <span class="c1"># Non-top-level items</span>
+                <span class="k">if</span> <span class="n">this_vertical</span><span class="p">:</span>
+                    <span class="n">this_prefix</span> <span class="o">=</span> <span class="n">indents</span>
+                    <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">this_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">mid</span><span class="p">]</span>
-                    <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">within_tree</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">this_islast</span><span class="p">:</span>
+                        <span class="n">this_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">last</span><span class="p">]</span>
+                        <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">endof_forest</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">this_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">mid</span><span class="p">]</span>
+                        <span class="n">next_prefix</span> <span class="o">=</span> <span class="n">indents</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">within_tree</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="bp">Ellipsis</span><span class="p">:</span>
                 <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot; ...&quot;</span>
@@ -739,6 +844,12 @@ document.write(`
                     <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label_attr</span><span class="p">,</span> <span class="n">node</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+                <span class="c1"># Determine if we want to show the children of this node.</span>
+                <span class="k">if</span> <span class="n">collapse_attr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">collapse</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">collapse_attr</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">collapse</span> <span class="o">=</span> <span class="kc">False</span>
 
                 <span class="c1"># Determine:</span>
                 <span class="c1"># (1) children to traverse into after showing this node.</span>
@@ -769,6 +880,12 @@ document.write(`
                         <span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">Ellipsis</span><span class="p">]</span>
                     <span class="n">handled_parents</span> <span class="o">=</span> <span class="p">{</span><span class="n">parent</span><span class="p">}</span>
 
+                <span class="k">if</span> <span class="n">collapse</span><span class="p">:</span>
+                    <span class="c1"># Collapsing a node is the same as reaching maximum depth</span>
+                    <span class="k">if</span> <span class="n">children</span><span class="p">:</span>
+                        <span class="n">children</span> <span class="o">=</span> <span class="p">[</span><span class="bp">Ellipsis</span><span class="p">]</span>
+                    <span class="n">handled_parents</span> <span class="o">=</span> <span class="p">{</span><span class="n">parent</span><span class="p">}</span>
+
                 <span class="c1"># The other parents are other predecessors of this node that</span>
                 <span class="c1"># are not handled elsewhere.</span>
                 <span class="n">other_parents</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">handled_parents</span><span class="p">]</span>
@@ -790,13 +907,29 @@ document.write(`
 
             <span class="c1"># Emit the line for this node, this will be called for each node</span>
             <span class="c1"># exactly once.</span>
+            <span class="k">if</span> <span class="n">this_vertical</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">this_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="n">glyphs</span><span class="o">.</span><span class="n">vertical_edge</span><span class="p">])</span>
+
             <span class="k">yield</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">this_prefix</span> <span class="o">+</span> <span class="p">[</span><span class="n">label</span><span class="p">,</span> <span class="n">suffix</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">vertical_chains</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
+                    <span class="n">num_children</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">children</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">num_children</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">children</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">parent</span><span class="p">})</span>
+                <span class="c1"># The next node can be drawn vertically if it is the only</span>
+                <span class="c1"># remaining child of this node.</span>
+                <span class="n">next_is_vertical</span> <span class="o">=</span> <span class="n">num_children</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">next_is_vertical</span> <span class="o">=</span> <span class="kc">False</span>
 
             <span class="c1"># Push children on the stack in reverse order so they are popped in</span>
             <span class="c1"># the original order.</span>
             <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">children</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
                 <span class="n">next_islast</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="n">try_frame</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">next_prefix</span><span class="p">,</span> <span class="n">next_islast</span><span class="p">)</span>
+                <span class="n">try_frame</span> <span class="o">=</span> <span class="n">StackFrame</span><span class="p">(</span>
+                    <span class="n">node</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">next_prefix</span><span class="p">,</span> <span class="n">next_islast</span><span class="p">,</span> <span class="n">next_is_vertical</span>
+                <span class="p">)</span>
                 <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">try_frame</span><span class="p">)</span></div>
 
 
@@ -809,6 +942,7 @@ document.write(`
     <span class="n">max_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">ascii_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">vertical_chains</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a nice text representation of a graph</span>
 
@@ -848,8 +982,11 @@ document.write(`
 <span class="sd">    end : string</span>
 <span class="sd">        The line ending character</span>
 
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
+<span class="sd">    vertical_chains : Boolean</span>
+<span class="sd">        If True, chains of nodes will be drawn vertically when possible.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
 <span class="sd">    &gt;&gt;&gt; graph = nx.balanced_tree(r=2, h=2, create_using=nx.DiGraph)</span>
 <span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph)</span>
 <span class="sd">    ╙── 0</span>
@@ -881,8 +1018,33 @@ document.write(`
 <span class="sd">        │           └── 4 ─ 0</span>
 <span class="sd">        └──  ...</span>
 
+<span class="sd">    &gt;&gt;&gt; graph = nx.cycle_graph(5, nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph, vertical_chains=True)</span>
+<span class="sd">    ╙── 0 ╾ 4</span>
+<span class="sd">        ╽</span>
+<span class="sd">        1</span>
+<span class="sd">        ╽</span>
+<span class="sd">        2</span>
+<span class="sd">        ╽</span>
+<span class="sd">        3</span>
+<span class="sd">        ╽</span>
+<span class="sd">        4</span>
+<span class="sd">        └─╼  ...</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph, vertical_chains=True, ascii_only=True)</span>
+<span class="sd">    +-- 0 &lt;- 4</span>
+<span class="sd">        !</span>
+<span class="sd">        1</span>
+<span class="sd">        !</span>
+<span class="sd">        2</span>
+<span class="sd">        !</span>
+<span class="sd">        3</span>
+<span class="sd">        !</span>
+<span class="sd">        4</span>
+<span class="sd">        L-&gt;  ...</span>
+
 <span class="sd">    &gt;&gt;&gt; graph = nx.generators.barbell_graph(4, 2)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph)</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph, vertical_chains=False)</span>
 <span class="sd">    ╙── 4</span>
 <span class="sd">        ├── 5</span>
 <span class="sd">        │   └── 6</span>
@@ -895,6 +1057,24 @@ document.write(`
 <span class="sd">            ├── 0</span>
 <span class="sd">            │   ├── 1 ─ 3</span>
 <span class="sd">            │   │   └── 2 ─ 0, 3</span>
+<span class="sd">            │   └──  ...</span>
+<span class="sd">            └──  ...</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_network_text(graph, vertical_chains=True)</span>
+<span class="sd">    ╙── 4</span>
+<span class="sd">        ├── 5</span>
+<span class="sd">        │   │</span>
+<span class="sd">        │   6</span>
+<span class="sd">        │   ├── 7</span>
+<span class="sd">        │   │   ├── 8 ─ 6</span>
+<span class="sd">        │   │   │   │</span>
+<span class="sd">        │   │   │   9 ─ 6, 7</span>
+<span class="sd">        │   │   └──  ...</span>
+<span class="sd">        │   └──  ...</span>
+<span class="sd">        └── 3</span>
+<span class="sd">            ├── 0</span>
+<span class="sd">            │   ├── 1 ─ 3</span>
+<span class="sd">            │   │   │</span>
+<span class="sd">            │   │   2 ─ 0, 3</span>
 <span class="sd">            │   └──  ...</span>
 <span class="sd">            └──  ...</span>
 
@@ -936,6 +1116,7 @@ document.write(`
         <span class="n">sources</span><span class="o">=</span><span class="n">sources</span><span class="p">,</span>
         <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
         <span class="n">ascii_only</span><span class="o">=</span><span class="n">ascii_only</span><span class="p">,</span>
+        <span class="n">vertical_chains</span><span class="o">=</span><span class="n">vertical_chains</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">_write</span><span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span></div>
 
@@ -1074,6 +1255,213 @@ document.write(`
     <span class="k">if</span> <span class="n">write</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Only return a string if the custom write function was not specified</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">printbuf</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_network_text</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reconstructs a graph from a network text representation.</span>
+
+<span class="sd">    This is mainly used for testing.  Network text is for display, not</span>
+<span class="sd">    serialization, as such this cannot parse all network text representations</span>
+<span class="sd">    because node labels can be ambiguous with the glyphs and indentation used</span>
+<span class="sd">    to represent edge structure. Additionally, there is no way to determine if</span>
+<span class="sd">    disconnected graphs were originally directed or undirected.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lines : list or iterator of strings</span>
+<span class="sd">        Input data in network text format</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G: NetworkX graph</span>
+<span class="sd">        The graph corresponding to the lines in network text format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Union</span>
+
+    <span class="k">class</span> <span class="nc">ParseStackFrame</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+        <span class="n">node</span><span class="p">:</span> <span class="n">Any</span>
+        <span class="n">indent</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="n">has_vertical_child</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">initial_line_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="n">is_ascii</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">is_directed</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">##############</span>
+    <span class="c1"># Initial Pass</span>
+    <span class="c1">##############</span>
+
+    <span class="c1"># Do an initial pass over the lines to determine what type of graph it is.</span>
+    <span class="c1"># Remember what these lines were, so we can reiterate over them in the</span>
+    <span class="c1"># parsing pass.</span>
+    <span class="n">initial_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">first_line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">initial_line_iter</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+        <span class="o">...</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">initial_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_line</span><span class="p">)</span>
+        <span class="c1"># The first character indicates if it is an ASCII or UTF graph</span>
+        <span class="n">first_char</span> <span class="o">=</span> <span class="n">first_line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">first_char</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="n">UtfBaseGlyphs</span><span class="o">.</span><span class="n">empty</span><span class="p">,</span>
+            <span class="n">UtfBaseGlyphs</span><span class="o">.</span><span class="n">newtree_mid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">UtfBaseGlyphs</span><span class="o">.</span><span class="n">newtree_last</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">}:</span>
+            <span class="n">is_ascii</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">first_char</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="n">AsciiBaseGlyphs</span><span class="o">.</span><span class="n">empty</span><span class="p">,</span>
+            <span class="n">AsciiBaseGlyphs</span><span class="o">.</span><span class="n">newtree_mid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">AsciiBaseGlyphs</span><span class="o">.</span><span class="n">newtree_last</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">}:</span>
+            <span class="n">is_ascii</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected first character: </span><span class="si">{</span><span class="n">first_char</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_ascii</span><span class="p">:</span>
+        <span class="n">directed_glyphs</span> <span class="o">=</span> <span class="n">AsciiDirectedGlyphs</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+        <span class="n">undirected_glyphs</span> <span class="o">=</span> <span class="n">AsciiUndirectedGlyphs</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">directed_glyphs</span> <span class="o">=</span> <span class="n">UtfDirectedGlyphs</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+        <span class="n">undirected_glyphs</span> <span class="o">=</span> <span class="n">UtfUndirectedGlyphs</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+
+    <span class="c1"># For both directed / undirected glyphs, determine which glyphs never</span>
+    <span class="c1"># appear as substrings in the other undirected / directed glyphs.  Glyphs</span>
+    <span class="c1"># with this property unambiguously indicates if a graph is directed /</span>
+    <span class="c1"># undirected.</span>
+    <span class="n">directed_items</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">directed_glyphs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">undirected_items</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">undirected_glyphs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">unambiguous_directed_items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">directed_items</span><span class="p">:</span>
+        <span class="n">other_items</span> <span class="o">=</span> <span class="n">undirected_items</span>
+        <span class="n">other_supersets</span> <span class="o">=</span> <span class="p">[</span><span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">other_items</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">other</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">other_supersets</span><span class="p">:</span>
+            <span class="n">unambiguous_directed_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="n">unambiguous_undirected_items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">undirected_items</span><span class="p">:</span>
+        <span class="n">other_items</span> <span class="o">=</span> <span class="n">directed_items</span>
+        <span class="n">other_supersets</span> <span class="o">=</span> <span class="p">[</span><span class="n">other</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">other_items</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">other</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">other_supersets</span><span class="p">:</span>
+            <span class="n">unambiguous_undirected_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">initial_line_iter</span><span class="p">:</span>
+        <span class="n">initial_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">unambiguous_undirected_items</span><span class="p">):</span>
+            <span class="n">is_directed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">unambiguous_directed_items</span><span class="p">):</span>
+            <span class="n">is_directed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">is_directed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Not enough information to determine, choose undirected by default</span>
+        <span class="n">is_directed</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">glyphs</span> <span class="o">=</span> <span class="n">directed_glyphs</span> <span class="k">if</span> <span class="n">is_directed</span> <span class="k">else</span> <span class="n">undirected_glyphs</span>
+
+    <span class="c1"># the backedge symbol by itself can be ambiguous, but with spaces around it</span>
+    <span class="c1"># becomes unambiguous.</span>
+    <span class="n">backedge_symbol</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">glyphs</span><span class="p">[</span><span class="s2">&quot;backedge&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
+
+    <span class="c1"># Reconstruct an iterator over all of the lines.</span>
+    <span class="n">parsing_line_iter</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">initial_lines</span><span class="p">,</span> <span class="n">initial_line_iter</span><span class="p">)</span>
+
+    <span class="c1">##############</span>
+    <span class="c1"># Parsing Pass</span>
+    <span class="c1">##############</span>
+
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">is_empty</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">noparent</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>  <span class="c1"># sentinel value</span>
+
+    <span class="c1"># keep a stack of previous nodes that could be parents of subsequent nodes</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">ParseStackFrame</span><span class="p">(</span><span class="n">noparent</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">parsing_line_iter</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="n">glyphs</span><span class="p">[</span><span class="s2">&quot;empty&quot;</span><span class="p">]:</span>
+            <span class="c1"># If the line is the empty glyph, we are done.</span>
+            <span class="c1"># There shouldn&#39;t be anything else after this.</span>
+            <span class="n">is_empty</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">backedge_symbol</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="c1"># This line has one or more backedges, separate those out</span>
+            <span class="n">node_part</span><span class="p">,</span> <span class="n">backedge_part</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">backedge_symbol</span><span class="p">)</span>
+            <span class="n">backedge_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">backedge_part</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)]</span>
+            <span class="c1"># Now the node can be parsed</span>
+            <span class="n">node_part</span> <span class="o">=</span> <span class="n">node_part</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">node</span> <span class="o">=</span> <span class="n">node_part</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="c1"># Add the backedges to the edge list</span>
+            <span class="n">edges</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">u</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">backedge_nodes</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No backedge, the tail of this line is the node</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">node</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">prev</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">glyphs</span><span class="p">[</span><span class="s2">&quot;vertical_edge&quot;</span><span class="p">]:</span>
+            <span class="c1"># Previous node is still the previous node, but we know it will</span>
+            <span class="c1"># have exactly one child, which will need to have its nesting level</span>
+            <span class="c1"># adjusted.</span>
+            <span class="n">modified_prev</span> <span class="o">=</span> <span class="n">ParseStackFrame</span><span class="p">(</span>
+                <span class="n">prev</span><span class="o">.</span><span class="n">node</span><span class="p">,</span>
+                <span class="n">prev</span><span class="o">.</span><span class="n">indent</span><span class="p">,</span>
+                <span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">modified_prev</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># The length of the string before the node characters give us a hint</span>
+        <span class="c1"># about our nesting level. The only case where this doesn&#39;t work is</span>
+        <span class="c1"># when there are vertical chains, which is handled explicitly.</span>
+        <span class="n">indent</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">ParseStackFrame</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">prev</span><span class="o">.</span><span class="n">has_vertical_child</span><span class="p">:</span>
+            <span class="c1"># In this case we know prev must be the parent of our current line,</span>
+            <span class="c1"># so we don&#39;t have to search the stack. (which is good because the</span>
+            <span class="c1"># indentation check wouldn&#39;t work in this case).</span>
+            <span class="o">...</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If the previous node nesting-level is greater than the current</span>
+            <span class="c1"># nodes nesting-level than the previous node was the end of a path,</span>
+            <span class="c1"># and is not our parent. We can safely pop nodes off the stack</span>
+            <span class="c1"># until we find one with a comparable nesting-level, which is our</span>
+            <span class="c1"># parent.</span>
+            <span class="k">while</span> <span class="n">curr</span><span class="o">.</span><span class="n">indent</span> <span class="o">&lt;=</span> <span class="n">prev</span><span class="o">.</span><span class="n">indent</span><span class="p">:</span>
+                <span class="n">prev</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="s2">&quot;...&quot;</span><span class="p">:</span>
+            <span class="c1"># The current previous node is no longer a valid parent,</span>
+            <span class="c1"># keep it popped from the stack.</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prev</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The previous and current nodes may still be parents, so add them</span>
+            <span class="c1"># back onto the stack.</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prev</span><span class="p">)</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+
+            <span class="c1"># Add the node and the edge to its parent to the node / edge lists.</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prev</span><span class="o">.</span><span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">noparent</span><span class="p">:</span>
+                <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">prev</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">curr</span><span class="o">.</span><span class="n">node</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">is_empty</span><span class="p">:</span>
+        <span class="c1"># Sanity check</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="c1"># Reconstruct the graph</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span> <span class="k">if</span> <span class="n">is_directed</span> <span class="k">else</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+    <span class="n">new</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">new</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new</span>
 </pre></div>
 
                 </article>
