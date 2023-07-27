@@ -525,6 +525,8 @@ document.write(`
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;shortest_path&quot;</span><span class="p">,</span>
     <span class="s2">&quot;all_shortest_paths&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;single_source_all_shortest_paths&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;all_pairs_all_shortest_paths&quot;</span><span class="p">,</span>
     <span class="s2">&quot;shortest_path_length&quot;</span><span class="p">,</span>
     <span class="s2">&quot;average_shortest_path_length&quot;</span><span class="p">,</span>
     <span class="s2">&quot;has_path&quot;</span><span class="p">,</span>
@@ -1025,6 +1027,139 @@ document.write(`
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;method not supported: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">_build_paths_from_predecessors</span><span class="p">({</span><span class="n">source</span><span class="p">},</span> <span class="n">target</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">single_source_all_shortest_paths</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;dijkstra&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute all shortest simple paths from the given source in the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    source : node</span>
+<span class="sd">       Starting node for path.</span>
+
+<span class="sd">    weight : None, string or function, optional (default = None)</span>
+<span class="sd">        If None, every edge has weight/distance/cost 1.</span>
+<span class="sd">        If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">        Any edge attribute not present defaults to 1.</span>
+<span class="sd">        If this is a function, the weight of an edge is the value</span>
+<span class="sd">        returned by the function. The function must accept exactly</span>
+<span class="sd">        three positional arguments: the two endpoints of an edge and</span>
+<span class="sd">        the dictionary of edge attributes for that edge.</span>
+<span class="sd">        The function must return a number.</span>
+
+<span class="sd">    method : string, optional (default = &#39;dijkstra&#39;)</span>
+<span class="sd">       The algorithm to use to compute the path lengths.</span>
+<span class="sd">       Supported options: &#39;dijkstra&#39;, &#39;bellman-ford&#39;.</span>
+<span class="sd">       Other inputs produce a ValueError.</span>
+<span class="sd">       If `weight` is None, unweighted graph methods are used, and this</span>
+<span class="sd">       suggestion is ignored.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    paths : generator of dictionary</span>
+<span class="sd">        A generator of all paths between source and all nodes in the graph.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `method` is not among the supported options.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G, [0, 1, 2, 3, 0])</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.single_source_all_shortest_paths(G, source=0))</span>
+<span class="sd">    {0: [[0]], 1: [[0, 1]], 2: [[0, 1, 2], [0, 3, 2]], 3: [[0, 3]]}</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    There may be many shortest paths between the source and target.  If G</span>
+<span class="sd">    contains zero-weight cycles, this function will not produce all shortest</span>
+<span class="sd">    paths because doing so would produce infinitely many paths of unbounded</span>
+<span class="sd">    length -- instead, we only produce the shortest simple paths.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    shortest_path</span>
+<span class="sd">    all_shortest_paths</span>
+<span class="sd">    single_source_shortest_path</span>
+<span class="sd">    all_pairs_shortest_path</span>
+<span class="sd">    all_pairs_all_shortest_paths</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;unweighted&quot;</span> <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">method</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;unweighted&quot;</span><span class="p">:</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">predecessor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;dijkstra&quot;</span><span class="p">:</span>
+        <span class="n">pred</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dijkstra_predecessor_and_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;bellman-ford&quot;</span><span class="p">:</span>
+        <span class="n">pred</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bellman_ford_predecessor_and_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;method not supported: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">n</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">_build_paths_from_predecessors</span><span class="p">({</span><span class="n">source</span><span class="p">},</span> <span class="n">n</span><span class="p">,</span> <span class="n">pred</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoPath</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">all_pairs_all_shortest_paths</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;dijkstra&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute all shortest paths between all nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight : None, string or function, optional (default = None)</span>
+<span class="sd">        If None, every edge has weight/distance/cost 1.</span>
+<span class="sd">        If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">        Any edge attribute not present defaults to 1.</span>
+<span class="sd">        If this is a function, the weight of an edge is the value</span>
+<span class="sd">        returned by the function. The function must accept exactly</span>
+<span class="sd">        three positional arguments: the two endpoints of an edge and</span>
+<span class="sd">        the dictionary of edge attributes for that edge.</span>
+<span class="sd">        The function must return a number.</span>
+
+<span class="sd">    method : string, optional (default = &#39;dijkstra&#39;)</span>
+<span class="sd">       The algorithm to use to compute the path lengths.</span>
+<span class="sd">       Supported options: &#39;dijkstra&#39;, &#39;bellman-ford&#39;.</span>
+<span class="sd">       Other inputs produce a ValueError.</span>
+<span class="sd">       If `weight` is None, unweighted graph methods are used, and this</span>
+<span class="sd">       suggestion is ignored.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    paths : generator of dictionary</span>
+<span class="sd">        Dictionary of arrays, keyed by source and target, of all shortest paths.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `method` is not among the supported options.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.cycle_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.all_pairs_all_shortest_paths(G))[0][2]</span>
+<span class="sd">    [[0, 1, 2], [0, 3, 2]]</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.all_pairs_all_shortest_paths(G))[0][3]</span>
+<span class="sd">    [[0, 3]]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    There may be multiple shortest paths with equal lengths. Unlike</span>
+<span class="sd">    all_pairs_shortest_path, this method returns all shortest paths.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    all_pairs_shortest_path</span>
+<span class="sd">    single_source_all_shortest_paths</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">n</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">single_source_all_shortest_paths</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_build_paths_from_predecessors</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">pred</span><span class="p">):</span>
