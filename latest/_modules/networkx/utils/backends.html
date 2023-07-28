@@ -562,6 +562,8 @@ document.write(`
 <span class="sd">    Whether to preserve all node attributes.</span>
 <span class="sd">- ``preserve_graph_attrs`` : bool</span>
 <span class="sd">    Whether to preserve all graph attributes.</span>
+<span class="sd">- ``preserve_all_attrs`` : bool</span>
+<span class="sd">    Whether to preserve all graph, node, and edge attributes.</span>
 <span class="sd">- ``name`` : str</span>
 <span class="sd">    The name of the algorithm.</span>
 <span class="sd">- ``graph_name`` : str</span>
@@ -651,6 +653,7 @@ document.write(`
     <span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">preserve_node_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">preserve_graph_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">preserve_all_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dispatches to a backend algorithm based on input graph types.</span>
 
@@ -702,6 +705,10 @@ document.write(`
 <span class="sd">        For bool, whether to preserve all graph attributes.</span>
 <span class="sd">        For set, which input graph arguments to preserve graph attributes.</span>
 
+<span class="sd">    preserve_all_attrs : bool</span>
+<span class="sd">        Whether to preserve all edge, node and graph attributes.</span>
+<span class="sd">        This overrides all the other preserve_*_attrs.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Allow any of the following decorator forms:</span>
     <span class="c1">#  - @_dispatch</span>
@@ -720,6 +727,7 @@ document.write(`
             <span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="n">preserve_edge_attrs</span><span class="p">,</span>
             <span class="n">preserve_node_attrs</span><span class="o">=</span><span class="n">preserve_node_attrs</span><span class="p">,</span>
             <span class="n">preserve_graph_attrs</span><span class="o">=</span><span class="n">preserve_graph_attrs</span><span class="p">,</span>
+            <span class="n">preserve_all_attrs</span><span class="o">=</span><span class="n">preserve_all_attrs</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;name&#39; and &#39;graphs&#39; must be passed by keyword&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
@@ -849,6 +857,7 @@ document.write(`
     <span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">preserve_node_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">preserve_graph_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">preserve_all_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Auto-converts graph arguments into the backend equivalent,</span>
 <span class="sd">    causing the dispatching mechanism to trigger for every</span>
@@ -863,6 +872,7 @@ document.write(`
             <span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="n">preserve_edge_attrs</span><span class="p">,</span>
             <span class="n">preserve_node_attrs</span><span class="o">=</span><span class="n">preserve_node_attrs</span><span class="p">,</span>
             <span class="n">preserve_graph_attrs</span><span class="o">=</span><span class="n">preserve_graph_attrs</span><span class="p">,</span>
+            <span class="n">preserve_all_attrs</span><span class="o">=</span><span class="n">preserve_all_attrs</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;name&#39; and &#39;graphs&#39; must be passed by keyword&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
@@ -907,7 +917,7 @@ document.write(`
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid graph names: </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">graphs</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">set</span><span class="p">(</span><span class="n">bound</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="c1"># Convert graphs into backend graph-like object</span>
         <span class="c1">#   Include the edge and/or node labels if provided to the algorithm</span>
-        <span class="n">_preserve_edge_attrs</span> <span class="o">=</span> <span class="n">preserve_edge_attrs</span>
+        <span class="n">_preserve_edge_attrs</span> <span class="o">=</span> <span class="n">preserve_edge_attrs</span> <span class="ow">or</span> <span class="n">preserve_all_attrs</span>
         <span class="n">_edge_attrs</span> <span class="o">=</span> <span class="n">edge_attrs</span>
         <span class="k">if</span> <span class="n">_preserve_edge_attrs</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
             <span class="c1"># e.g. `preserve_edge_attrs=False`</span>
@@ -981,7 +991,7 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bad type for edge_attrs: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">edge_attrs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">_preserve_node_attrs</span> <span class="o">=</span> <span class="n">preserve_node_attrs</span>
+        <span class="n">_preserve_node_attrs</span> <span class="o">=</span> <span class="n">preserve_node_attrs</span> <span class="ow">or</span> <span class="n">preserve_all_attrs</span>
         <span class="n">_node_attrs</span> <span class="o">=</span> <span class="n">node_attrs</span>
         <span class="k">if</span> <span class="n">_preserve_node_attrs</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
             <span class="c1"># e.g. `preserve_node_attrs=False`</span>
@@ -1048,7 +1058,7 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bad type for node_attrs: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">node_attrs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">_preserve_graph_attrs</span> <span class="o">=</span> <span class="n">preserve_graph_attrs</span>
+        <span class="n">_preserve_graph_attrs</span> <span class="o">=</span> <span class="n">preserve_graph_attrs</span> <span class="ow">or</span> <span class="n">preserve_all_attrs</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_preserve_graph_attrs</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">set</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Bad type for preserve_graph_attrs: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">preserve_graph_attrs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
