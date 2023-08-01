@@ -543,17 +543,13 @@ document.write(`
 <span class="sd">    neighbors : function</span>
 <span class="sd">        A function that takes a newly visited node of the graph as input</span>
 <span class="sd">        and returns an *iterator* (not just a list) of nodes that are</span>
-<span class="sd">        neighbors of that node. If not specified, this is just the</span>
-<span class="sd">        ``G.neighbors`` method, but in general it can be any function</span>
+<span class="sd">        neighbors of that node with custom ordering. If not specified, this is</span>
+<span class="sd">        just the``G.neighbors`` method, but in general it can be any function</span>
 <span class="sd">        that returns an iterator over some or all of the neighbors of a</span>
 <span class="sd">        given node, in any order.</span>
 
 <span class="sd">    depth_limit : int, optional(default=len(G))</span>
 <span class="sd">        Specify the maximum search depth.</span>
-
-<span class="sd">    sort_neighbors : function</span>
-<span class="sd">        A function that takes the list of neighbors of given node as input, and</span>
-<span class="sd">        returns an *iterator* over these neighbors but with custom ordering.</span>
 
 <span class="sd">    Yields</span>
 <span class="sd">    ------</span>
@@ -563,9 +559,9 @@ document.write(`
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(3)</span>
-<span class="sd">    &gt;&gt;&gt; print(list(nx.bfs_edges(G, 0)))</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.bfs_edges(G, 0))</span>
 <span class="sd">    [(0, 1), (1, 2)]</span>
-<span class="sd">    &gt;&gt;&gt; print(list(nx.bfs_edges(G, source=0, depth_limit=1)))</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.bfs_edges(G, source=0, depth_limit=1))</span>
 <span class="sd">    [(0, 1)]</span>
 
 <span class="sd">    Notes</span>
@@ -581,6 +577,16 @@ document.write(`
     <span class="k">if</span> <span class="n">neighbors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">neighbors</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span>
     <span class="k">if</span> <span class="n">sort_neighbors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">warnings</span>
+
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;sort_neighbors parameter is deprecated and will be removed &quot;</span>
+                <span class="s2">&quot;in NetworkX 3.2, use neighbors parameter instead.&quot;</span>
+            <span class="p">),</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">_neighbors</span> <span class="o">=</span> <span class="n">neighbors</span>
         <span class="n">neighbors</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">sort_neighbors</span><span class="p">(</span><span class="n">_neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">)))</span>
     <span class="k">if</span> <span class="n">depth_limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -683,7 +689,13 @@ document.write(`
         <span class="n">successors</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">predecessors</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">successors</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span>
-    <span class="k">yield from</span> <span class="n">generic_bfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">successors</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">,</span> <span class="n">sort_neighbors</span><span class="p">)</span></div>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">sort_neighbors</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="n">generic_bfs_edges</span><span class="p">(</span>
+            <span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">sort_neighbors</span><span class="p">(</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="p">))),</span> <span class="n">depth_limit</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">yield from</span> <span class="n">generic_bfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">successors</span><span class="p">,</span> <span class="n">depth_limit</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="bfs_tree"><a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.traversal.breadth_first_search.bfs_tree.html#networkx.algorithms.traversal.breadth_first_search.bfs_tree">[docs]</a><span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span>
@@ -716,12 +728,12 @@ document.write(`
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(3)</span>
-<span class="sd">    &gt;&gt;&gt; print(list(nx.bfs_tree(G, 1).edges()))</span>
+<span class="sd">    &gt;&gt;&gt; list(nx.bfs_tree(G, 1).edges())</span>
 <span class="sd">    [(1, 0), (1, 2)]</span>
 <span class="sd">    &gt;&gt;&gt; H = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(H, [0, 1, 2, 3, 4, 5, 6])</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(H, [2, 7, 8, 9, 10])</span>
-<span class="sd">    &gt;&gt;&gt; print(sorted(list(nx.bfs_tree(H, source=3, depth_limit=3).edges())))</span>
+<span class="sd">    &gt;&gt;&gt; sorted(list(nx.bfs_tree(H, source=3, depth_limit=3).edges()))</span>
 <span class="sd">    [(1, 0), (2, 1), (2, 7), (3, 2), (3, 4), (4, 5), (5, 6), (7, 8)]</span>
 
 
@@ -780,21 +792,21 @@ document.write(`
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(3)</span>
-<span class="sd">    &gt;&gt;&gt; print(dict(nx.bfs_predecessors(G, 0)))</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.bfs_predecessors(G, 0))</span>
 <span class="sd">    {1: 0, 2: 1}</span>
 <span class="sd">    &gt;&gt;&gt; H = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; H.add_edges_from([(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)])</span>
-<span class="sd">    &gt;&gt;&gt; print(dict(nx.bfs_predecessors(H, 0)))</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.bfs_predecessors(H, 0))</span>
 <span class="sd">    {1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 2}</span>
 <span class="sd">    &gt;&gt;&gt; M = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(M, [0, 1, 2, 3, 4, 5, 6])</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(M, [2, 7, 8, 9, 10])</span>
-<span class="sd">    &gt;&gt;&gt; print(sorted(nx.bfs_predecessors(M, source=1, depth_limit=3)))</span>
+<span class="sd">    &gt;&gt;&gt; sorted(nx.bfs_predecessors(M, source=1, depth_limit=3))</span>
 <span class="sd">    [(0, 1), (2, 1), (3, 2), (4, 3), (7, 2), (8, 7)]</span>
 <span class="sd">    &gt;&gt;&gt; N = nx.DiGraph()</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(N, [0, 1, 2, 3, 4, 7])</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(N, [3, 5, 6, 7])</span>
-<span class="sd">    &gt;&gt;&gt; print(sorted(nx.bfs_predecessors(N, source=2)))</span>
+<span class="sd">    &gt;&gt;&gt; sorted(nx.bfs_predecessors(N, source=2))</span>
 <span class="sd">    [(3, 2), (4, 3), (5, 3), (6, 5), (7, 4)]</span>
 
 <span class="sd">    Notes</span>
@@ -846,20 +858,20 @@ document.write(`
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(3)</span>
-<span class="sd">    &gt;&gt;&gt; print(dict(nx.bfs_successors(G, 0)))</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.bfs_successors(G, 0))</span>
 <span class="sd">    {0: [1], 1: [2]}</span>
 <span class="sd">    &gt;&gt;&gt; H = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; H.add_edges_from([(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)])</span>
-<span class="sd">    &gt;&gt;&gt; print(dict(nx.bfs_successors(H, 0)))</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.bfs_successors(H, 0))</span>
 <span class="sd">    {0: [1, 2], 1: [3, 4], 2: [5, 6]}</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(G, [0, 1, 2, 3, 4, 5, 6])</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(G, [2, 7, 8, 9, 10])</span>
-<span class="sd">    &gt;&gt;&gt; print(dict(nx.bfs_successors(G, source=1, depth_limit=3)))</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.bfs_successors(G, source=1, depth_limit=3))</span>
 <span class="sd">    {1: [0, 2], 2: [3, 7], 3: [4], 7: [8]}</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
 <span class="sd">    &gt;&gt;&gt; nx.add_path(G, [0, 1, 2, 3, 4, 5])</span>
-<span class="sd">    &gt;&gt;&gt; print(dict(nx.bfs_successors(G, source=3)))</span>
+<span class="sd">    &gt;&gt;&gt; dict(nx.bfs_successors(G, source=3))</span>
 <span class="sd">    {3: [4], 4: [5]}</span>
 
 <span class="sd">    Notes</span>
