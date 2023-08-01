@@ -1508,7 +1508,7 @@ document.write(`
     <span class="k">return</span> <span class="n">A</span></div>
 
 
-<div class="viewcode-block" id="from_numpy_array"><a class="viewcode-back" href="../../reference/generated/networkx.convert_matrix.from_numpy_array.html#networkx.convert_matrix.from_numpy_array">[docs]</a><span class="k">def</span> <span class="nf">from_numpy_array</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">parallel_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="from_numpy_array"><a class="viewcode-back" href="../../reference/generated/networkx.convert_matrix.from_numpy_array.html#networkx.convert_matrix.from_numpy_array">[docs]</a><span class="k">def</span> <span class="nf">from_numpy_array</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">parallel_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a graph from a 2D NumPy array.</span>
 
 <span class="sd">    The 2D NumPy array is interpreted as an adjacency matrix for the graph.</span>
@@ -1528,6 +1528,10 @@ document.write(`
 <span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
 <span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
 
+<span class="sd">    edge_attr : String, optional (default=&quot;weight&quot;)</span>
+<span class="sd">        The attribute to which the array values are assigned on each edge. If</span>
+<span class="sd">        it is None, edge attributes will not be assigned.</span>
+
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    For directed graphs, explicitly mention create_using=nx.DiGraph,</span>
@@ -1541,6 +1545,11 @@ document.write(`
 <span class="sd">    If `create_using` indicates an undirected multigraph, then only the edges</span>
 <span class="sd">    indicated by the upper triangle of the array `A` will be added to the</span>
 <span class="sd">    graph.</span>
+
+<span class="sd">    If `edge_attr` is Falsy (False or None), edge attributes will not be</span>
+<span class="sd">    assigned, and the array data will be treated like a binary mask of</span>
+<span class="sd">    edge presence or absence. Otherwise, the attributes will be assigned</span>
+<span class="sd">    as follows:</span>
 
 <span class="sd">    If the NumPy array has a single data type for each array entry it</span>
 <span class="sd">    will be converted to an appropriate Python data type.</span>
@@ -1635,7 +1644,9 @@ document.write(`
                 <span class="p">{</span>
                     <span class="n">name</span><span class="p">:</span> <span class="n">kind_to_python_type</span><span class="p">[</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span><span class="p">](</span><span class="n">val</span><span class="p">)</span>
                     <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">A</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">])</span>
-                <span class="p">},</span>
+                <span class="p">}</span>
+                <span class="k">if</span> <span class="n">edge_attr</span>
+                <span class="k">else</span> <span class="p">{},</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span>
         <span class="p">)</span>
@@ -1652,11 +1663,17 @@ document.write(`
         <span class="c1">#         for d in range(A[u, v]):</span>
         <span class="c1">#             G.add_edge(u, v, weight=1)</span>
         <span class="c1">#</span>
-        <span class="n">triples</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span>
-            <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]))</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edges</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_attr</span><span class="p">:</span>
+            <span class="n">triples</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span>
+                <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="n">edge_attr</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]))</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edges</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">triples</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]))</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># basic data type</span>
-        <span class="n">triples</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="n">python_type</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">])})</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_attr</span><span class="p">:</span>
+            <span class="n">triples</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{</span><span class="n">edge_attr</span><span class="p">:</span> <span class="n">python_type</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">])})</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">triples</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">)</span>
     <span class="c1"># If we are creating an undirected multigraph, only add the edges from the</span>
     <span class="c1"># upper triangle of the matrix. Otherwise, add all the edges. This relies</span>
     <span class="c1"># on the fact that the vertices created in the</span>
