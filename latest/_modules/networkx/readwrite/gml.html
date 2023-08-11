@@ -819,9 +819,34 @@ document.write(`
         <span class="p">]</span>
         <span class="n">tokens</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">))</span>
         <span class="n">lineno</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">multilines</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># entries spread across multiple lines</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-            <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># deal with entries spread across multiple lines</span>
+            <span class="c1">#</span>
+            <span class="c1"># should we actually have to deal with escaped &quot;s then do it here</span>
+            <span class="k">if</span> <span class="n">multilines</span><span class="p">:</span>
+                <span class="n">multilines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>  <span class="c1"># closing multiline entry</span>
+                    <span class="c1"># multiline entries will be joined by space. cannot</span>
+                    <span class="c1"># reintroduce newlines as this will break the tokenizer</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">multilines</span><span class="p">)</span>
+                    <span class="n">multilines</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># continued multiline entry</span>
+                    <span class="n">lineno</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># opening multiline entry</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&quot;&#39;</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">:</span>
+                        <span class="c1"># since we expect something like key &quot;value&quot;, the &quot; should not be found at ends</span>
+                        <span class="c1"># otherwise tokenizer will pick up the formatting mistake.</span>
+                        <span class="n">multilines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()]</span>
+                        <span class="n">lineno</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">continue</span>
+
+            <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
             <span class="k">while</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
                 <span class="n">match</span> <span class="o">=</span> <span class="n">tokens</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
