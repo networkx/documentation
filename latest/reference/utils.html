@@ -500,7 +500,7 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="generated/networkx.utils.rcm.cuthill_mckee_ordering.html">cuthill_mckee_ordering</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/networkx.utils.rcm.reverse_cuthill_mckee_ordering.html">reverse_cuthill_mckee_ordering</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/networkx.utils.mapped_queue.MappedQueue.html">networkx.utils.mapped_queue.MappedQueue</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/networkx.utils.backends._dispatch.html">_dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/networkx.utils.backends._dispatch.html">networkx.utils.backends._dispatch</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
@@ -734,10 +734,12 @@ dispatch object in the entry_points, load it, and dispatch the work to it.</p>
 <section id="testing">
 <h3>Testing<a class="headerlink" href="#testing" title="Link to this heading">#</a></h3>
 <p>To assist in validating the backend algorithm implementations, if an
-environment variable <code class="docutils literal notranslate"><span class="pre">NETWORKX_GRAPH_CONVERT</span></code> is set to a registered
+environment variable <code class="docutils literal notranslate"><span class="pre">NETWORKX_TEST_BACKEND</span></code> is set to a registered
 plugin keys, the dispatch machinery will automatically convert regular
 networkx Graphs and DiGraphs to the backend equivalent by calling
-<code class="docutils literal notranslate"><span class="pre">&lt;backend</span> <span class="pre">dispatcher&gt;.convert_from_nx(G,</span> <span class="pre">edge_attrs=edge_attrs,</span> <span class="pre">name=name)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&lt;backend</span> <span class="pre">dispatcher&gt;.convert_from_nx(G,</span> <span class="pre">edge_attrs=edge_attrs,</span> <span class="pre">name=name)</span></code>.
+Set <code class="docutils literal notranslate"><span class="pre">NETWORKX_FALLBACK_TO_NX</span></code> environment variable to have tests
+use networkx graphs for algorithms not implemented by the backend.</p>
 <p>The arguments to <code class="docutils literal notranslate"><span class="pre">convert_from_nx</span></code> are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">G</span></code> : networkx Graph</p></li>
@@ -793,12 +795,15 @@ the environment variable, NetworkX will automatically route tests on
 dispatchable algorithms to the backend, allowing the full networkx test
 suite to be run against the backend implementation.</p>
 <p>Example pytest invocation:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NETWORKX_GRAPH_CONVERT</span><span class="o">=</span><span class="n">sparse</span> <span class="n">pytest</span> <span class="o">--</span><span class="n">pyargs</span> <span class="n">networkx</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NETWORKX_TEST_BACKEND</span><span class="o">=</span><span class="n">sparse</span> <span class="n">pytest</span> <span class="o">--</span><span class="n">pyargs</span> <span class="n">networkx</span>
 </pre></div>
 </div>
 <p>Dispatchable algorithms which are not implemented by the backend
 will cause a <code class="docutils literal notranslate"><span class="pre">pytest.xfail()</span></code>, giving some indication that not all
 tests are working, while avoiding causing an explicit failure.</p>
+<p>If a backend only partially implements some algorithms, it can define
+a <code class="docutils literal notranslate"><span class="pre">can_run(name,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code> function that returns True or False
+indicating whether it can run the algorithm with the given arguments.</p>
 <p>A special <code class="docutils literal notranslate"><span class="pre">on_start_tests(items)</span></code> function may be defined by the backend.
 It will be called with the list of NetworkX tests discovered. Each item
 is a test object that can be marked as xfail if the backend does not support
