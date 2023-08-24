@@ -1402,10 +1402,10 @@ document.write(`
         <span class="c1"># Adding m new edges, if there is room to add them</span>
         <span class="k">if</span> <span class="n">a_probability</span> <span class="o">&lt;</span> <span class="n">p</span> <span class="ow">and</span> <span class="n">G</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">clique_size</span> <span class="o">-</span> <span class="n">m</span><span class="p">:</span>
             <span class="c1"># Select the nodes where an edge can be added</span>
-            <span class="n">elligible_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nd</span> <span class="k">for</span> <span class="n">nd</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="n">deg</span> <span class="o">&lt;</span> <span class="n">clique_degree</span><span class="p">]</span>
+            <span class="n">eligible_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nd</span> <span class="k">for</span> <span class="n">nd</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="n">deg</span> <span class="o">&lt;</span> <span class="n">clique_degree</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
-                <span class="c1"># Choosing a random source node from elligible_nodes</span>
-                <span class="n">src_node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">elligible_nodes</span><span class="p">)</span>
+                <span class="c1"># Choosing a random source node from eligible_nodes</span>
+                <span class="n">src_node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">eligible_nodes</span><span class="p">)</span>
 
                 <span class="c1"># Picking a possible node that is not &#39;src_node&#39; or</span>
                 <span class="c1"># neighbor with &#39;src_node&#39;, with preferential attachment</span>
@@ -1422,29 +1422,26 @@ document.write(`
                 <span class="n">attachment_preference</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span>
                 <span class="n">attachment_preference</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
 
-                <span class="c1"># Adjusting the elligible nodes. Degree may be saturated.</span>
+                <span class="c1"># Adjusting the eligible nodes. Degree may be saturated.</span>
                 <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span> <span class="o">==</span> <span class="n">clique_degree</span><span class="p">:</span>
-                    <span class="n">elligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span> <span class="o">==</span> <span class="n">clique_degree</span>
-                    <span class="ow">and</span> <span class="n">dest_node</span> <span class="ow">in</span> <span class="n">elligible_nodes</span>
-                <span class="p">):</span>
-                    <span class="n">elligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
+                    <span class="n">eligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span> <span class="o">==</span> <span class="n">clique_degree</span> <span class="ow">and</span> <span class="n">dest_node</span> <span class="ow">in</span> <span class="n">eligible_nodes</span><span class="p">:</span>
+                    <span class="n">eligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
 
         <span class="c1"># Rewiring m edges, if there are enough edges</span>
         <span class="k">elif</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="n">a_probability</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">q</span><span class="p">)</span> <span class="ow">and</span> <span class="n">m</span> <span class="o">&lt;=</span> <span class="n">G</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">clique_size</span><span class="p">:</span>
             <span class="c1"># Selecting nodes that have at least 1 edge but that are not</span>
             <span class="c1"># fully connected to ALL other nodes (center of star).</span>
             <span class="c1"># These nodes are the pivot nodes of the edges to rewire</span>
-            <span class="n">elligible_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nd</span> <span class="k">for</span> <span class="n">nd</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">deg</span> <span class="o">&lt;</span> <span class="n">clique_degree</span><span class="p">]</span>
+            <span class="n">eligible_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nd</span> <span class="k">for</span> <span class="n">nd</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">deg</span> <span class="o">&lt;</span> <span class="n">clique_degree</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
                 <span class="c1"># Choosing a random source node</span>
-                <span class="n">node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">elligible_nodes</span><span class="p">)</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">eligible_nodes</span><span class="p">)</span>
 
                 <span class="c1"># The available nodes do have a neighbor at least.</span>
                 <span class="n">neighbor_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
 
-                <span class="c1"># Choosing the other end that will get dettached</span>
+                <span class="c1"># Choosing the other end that will get detached</span>
                 <span class="n">src_node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">neighbor_nodes</span><span class="p">)</span>
 
                 <span class="c1"># Picking a target node that is not &#39;node&#39; or</span>
@@ -1461,16 +1458,16 @@ document.write(`
                 <span class="n">attachment_preference</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span>
                 <span class="n">attachment_preference</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
 
-                <span class="c1"># Adjusting the elligible nodes.</span>
+                <span class="c1"># Adjusting the eligible nodes.</span>
                 <span class="c1"># nodes may be saturated or isolated.</span>
-                <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">src_node</span> <span class="ow">in</span> <span class="n">elligible_nodes</span><span class="p">:</span>
-                    <span class="n">elligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">dest_node</span> <span class="ow">in</span> <span class="n">elligible_nodes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">src_node</span> <span class="ow">in</span> <span class="n">eligible_nodes</span><span class="p">:</span>
+                    <span class="n">eligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">src_node</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">dest_node</span> <span class="ow">in</span> <span class="n">eligible_nodes</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span> <span class="o">==</span> <span class="n">clique_degree</span><span class="p">:</span>
-                        <span class="n">elligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
+                        <span class="n">eligible_nodes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="n">elligible_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
+                        <span class="n">eligible_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dest_node</span><span class="p">)</span>
 
         <span class="c1"># Adding new node with m edges</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1935,7 +1932,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.3.
     <br/>
   </p>
 </div>
