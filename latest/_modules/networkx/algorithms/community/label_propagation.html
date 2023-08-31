@@ -508,12 +508,139 @@ document.write(`
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Label propagation community detection algorithms.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">groups</span><span class="p">,</span> <span class="n">not_implemented_for</span><span class="p">,</span> <span class="n">py_random_state</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;label_propagation_communities&quot;</span><span class="p">,</span> <span class="s2">&quot;asyn_lpa_communities&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;label_propagation_communities&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;asyn_lpa_communities&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fast_label_propagation_communities&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fast_label_propagation_communities</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns communities in `G` as detected by fast label propagation.</span>
+
+<span class="sd">    The fast label propagation algorithm is described in [1]_. The algorithm is</span>
+<span class="sd">    probabilistic and the found communities may vary in different executions.</span>
+
+<span class="sd">    The algorithm operates as follows. First, the community label of each node is</span>
+<span class="sd">    set to a unique label. The algorithm then repeatedly updates the labels of</span>
+<span class="sd">    the nodes to the most frequent label in their neighborhood. In case of ties,</span>
+<span class="sd">    a random label is chosen from the most frequent labels.</span>
+
+<span class="sd">    The algorithm maintains a queue of nodes that still need to be processed.</span>
+<span class="sd">    Initially, all nodes are added to the queue in a random order. Then the nodes</span>
+<span class="sd">    are removed from the queue one by one and processed. If a node updates its label,</span>
+<span class="sd">    all its neighbors that have a different label are added to the queue (if not</span>
+<span class="sd">    already in the queue). The algorithm stops when the queue is empty.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Graph, DiGraph, MultiGraph, or MultiDiGraph</span>
+<span class="sd">      Any NetworkX graph.</span>
+
+<span class="sd">    weight : string, or None (default)</span>
+<span class="sd">      The edge attribute representing a non-negative weight of an edge. If None,</span>
+<span class="sd">      each edge is assumed to have weight one. The weight of an edge is used in</span>
+<span class="sd">      determining the frequency with which a label appears among the neighbors of</span>
+<span class="sd">      a node (edge with weight `w` is equivalent to `w` unweighted edges).</span>
+
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">      Indicator of random number generation state. See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    communities : iterable</span>
+<span class="sd">      Iterable of communities given as sets of nodes.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Edge directions are ignored for directed graphs.</span>
+<span class="sd">    Edge weights must be non-negative numbers.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Vincent A. Traag &amp; Lovro Šubelj. &quot;Large network community detection by</span>
+<span class="sd">    fast label propagation.&quot; Scientific Reports 13 (2023): 2701.</span>
+<span class="sd">    https://doi.org/10.1038/s41598-023-29610-z</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Queue of nodes to be processed.</span>
+    <span class="n">nodes_queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">seed</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">nodes_queue</span><span class="p">)</span>
+
+    <span class="c1"># Set of nodes in the queue.</span>
+    <span class="n">nodes_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="c1"># Assign unique label to each node.</span>
+    <span class="n">comms</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">)}</span>
+
+    <span class="k">while</span> <span class="n">nodes_queue</span><span class="p">:</span>
+        <span class="c1"># Remove next node from the queue to process.</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">nodes_queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+        <span class="n">nodes_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="c1"># Isolated nodes retain their initial label.</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Compute frequency of labels in node&#39;s neighborhood.</span>
+            <span class="n">label_freqs</span> <span class="o">=</span> <span class="n">_fast_label_count</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">comms</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+            <span class="n">max_freq</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">label_freqs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="c1"># Always sample new label from most frequent labels.</span>
+            <span class="n">comm</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">comm</span> <span class="k">for</span> <span class="n">comm</span> <span class="ow">in</span> <span class="n">label_freqs</span> <span class="k">if</span> <span class="n">label_freqs</span><span class="p">[</span><span class="n">comm</span><span class="p">]</span> <span class="o">==</span> <span class="n">max_freq</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">comms</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">!=</span> <span class="n">comm</span><span class="p">:</span>
+                <span class="n">comms</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">comm</span>
+
+                <span class="c1"># Add neighbors that have different label to the queue.</span>
+                <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">all_neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">comms</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span> <span class="o">!=</span> <span class="n">comm</span> <span class="ow">and</span> <span class="n">nbr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_set</span><span class="p">:</span>
+                        <span class="n">nodes_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span>
+                        <span class="n">nodes_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span>
+
+    <span class="k">yield from</span> <span class="n">groups</span><span class="p">(</span><span class="n">comms</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_fast_label_count</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">comms</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the frequency of labels in the neighborhood of a node.</span>
+
+<span class="sd">    Returns a dictionary keyed by label to the frequency of that label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Unweighted (un)directed simple graph.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="n">label_freqs</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">comms</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">all_neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">)))</span>
+
+        <span class="c1"># Unweighted (un)directed multigraph.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">label_freqs</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+                <span class="n">label_freqs</span><span class="p">[</span><span class="n">comms</span><span class="p">[</span><span class="n">nbr</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">pred</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+                    <span class="n">label_freqs</span><span class="p">[</span><span class="n">comms</span><span class="p">[</span><span class="n">nbr</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">pred</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Weighted undirected simple/multigraph.</span>
+        <span class="n">label_freqs</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">nbr</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">label_freqs</span><span class="p">[</span><span class="n">comms</span><span class="p">[</span><span class="n">nbr</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">w</span>
+
+        <span class="c1"># Weighted directed simple/multigraph.</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">nbr</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">label_freqs</span><span class="p">[</span><span class="n">comms</span><span class="p">[</span><span class="n">nbr</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">w</span>
+
+    <span class="k">return</span> <span class="n">label_freqs</span>
 
 
 <div class="viewcode-block" id="asyn_lpa_communities">
@@ -783,7 +910,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.4.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.5.
     <br/>
   </p>
 </div>
