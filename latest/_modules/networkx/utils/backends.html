@@ -627,8 +627,6 @@ document.write(`
 <span class="n">_registered_algorithms</span> <span class="o">=</span> <span class="p">{}</span>
 
 
-<div class="viewcode-block" id="_dispatch">
-<a class="viewcode-back" href="../../../reference/generated/networkx.utils.backends._dispatch.html#networkx.utils.backends._dispatch">[docs]</a>
 <span class="k">class</span> <span class="nc">_dispatch</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dispatches to a backend algorithm based on input graph types.</span>
 
@@ -1321,12 +1319,30 @@ document.write(`
 
 <span class="sd">        This uses the global registry `_registered_algorithms` to deserialize.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_restore_dispatch</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,)</span></div>
-
+        <span class="k">return</span> <span class="n">_restore_dispatch</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,)</span>
 
 
 <span class="k">def</span> <span class="nf">_restore_dispatch</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">_registered_algorithms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_NETWORKX_BUILDING_DOCS_&quot;</span><span class="p">):</span>
+    <span class="c1"># When building docs with Sphinx, use the original function with the</span>
+    <span class="c1"># dispatched __doc__, b/c Sphinx renders normal Python functions better.</span>
+    <span class="c1"># This doesn&#39;t show e.g. `*, backend=None, **backend_kwargs` in the</span>
+    <span class="c1"># signatures, which is probably okay. It does allow the docstring to be</span>
+    <span class="c1"># updated based on the installed backends.</span>
+    <span class="n">_orig_dispatch</span> <span class="o">=</span> <span class="n">_dispatch</span>
+
+<div class="viewcode-block" id="_dispatch">
+<a class="viewcode-back" href="../../../reference/generated/networkx.utils.backends._dispatch.html#networkx.utils.backends._dispatch">[docs]</a>
+    <span class="k">def</span> <span class="nf">_dispatch</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># type: ignore[no-redef]</span>
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">_dispatch</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">dispatched_func</span> <span class="o">=</span> <span class="n">_orig_dispatch</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">dispatched_func</span><span class="o">.</span><span class="vm">__doc__</span>
+        <span class="k">return</span> <span class="n">func</span></div>
+
 </pre></div>
 
                 </article>
