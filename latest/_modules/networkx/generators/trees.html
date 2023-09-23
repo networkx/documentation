@@ -520,13 +520,54 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <h1>Source code for networkx.generators.trees</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Functions for generating trees.&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span></span><span class="sd">&quot;&quot;&quot;Functions for generating trees.</span>
+
+<span class="sd">The functions sampling trees at random in this module come</span>
+<span class="sd">in two variants: labeled and unlabeled. The labeled variants</span>
+<span class="sd">sample from every possible tree with the given number of nodes</span>
+<span class="sd">uniformly at random. The unlabeled variants sample from every</span>
+<span class="sd">possible *isomorphism class* of trees with the given number</span>
+<span class="sd">of nodes uniformly at random.</span>
+
+<span class="sd">To understand the difference, consider the following example.</span>
+<span class="sd">There are two isomorphism classes of trees with four nodes.</span>
+<span class="sd">One is that of the path graph, the other is that of the</span>
+<span class="sd">star graph. The unlabeled variant will return a line graph or</span>
+<span class="sd">a star graph with probability 1/2.</span>
+
+<span class="sd">The labeled variant will return the line graph</span>
+<span class="sd">with probability 3/4 and the star graph with probability 1/4,</span>
+<span class="sd">because there are more labeled variants of the line graph</span>
+<span class="sd">than of the star graph. More precisely, the line graph has</span>
+<span class="sd">an automorphism group of order 2, whereas the star graph has</span>
+<span class="sd">an automorphism group of order 6, so the line graph has three</span>
+<span class="sd">times as many labeled variants as the star graph, and thus</span>
+<span class="sd">three more chances to be drawn.</span>
+
+<span class="sd">Additionally, some functions in this module can sample rooted</span>
+<span class="sd">trees and forests uniformly at random. A rooted tree is a tree</span>
+<span class="sd">with a designated root node. A rooted forest is a disjoint union</span>
+<span class="sd">of rooted trees.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">comb</span><span class="p">,</span> <span class="n">factorial</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">py_random_state</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;prefix_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;random_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;prefix_tree_recursive&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;prefix_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;prefix_tree_recursive&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_labeled_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_labeled_rooted_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_labeled_rooted_forest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_unlabeled_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_unlabeled_rooted_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_unlabeled_rooted_forest&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <div class="viewcode-block" id="prefix_tree">
@@ -805,17 +846,14 @@ document.write(`
     <span class="k">return</span> <span class="n">tree</span>
 
 
-<span class="c1"># From the Wikipedia article on Prüfer sequences:</span>
-<span class="c1">#</span>
-<span class="c1"># &gt; Generating uniformly distributed random Prüfer sequences and</span>
-<span class="c1"># &gt; converting them into the corresponding trees is a straightforward</span>
-<span class="c1"># &gt; method of generating uniformly distributed random labelled trees.</span>
-<span class="c1">#</span>
-<div class="viewcode-block" id="random_tree">
-<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_tree.html#networkx.generators.trees.random_tree">[docs]</a>
 <span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">random_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a uniformly random tree on `n` nodes.</span>
+
+<span class="sd">    .. deprecated:: 3.2</span>
+
+<span class="sd">       ``random_tree`` is deprecated and will be removed in NX v3.4</span>
+<span class="sd">       Use ``random_labeled_tree`` instead.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -875,6 +913,14 @@ document.write(`
 <span class="sd">            │           └─╼ 5</span>
 <span class="sd">            └─╼ 9</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">random_tree is deprecated and will be removed in NX v3.4</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Use random_labeled_tree instead.&quot;</span>
+        <span class="p">),</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;the null graph is not a tree&quot;</span><span class="p">)</span>
     <span class="c1"># Cannot create a Prüfer sequence unless `n` is at least two.</span>
@@ -898,7 +944,749 @@ document.write(`
         <span class="n">tree</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">utree</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
         <span class="n">tree</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">tree</span></div>
+    <span class="k">return</span> <span class="n">tree</span>
+
+
+<div class="viewcode-block" id="random_labeled_tree">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_labeled_tree.html#networkx.generators.trees.random_labeled_tree">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_labeled_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a labeled tree on `n` nodes chosen uniformly at random.</span>
+
+<span class="sd">    Generating uniformly distributed random Prüfer sequences and</span>
+<span class="sd">    converting them into the corresponding trees is a straightforward</span>
+<span class="sd">    method of generating uniformly distributed random labeled trees.</span>
+<span class="sd">    This function implements this method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes, greater than zero.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">     :class:`networkx.Graph`</span>
+<span class="sd">        A `networkx.Graph` with nodes in the set {0, …, *n* - 1}.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `n` is zero (because the null graph is not a tree).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Cannot create a Prüfer sequence unless `n` is at least two.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;the null graph is not a tree&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_prufer_sequence</span><span class="p">([</span><span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)])</span></div>
+
+
+
+<div class="viewcode-block" id="random_labeled_rooted_tree">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_labeled_rooted_tree.html#networkx.generators.trees.random_labeled_rooted_tree">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_labeled_rooted_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a labeled rooted tree with `n` nodes.</span>
+
+<span class="sd">    The returned tree is chosen uniformly at random from all labeled rooted trees.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`networkx.Graph`</span>
+<span class="sd">        A `networkx.Graph` with integer nodes 0 &lt;= node &lt;= `n` - 1.</span>
+<span class="sd">        The root of the tree is selected uniformly from the nodes.</span>
+<span class="sd">        The &quot;root&quot; graph attribute identifies the root of the tree.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function returns the result of :func:`random_labeled_tree`</span>
+<span class="sd">    with a randomly selected root.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `n` is zero (because the null graph is not a tree).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">random_labeled_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">t</span></div>
+
+
+
+<div class="viewcode-block" id="random_labeled_rooted_forest">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_labeled_rooted_forest.html#networkx.generators.trees.random_labeled_rooted_forest">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_labeled_rooted_forest</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a labeled rooted forest with `n` nodes.</span>
+
+<span class="sd">    The returned forest is chosen uniformly at random using a</span>
+<span class="sd">    generalization of Prüfer sequences [1]_ in the form described in [2]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">       See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`networkx.Graph`</span>
+<span class="sd">        A `networkx.Graph` with integer nodes 0 &lt;= node &lt;= `n` - 1.</span>
+<span class="sd">        The &quot;roots&quot; graph attribute is a set of integers containing the roots.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Knuth, Donald E. &quot;Another Enumeration of Trees.&quot;</span>
+<span class="sd">        Canadian Journal of Mathematics, 20 (1968): 1077-1086.</span>
+<span class="sd">        https://doi.org/10.4153/CJM-1968-104-8</span>
+<span class="sd">    .. [2] Rubey, Martin. &quot;Counting Spanning Trees&quot;. Diplomarbeit</span>
+<span class="sd">        zur Erlangung des akademischen Grades Magister der</span>
+<span class="sd">        Naturwissenschaften an der Formal- und Naturwissenschaftlichen</span>
+<span class="sd">        Fakultät der Universität Wien. Wien, May 2000.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Select the number of roots by iterating over the cumulative count of trees</span>
+    <span class="c1"># with at most k roots</span>
+    <span class="k">def</span> <span class="nf">_select_k</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">cum_sum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">cum_sum</span> <span class="o">+=</span> <span class="p">(</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span> <span class="o">//</span> <span class="p">(</span>
+                <span class="n">factorial</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="n">cum_sum</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">k</span>
+
+        <span class="k">return</span> <span class="n">n</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">F</span>
+    <span class="c1"># Select the number of roots k</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">_select_k</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">F</span>  <span class="c1"># Nothing to do</span>
+    <span class="c1"># Select the roots</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">)</span>
+    <span class="c1"># Nonroots</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">roots</span><span class="p">)</span>
+    <span class="c1"># Coding sequence</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="c1"># Multiset of elements in N also in p</span>
+    <span class="n">degree</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">N</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">p</span><span class="p">])</span>
+    <span class="c1"># Iterator over the elements of p with degree zero</span>
+    <span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">p</span> <span class="k">if</span> <span class="n">degree</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">last</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+    <span class="c1"># This loop is identical to that for Prüfer sequences,</span>
+    <span class="c1"># except that we can draw nodes only from p</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">N</span><span class="p">:</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">last</span> <span class="ow">and</span> <span class="n">degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterator</span><span class="p">)</span>
+
+    <span class="n">F</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">roots</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">roots</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">F</span></div>
+
+
+
+<span class="c1"># The following functions support generation of unlabeled trees and forests.</span>
+
+
+<span class="k">def</span> <span class="nf">_to_nx</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">roots</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts the (edges, n_nodes) input to a :class:`networkx.Graph`.</span>
+<span class="sd">    The (edges, n_nodes) input is a list of even length, where each pair</span>
+<span class="sd">    of consecutive integers represents an edge, and an integer `n_nodes`.</span>
+<span class="sd">    Integers in the list are elements of `range(n_nodes)`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    edges : list of ints</span>
+<span class="sd">        The flattened list of edges of the graph.</span>
+<span class="sd">    n_nodes : int</span>
+<span class="sd">        The number of nodes of the graph.</span>
+<span class="sd">    root: int (default=None)</span>
+<span class="sd">        If not None, the &quot;root&quot; attribute of the graph will be set to this value.</span>
+<span class="sd">    roots: collection of ints (default=None)</span>
+<span class="sd">        If not None, he &quot;roots&quot; attribute of the graph will be set to this value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`networkx.Graph`</span>
+<span class="sd">        The graph with `n_nodes` nodes and edges given by `edges`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">root</span>
+    <span class="k">if</span> <span class="n">roots</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;roots&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">roots</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+
+<span class="k">def</span> <span class="nf">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of unlabeled rooted trees with `n` nodes.</span>
+
+<span class="sd">    See also https://oeis.org/A000081.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes</span>
+<span class="sd">    cache_trees : list of ints</span>
+<span class="sd">        The $i$-th element is the number of unlabeled rooted trees with $i$ nodes,</span>
+<span class="sd">        which is used as a cache (and is extended to length $n+1$ if needed)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        The number of unlabeled rooted trees with `n` nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">n_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cache_trees</span><span class="p">),</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">cache_trees</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">d</span> <span class="o">*</span> <span class="n">cache_trees</span><span class="p">[</span><span class="n">n_i</span> <span class="o">-</span> <span class="n">j</span> <span class="o">*</span> <span class="n">d</span><span class="p">]</span> <span class="o">*</span> <span class="n">cache_trees</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_i</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">n_i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">//</span> <span class="p">(</span><span class="n">n_i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">cache_trees</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_select_jd_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a pair $(j,d)$ with a specific probability</span>
+
+<span class="sd">    Given $n$, returns a pair of positive integers $(j,d)$ with the probability</span>
+<span class="sd">    specified in formula (5) of Chapter 29 of [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes</span>
+<span class="sd">    cache_trees : list of ints</span>
+<span class="sd">        Cache for :func:`_num_rooted_trees`.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">       See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (int, int)</span>
+<span class="sd">        A pair of positive integers $(j,d)$ satisfying formula (5) of</span>
+<span class="sd">        Chapter 29 of [1]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Nijenhuis, Albert, and Wilf, Herbert S.</span>
+<span class="sd">        &quot;Combinatorial algorithms: for computers and calculators.&quot;</span>
+<span class="sd">        Academic Press, 1978.</span>
+<span class="sd">        https://doi.org/10.1016/C2013-0-11243-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">cumsum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">cumsum</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="n">d</span>
+                <span class="o">*</span> <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">j</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">cumsum</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an unlabeled rooted tree with `n` nodes.</span>
+
+<span class="sd">    Returns an unlabeled rooted tree with `n` nodes chosen uniformly</span>
+<span class="sd">    at random using the &quot;RANRUT&quot; algorithm from [1]_.</span>
+<span class="sd">    The tree is returned in the form: (list_of_edges, number_of_nodes)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes, greater than zero.</span>
+<span class="sd">    cache_trees : list ints</span>
+<span class="sd">        Cache for :func:`_num_rooted_trees`.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (list_of_edges, number_of_nodes) : list, int</span>
+<span class="sd">        A random unlabeled rooted tree with `n` nodes as a 2-tuple</span>
+<span class="sd">        ``(list_of_edges, number_of_nodes)``.</span>
+<span class="sd">        The root is node 0.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Nijenhuis, Albert, and Wilf, Herbert S.</span>
+<span class="sd">        &quot;Combinatorial algorithms: for computers and calculators.&quot;</span>
+<span class="sd">        Academic Press, 1978.</span>
+<span class="sd">        https://doi.org/10.1016/C2013-0-11243-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">edges</span><span class="p">,</span> <span class="n">n_nodes</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">edges</span><span class="p">,</span> <span class="n">n_nodes</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">edges</span><span class="p">,</span> <span class="n">n_nodes</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">edges</span><span class="p">,</span> <span class="n">n_nodes</span>
+
+    <span class="n">j</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">_select_jd_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">t1</span><span class="p">,</span> <span class="n">t1_nodes</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">j</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">t2</span><span class="p">,</span> <span class="n">t2_nodes</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">t12</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t2_nodes</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="n">t1_nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">t12</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+        <span class="n">t1</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">n1</span> <span class="o">+</span> <span class="n">t1_nodes</span><span class="p">,</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">t1_nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">t2</span><span class="p">)</span>
+        <span class="n">t1_nodes</span> <span class="o">+=</span> <span class="n">t2_nodes</span>
+
+    <span class="k">return</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t1_nodes</span>
+
+
+<div class="viewcode-block" id="random_unlabeled_rooted_tree">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_unlabeled_rooted_tree.html#networkx.generators.trees.random_unlabeled_rooted_tree">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">number_of_trees</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a number of unlabeled rooted trees uniformly at random</span>
+
+<span class="sd">    Returns one or more (depending on `number_of_trees`)</span>
+<span class="sd">    unlabeled rooted trees with `n` nodes drawn uniformly</span>
+<span class="sd">    at random.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes</span>
+<span class="sd">    number_of_trees : int or None (default)</span>
+<span class="sd">        If not None, this number of trees is generated and returned.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`networkx.Graph` or list of :class:`networkx.Graph`</span>
+<span class="sd">        A single `networkx.Graph` (or a list thereof, if `number_of_trees`</span>
+<span class="sd">        is specified) with nodes in the set {0, …, *n* - 1}.</span>
+<span class="sd">        The &quot;root&quot; graph attribute identifies the root of the tree.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The trees are generated using the &quot;RANRUT&quot; algorithm from [1]_.</span>
+<span class="sd">    The algorithm needs to compute some counting functions</span>
+<span class="sd">    that are relatively expensive: in case several trees are needed,</span>
+<span class="sd">    it is advisable to use the `number_of_trees` optional argument</span>
+<span class="sd">    to reuse the counting functions.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `n` is zero (because the null graph is not a tree).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Nijenhuis, Albert, and Wilf, Herbert S.</span>
+<span class="sd">        &quot;Combinatorial algorithms: for computers and calculators.&quot;</span>
+<span class="sd">        Academic Press, 1978.</span>
+<span class="sd">        https://doi.org/10.1016/C2013-0-11243-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;the null graph is not a tree&quot;</span><span class="p">)</span>
+    <span class="n">cache_trees</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># initial cache of number of rooted trees</span>
+    <span class="k">if</span> <span class="n">number_of_trees</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_to_nx</span><span class="p">(</span><span class="o">*</span><span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">),</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">_to_nx</span><span class="p">(</span><span class="o">*</span><span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">),</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_trees</span><span class="p">)</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_num_rooted_forests</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of unlabeled rooted forests with `n` nodes, and with</span>
+<span class="sd">    no more than `q` nodes per tree. A recursive formula for this is (2) in</span>
+<span class="sd">    [1]_. This function is implemented using dynamic programming instead of</span>
+<span class="sd">    recursion.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes.</span>
+<span class="sd">    q : int</span>
+<span class="sd">        The maximum number of nodes for each tree of the forest.</span>
+<span class="sd">    cache_forests : list of ints</span>
+<span class="sd">        The $i$-th element is the number of unlabeled rooted forests with</span>
+<span class="sd">        $i$ nodes, and with no more than `q` nodes per tree; this is used</span>
+<span class="sd">        as a cache (and is extended to length `n` + 1 if needed).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        The number of unlabeled rooted forests with `n` nodes with no more than</span>
+<span class="sd">        `q` nodes per tree.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">n_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cache_forests</span><span class="p">),</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">q_i</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n_i</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+        <span class="n">cache_forests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">sum</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">d</span> <span class="o">*</span> <span class="n">cache_forests</span><span class="p">[</span><span class="n">n_i</span> <span class="o">-</span> <span class="n">j</span> <span class="o">*</span> <span class="n">d</span><span class="p">]</span> <span class="o">*</span> <span class="n">cache_forests</span><span class="p">[</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">q_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_i</span> <span class="o">//</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">//</span> <span class="n">n_i</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cache_forests</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_select_jd_forests</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Given `n` and `q`, returns a pair of positive integers $(j,d)$</span>
+<span class="sd">    such that $j\\leq d$, with probability satisfying (F1) of [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes.</span>
+<span class="sd">    q : int</span>
+<span class="sd">        The maximum number of nodes for each tree of the forest.</span>
+<span class="sd">    cache_forests : list of ints</span>
+<span class="sd">        Cache for :func:`_num_rooted_forests`.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (int, int)</span>
+<span class="sd">        A pair of positive integers $(j,d)$</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_num_rooted_forests</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">cumsum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">cumsum</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="n">d</span>
+                <span class="o">*</span> <span class="n">_num_rooted_forests</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">j</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">_num_rooted_forests</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">cumsum</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_random_unlabeled_rooted_forest</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an unlabeled rooted forest with `n` nodes, and with no more</span>
+<span class="sd">    than `q` nodes per tree, drawn uniformly at random. It is an implementation</span>
+<span class="sd">    of the algorithm &quot;Forest&quot; of [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes.</span>
+<span class="sd">    q : int</span>
+<span class="sd">        The maximum number of nodes per tree.</span>
+<span class="sd">    cache_trees :</span>
+<span class="sd">        Cache for :func:`_num_rooted_trees`.</span>
+<span class="sd">    cache_forests :</span>
+<span class="sd">        Cache for :func:`_num_rooted_forests`.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">       See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (edges, n, r) : (list, int, list)</span>
+<span class="sd">        The forest (edges, n) and a list r of root nodes.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">([],</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="n">j</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">_select_jd_forests</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">t1</span><span class="p">,</span> <span class="n">t1_nodes</span><span class="p">,</span> <span class="n">r1</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_forest</span><span class="p">(</span>
+        <span class="n">n</span> <span class="o">-</span> <span class="n">j</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span>
+    <span class="p">)</span>
+    <span class="n">t2</span><span class="p">,</span> <span class="n">t2_nodes</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+        <span class="n">r1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t1_nodes</span><span class="p">)</span>
+        <span class="n">t1</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">n1</span> <span class="o">+</span> <span class="n">t1_nodes</span><span class="p">,</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">t1_nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">t2</span><span class="p">)</span>
+        <span class="n">t1_nodes</span> <span class="o">+=</span> <span class="n">t2_nodes</span>
+    <span class="k">return</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t1_nodes</span><span class="p">,</span> <span class="n">r1</span>
+
+
+<div class="viewcode-block" id="random_unlabeled_rooted_forest">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_unlabeled_rooted_forest.html#networkx.generators.trees.random_unlabeled_rooted_forest">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_unlabeled_rooted_forest</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">number_of_forests</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a forest or list of forests selected at random.</span>
+
+<span class="sd">    Returns one or more (depending on `number_of_forests`)</span>
+<span class="sd">    unlabeled rooted forests with `n` nodes, and with no more than</span>
+<span class="sd">    `q` nodes per tree, drawn uniformly at random.</span>
+<span class="sd">    The &quot;roots&quot; graph attribute identifies the roots of the forest.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes</span>
+<span class="sd">    q : int or None (default)</span>
+<span class="sd">        The maximum number of nodes per tree.</span>
+<span class="sd">    number_of_forests : int or None (default)</span>
+<span class="sd">        If not None, this number of forests is generated and returned.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`networkx.Graph` or list of :class:`networkx.Graph`</span>
+<span class="sd">        A single `networkx.Graph` (or a list thereof, if `number_of_forests`</span>
+<span class="sd">        is specified) with nodes in the set {0, …, *n* - 1}.</span>
+<span class="sd">        The &quot;roots&quot; graph attribute is a set containing the roots</span>
+<span class="sd">        of the trees in the forest.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function implements the algorithm &quot;Forest&quot; of [1]_.</span>
+<span class="sd">    The algorithm needs to compute some counting functions</span>
+<span class="sd">    that are relatively expensive: in case several trees are needed,</span>
+<span class="sd">    it is advisable to use the `number_of_forests` optional argument</span>
+<span class="sd">    to reuse the counting functions.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `n` is non-zero but `q` is zero.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">q</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="n">q</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;q must be a positive integer if n is positive.&quot;</span><span class="p">)</span>
+
+    <span class="n">cache_trees</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># initial cache of number of rooted trees</span>
+    <span class="n">cache_forests</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># initial cache of number of rooted forests</span>
+
+    <span class="k">if</span> <span class="n">number_of_forests</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">g</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">rs</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_forest</span><span class="p">(</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_to_nx</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">roots</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">rs</span><span class="p">))</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_forests</span><span class="p">):</span>
+        <span class="n">g</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">rs</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_forest</span><span class="p">(</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span>
+        <span class="p">)</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_to_nx</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">roots</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">rs</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_num_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of unlabeled trees with `n` nodes.</span>
+
+<span class="sd">    See also https://oeis.org/A000055.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes.</span>
+<span class="sd">    cache_trees : list of ints</span>
+<span class="sd">        Cache for :func:`_num_rooted_trees`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        The number of unlabeled trees with `n` nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span> <span class="o">*</span> <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">j</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">+=</span> <span class="n">comb</span><span class="p">(</span><span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<span class="k">def</span> <span class="nf">_bicenter</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a bi-centroidal tree on `n` nodes drawn uniformly at random.</span>
+
+<span class="sd">    This function implements the algorithm Bicenter of [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes (must be even).</span>
+<span class="sd">    cache : list of ints.</span>
+<span class="sd">        Cache for :func:`_num_rooted_trees`.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (edges, n)</span>
+<span class="sd">        The tree as a list of edges and number of nodes.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span><span class="p">,</span> <span class="n">t_nodes</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cache</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">t2</span><span class="p">,</span> <span class="n">t2_nodes</span> <span class="o">=</span> <span class="n">t</span><span class="p">,</span> <span class="n">t_nodes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t2</span><span class="p">,</span> <span class="n">t2_nodes</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_tree</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">extend</span><span class="p">([(</span><span class="n">n1</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="n">n2</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">t2</span><span class="p">])</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">t_nodes</span> <span class="o">+</span> <span class="n">t2_nodes</span>
+
+
+<span class="k">def</span> <span class="nf">_random_unlabeled_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a tree on `n` nodes drawn uniformly at random.</span>
+<span class="sd">    It implements the Wilf&#39;s algorithm &quot;Free&quot; of [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes, greater than zero.</span>
+<span class="sd">    cache_trees : list of ints</span>
+<span class="sd">        Cache for :func:`_num_rooted_trees`.</span>
+<span class="sd">    cache_forests : list of ints</span>
+<span class="sd">        Cache for :func:`_num_rooted_forests`.</span>
+<span class="sd">    seed : random_state</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (edges, n)</span>
+<span class="sd">        The tree as a list of edges and number of nodes.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">comb</span><span class="p">(</span><span class="n">_num_rooted_trees</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_num_trees</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_bicenter</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">n_f</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">_random_unlabeled_rooted_forest</span><span class="p">(</span>
+            <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">n_f</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">n_f</span> <span class="o">+</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="random_unlabeled_tree">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.trees.random_unlabeled_tree.html#networkx.generators.trees.random_unlabeled_tree">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_unlabeled_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">number_of_trees</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a tree or list of trees chosen randomly.</span>
+
+<span class="sd">    Returns one or more (depending on `number_of_trees`)</span>
+<span class="sd">    unlabeled trees with `n` nodes drawn uniformly at random.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        The number of nodes</span>
+<span class="sd">    number_of_trees : int or None (default)</span>
+<span class="sd">        If not None, this number of trees is generated and returned.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`networkx.Graph` or list of :class:`networkx.Graph`</span>
+<span class="sd">        A single `networkx.Graph` (or a list thereof, if</span>
+<span class="sd">        `number_of_trees` is specified) with nodes in the set {0, …, *n* - 1}.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `n` is zero (because the null graph is not a tree).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function generates an unlabeled tree uniformly at random using</span>
+<span class="sd">    Wilf&#39;s algorithm &quot;Free&quot; of [1]_. The algorithm needs to</span>
+<span class="sd">    compute some counting functions that are relatively expensive:</span>
+<span class="sd">    in case several trees are needed, it is advisable to use the</span>
+<span class="sd">    `number_of_trees` optional argument to reuse the counting</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wilf, Herbert S. &quot;The uniform selection of free trees.&quot;</span>
+<span class="sd">        Journal of Algorithms 2.2 (1981): 204-207.</span>
+<span class="sd">        https://doi.org/10.1016/0196-6774(81)90021-3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;the null graph is not a tree&quot;</span><span class="p">)</span>
+
+    <span class="n">cache_trees</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># initial cache of number of rooted trees</span>
+    <span class="n">cache_forests</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># initial cache of number of rooted forests</span>
+    <span class="k">if</span> <span class="n">number_of_trees</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_to_nx</span><span class="p">(</span><span class="o">*</span><span class="n">_random_unlabeled_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">_to_nx</span><span class="p">(</span><span class="o">*</span><span class="n">_random_unlabeled_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cache_trees</span><span class="p">,</span> <span class="n">cache_forests</span><span class="p">,</span> <span class="n">seed</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_trees</span><span class="p">)</span>
+        <span class="p">]</span></div>
 
 </pre></div>
 
