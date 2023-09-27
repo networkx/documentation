@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Sep 26, 2023"/>
+    <meta name="docbuild:last-update" content="Sep 27, 2023"/>
   </head>
   
   
@@ -533,6 +533,7 @@ document.write(`
     <span class="s2">&quot;center&quot;</span><span class="p">,</span>
     <span class="s2">&quot;barycenter&quot;</span><span class="p">,</span>
     <span class="s2">&quot;resistance_distance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;kemeny_constant&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -1311,6 +1312,101 @@ document.write(`
     <span class="n">rd</span> <span class="o">=</span> <span class="n">Ldet</span> <span class="o">*</span> <span class="n">LdiagAB_s</span> <span class="o">/</span> <span class="n">LdiagA_s</span>
 
     <span class="k">return</span> <span class="n">rd</span></div>
+
+
+
+<div class="viewcode-block" id="kemeny_constant">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.kemeny_constant.html#networkx.algorithms.distance_measures.kemeny_constant">[docs]</a>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">kemeny_constant</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Kemeny constant of the given graph.</span>
+
+<span class="sd">    The *Kemeny constant* (or Kemeny&#39;s constant) of a graph `G`</span>
+<span class="sd">    can be computed by regarding the graph as a Markov chain.</span>
+<span class="sd">    The Kemeny constant is then the expected number of time steps</span>
+<span class="sd">    to transition from a starting state i to a random destination state</span>
+<span class="sd">    sampled from the Markov chain&#39;s stationary distribution.</span>
+<span class="sd">    The Kemeny constant is independent of the chosen initial state [1]_.</span>
+
+<span class="sd">    The Kemeny constant measures the time needed for spreading</span>
+<span class="sd">    across a graph. Low values indicate a closely connected graph</span>
+<span class="sd">    whereas high values indicate a spread-out graph.</span>
+
+<span class="sd">    If weight is not provided, then a weight of 1 is used for all edges.</span>
+
+<span class="sd">    Since `G` represents a Markov chain, the weights must be positive.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight : string or None, optional (default=None)</span>
+<span class="sd">       The edge data key used to compute the Kemeny constant.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    K : float</span>
+<span class="sd">        The Kemeny constant of the graph `G`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If the graph `G` is directed.</span>
+
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the graph `G` is not connected, or contains no nodes,</span>
+<span class="sd">        or has edges with negative weights.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; round(nx.kemeny_constant(G), 10)</span>
+<span class="sd">    3.2</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The implementation is based on equation (3.3) in [2]_.</span>
+<span class="sd">    Self-loops are allowed and indicate a Markov chain where</span>
+<span class="sd">    the state can remain the same. Multi-edges are contracted</span>
+<span class="sd">    in one edge with weight equal to the sum of the weights.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wikipedia</span>
+<span class="sd">       &quot;Kemeny&#39;s constant.&quot;</span>
+<span class="sd">       https://en.wikipedia.org/wiki/Kemeny%27s_constant</span>
+<span class="sd">    .. [2] Lovász L.</span>
+<span class="sd">        Random walks on graphs: A survey.</span>
+<span class="sd">        Paul Erdös is Eighty, vol. 2, Bolyai Society,</span>
+<span class="sd">        Mathematical Studies, Keszthely, Hungary (1993), pp. 1-46</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Graph G must contain at least one node.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Graph G must be connected.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_negatively_weighted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The weights of graph G must be nonnegative.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Compute matrix H = D^-1/2 A D^-1/2</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">adjacency_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">diags</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">sp</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+        <span class="n">diags_sqrt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span>
+    <span class="n">diags_sqrt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">DH</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">))</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">DH</span> <span class="o">@</span> <span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">DH</span><span class="p">)</span>
+
+    <span class="c1"># Compute eigenvalues of H</span>
+    <span class="n">eig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">todense</span><span class="p">()))</span>
+
+    <span class="c1"># Compute the Kemeny constant</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eig</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></div>
 
 </pre></div>
 
