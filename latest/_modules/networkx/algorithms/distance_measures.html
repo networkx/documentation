@@ -1189,25 +1189,29 @@ document.write(`
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.resistance_distance.html#networkx.algorithms.distance_measures.resistance_distance">[docs]</a>
 <span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">resistance_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodeA</span><span class="p">,</span> <span class="n">nodeB</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">invert_weight</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the resistance distance between node A and node B on graph G.</span>
+<span class="k">def</span> <span class="nf">resistance_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodeA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodeB</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">invert_weight</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the resistance distance between every pair of nodes on graph G.</span>
 
 <span class="sd">    The resistance distance between two nodes of a graph is akin to treating</span>
-<span class="sd">    the graph as a grid of resistorses with a resistance equal to the provided</span>
-<span class="sd">    weight.</span>
+<span class="sd">    the graph as a grid of resistors with a resistance equal to the provided</span>
+<span class="sd">    weight [1]_, [2]_.</span>
 
 <span class="sd">    If weight is not provided, then a weight of 1 is used for all edges.</span>
+
+<span class="sd">    If two nodes are the same, the resistance distance is zero.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 <span class="sd">       A graph</span>
 
-<span class="sd">    nodeA : node</span>
+<span class="sd">    nodeA : node or None, optional (default=None)</span>
 <span class="sd">      A node within graph G.</span>
+<span class="sd">      If None, compute resistance distance using all nodes as source nodes.</span>
 
-<span class="sd">    nodeB : node</span>
-<span class="sd">      A node within graph G, exclusive of Node A.</span>
+<span class="sd">    nodeB : node or None, optional (default=None)</span>
+<span class="sd">      A node within graph G.</span>
+<span class="sd">      If None, compute resistance distance using all nodes as target nodes.</span>
 
 <span class="sd">    weight : string or None, optional (default=None)</span>
 <span class="sd">       The edge data key used to compute the resistance distance.</span>
@@ -1220,54 +1224,55 @@ document.write(`
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    rd : float</span>
-<span class="sd">       Value of effective resistance distance</span>
+<span class="sd">    rd : dict or float</span>
+<span class="sd">       If `nodeA` and `nodeB` are given, resistance distance between `nodeA`</span>
+<span class="sd">       and `nodeB`. If `nodeA` or `nodeB` is unspecified (the default), a</span>
+<span class="sd">       dictionary of nodes with resistance distances as the value.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If `G` is a directed graph.</span>
+
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If `G` is not connected, or contains no nodes,</span>
+<span class="sd">        or `nodeA` is not in `G` or `nodeB` is not in `G`.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.Graph([(1, 2), (1, 3), (1, 4), (3, 4), (3, 5), (4, 5)])</span>
-<span class="sd">    &gt;&gt;&gt; nx.resistance_distance(G, 1, 3)</span>
+<span class="sd">    &gt;&gt;&gt; round(nx.resistance_distance(G, 1, 3), 10)</span>
 <span class="sd">    0.625</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    Overviews are provided in [1]_ and [2]_. Additional details on computational</span>
-<span class="sd">    methods, proofs of properties, and corresponding MATLAB codes are provided</span>
-<span class="sd">    in [3]_.</span>
+<span class="sd">    The implementation is based on Theorem A in [2]_. Self-loops are ignored.</span>
+<span class="sd">    Multi-edges are contracted in one edge with weight equal to the harmonic sum of the weights.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Wikipedia</span>
 <span class="sd">       &quot;Resistance distance.&quot;</span>
 <span class="sd">       https://en.wikipedia.org/wiki/Resistance_distance</span>
-<span class="sd">    .. [2] E. W. Weisstein</span>
-<span class="sd">       &quot;Resistance Distance.&quot;</span>
-<span class="sd">       MathWorld--A Wolfram Web Resource</span>
-<span class="sd">       https://mathworld.wolfram.com/ResistanceDistance.html</span>
-<span class="sd">    .. [3] V. S. S. Vos,</span>
-<span class="sd">       &quot;Methods for determining the effective resistance.&quot;</span>
-<span class="sd">       Mestrado, Mathematisch Instituut Universiteit Leiden, 2016</span>
-<span class="sd">       https://www.universiteitleiden.nl/binaries/content/assets/science/mi/scripties/master/vos_vaya_master.pdf</span>
+<span class="sd">    .. [2] D. J. Klein and M. Randic.</span>
+<span class="sd">        Resistance distance.</span>
+<span class="sd">        J. of Math. Chem. 12:81-95, 1993.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-    <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
 
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Graph G must contain at least one node.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Graph G must be strongly connected.&quot;</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">nodeA</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Node A is not in graph G.&quot;</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">nodeB</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Node B is not in graph G.&quot;</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">nodeA</span> <span class="o">==</span> <span class="n">nodeB</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Node A and Node B cannot be the same.&quot;</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Graph G must be strongly connected.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nodeA</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nodeA</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Node A is not in graph G.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nodeB</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nodeB</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Node B is not in graph G.&quot;</span><span class="p">)</span>
 
     <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
+    <span class="c1"># Invert weights</span>
     <span class="k">if</span> <span class="n">invert_weight</span> <span class="ow">and</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1275,6 +1280,43 @@ document.write(`
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">d</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">d</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span>
+
+    <span class="c1"># Compute resistance distance using the Pseudo-inverse of the Laplacian</span>
+    <span class="c1"># Self-loops are ignored</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+    <span class="n">Linv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">hermitian</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Return relevant distances</span>
+    <span class="k">if</span> <span class="n">nodeA</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nodeB</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">nodeA</span><span class="p">)</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">nodeB</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">nodeA</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">nodeA</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">elif</span> <span class="n">nodeB</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">nodeB</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">n2</span><span class="p">)</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Linv</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
     <span class="c1"># Replace with collapsing topology or approximated zero?</span>
 
     <span class="c1"># Using determinants to compute the effective resistance is more memory</span>
