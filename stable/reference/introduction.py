@@ -147,7 +147,7 @@ G = nx.MultiDiGraph()
 #
 # * Graph generators—standard algorithms to create network topologies.
 #
-# * Importing data from pre-existing (usually file) sources.
+# * Importing data from preexisting (usually file) sources.
 #
 # * Adding edges and nodes explicitly.
 #
@@ -225,7 +225,7 @@ G.add_weighted_edges_from(elist)
 # graph algorithm that might be useful for others please let
 # us know through the
 # [NetworkX Google group](http://groups.google.com/group/networkx-discuss)
-# or the Github [Developer Zone](https://github.com/networkx/networkx).
+# or the GitHub [Developer Zone](https://github.com/networkx/networkx).
 #
 # As an example here is code to use Dijkstra’s algorithm to
 # find the shortest weighted path:
