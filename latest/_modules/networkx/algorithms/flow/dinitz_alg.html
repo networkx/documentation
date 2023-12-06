@@ -695,35 +695,59 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">breath_first_search</span><span class="p">():</span>
         <span class="n">parents</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">s</span><span class="p">])</span>
+        <span class="n">vertex_dist</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+        <span class="c1"># Record all the potential edges of shortest augmenting paths</span>
         <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
                 <span class="k">break</span>
-            <span class="n">u</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
-                <span class="n">attr</span> <span class="o">=</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parents</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">parents</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
-                    <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">vertex_dist</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">dist</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">parents</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">parents</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">u</span><span class="p">])</span>
+                        <span class="n">vertex_dist</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">dist</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">parents</span>
 
     <span class="k">def</span> <span class="nf">depth_first_search</span><span class="p">(</span><span class="n">parents</span><span class="p">):</span>
+        <span class="c1"># DFS to find all the shortest augmenting paths</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a path using DFS starting from the sink&quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">total_flow</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">u</span> <span class="o">=</span> <span class="n">t</span>
-        <span class="n">flow</span> <span class="o">=</span> <span class="n">INF</span>
-        <span class="k">while</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">s</span><span class="p">:</span>
-            <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
-            <span class="n">flow</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">flow</span><span class="p">,</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">])</span>
+        <span class="c1"># path also functions as a stack</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="p">]</span>
+        <span class="c1"># The loop ends with no augmenting path left in the layered graph</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">[</span><span class="n">u</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">parents</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">path</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">parents</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="c1"># Augment the flow along the path found</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">s</span><span class="p">:</span>
+                <span class="n">flow</span> <span class="o">=</span> <span class="n">INF</span>
+                <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                    <span class="n">flow</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">flow</span><span class="p">,</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+                    <span class="n">R_pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+                    <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
+                    <span class="c1"># Find the proper node to continue the search</span>
+                    <span class="k">if</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">parents</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+                        <span class="k">while</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
+                            <span class="n">path</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">total_flow</span> <span class="o">+=</span> <span class="n">flow</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
-        <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-        <span class="c1"># Augment the flow along the path found</span>
-        <span class="k">if</span> <span class="n">flow</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-                <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
-                <span class="n">R_pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
-        <span class="k">return</span> <span class="n">flow</span>
+        <span class="k">return</span> <span class="n">total_flow</span>
 
     <span class="n">flow_value</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="n">flow_value</span> <span class="o">&lt;</span> <span class="n">cutoff</span><span class="p">:</span>
