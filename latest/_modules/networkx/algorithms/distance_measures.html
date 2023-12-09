@@ -60,7 +60,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Dec 07, 2023"/>
+    <meta name="docbuild:last-update" content="Dec 09, 2023"/>
   </head>
   
   
@@ -531,6 +531,7 @@ document.write(`
     <span class="s2">&quot;barycenter&quot;</span><span class="p">,</span>
     <span class="s2">&quot;resistance_distance&quot;</span><span class="p">,</span>
     <span class="s2">&quot;kemeny_constant&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;effective_graph_resistance&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -1173,7 +1174,7 @@ document.write(`
 <span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">resistance_distance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodeA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodeB</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">invert_weight</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the resistance distance between every pair of nodes on graph G.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the resistance distance between pairs of nodes in graph G.</span>
 
 <span class="sd">    The resistance distance between two nodes of a graph is akin to treating</span>
 <span class="sd">    the graph as a grid of resistors with a resistance equal to the provided</span>
@@ -1303,6 +1304,97 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="effective_graph_resistance">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.effective_graph_resistance.html#networkx.algorithms.distance_measures.effective_graph_resistance">[docs]</a>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">effective_graph_resistance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">invert_weight</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Effective graph resistance of G.</span>
+
+<span class="sd">    Also known as the Kirchhoff index.</span>
+
+<span class="sd">    The effective graph resistance is defined as the sum</span>
+<span class="sd">    of the resistance distance of every node pair in G [1]_.</span>
+
+<span class="sd">    If weight is not provided, then a weight of 1 is used for all edges.</span>
+
+<span class="sd">    The effective graph resistance of a disconnected graph is infinite.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">       A graph</span>
+
+<span class="sd">    weight : string or None, optional (default=None)</span>
+<span class="sd">       The edge data key used to compute the effective graph resistance.</span>
+<span class="sd">       If None, then each edge has weight 1.</span>
+
+<span class="sd">    invert_weight : boolean (default=True)</span>
+<span class="sd">        Proper calculation of resistance distance requires building the</span>
+<span class="sd">        Laplacian matrix with the reciprocal of the weight. Not required</span>
+<span class="sd">        if the weight is already inverted. Weight cannot be zero.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    RG : float</span>
+<span class="sd">        The effective graph resistance of `G`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If `G` is a directed graph.</span>
+
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If `G` does not contain any nodes.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph([(1, 2), (1, 3), (1, 4), (3, 4), (3, 5), (4, 5)])</span>
+<span class="sd">    &gt;&gt;&gt; round(nx.effective_graph_resistance(G), 10)</span>
+<span class="sd">    10.25</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The implementation is based on Theorem 2.2 in [2]_. Self-loops are ignored.</span>
+<span class="sd">    Multi-edges are contracted in one edge with weight equal to the harmonic sum of the weights.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wolfram</span>
+<span class="sd">       &quot;Kirchhoff Index.&quot;</span>
+<span class="sd">       https://mathworld.wolfram.com/KirchhoffIndex.html</span>
+<span class="sd">    .. [2] W. Ellens, F. M. Spieksma, P. Van Mieghem, A. Jamakovic, R. E. Kooij.</span>
+<span class="sd">        Effective graph resistance.</span>
+<span class="sd">        Lin. Alg. Appl. 435:2491-2506, 2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Graph G must contain at least one node.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Disconnected graphs have infinite Effective graph resistance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># Invert weights</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">invert_weight</span> <span class="ow">and</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">d</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">d</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span>
+
+    <span class="c1"># Get Laplacian eigenvalues</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">laplacian_spectrum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">))</span>
+
+    <span class="c1"># Compute Effective graph resistance based on spectrum of the Laplacian</span>
+    <span class="c1"># Self-loops are ignored</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">*</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span></div>
+
+
+
 <div class="viewcode-block" id="kemeny_constant">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.distance_measures.kemeny_constant.html#networkx.algorithms.distance_measures.kemeny_constant">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
@@ -1335,7 +1427,7 @@ document.write(`
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    K : float</span>
+<span class="sd">    float</span>
 <span class="sd">        The Kemeny constant of the graph `G`.</span>
 
 <span class="sd">    Raises</span>
