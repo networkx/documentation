@@ -1808,6 +1808,14 @@ document.write(`
 <span class="sd">        If neither ``source`` nor ``target`` is ``None``, this returns</span>
 <span class="sd">        the similarity value for the given pair of nodes.</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    -------</span>
+<span class="sd">    ExceededMaxIterations</span>
+<span class="sd">        If the algorithm does not converge within ``max_iterations``.</span>
+
+<span class="sd">    NodeNotFound</span>
+<span class="sd">        If either ``source`` or ``target`` is not in `G`.</span>
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.cycle_graph(2)</span>
@@ -1844,8 +1852,21 @@ document.write(`
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
     <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="n">s_indx</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-    <span class="n">t_indx</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodelist</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Source node </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> not in G&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s_indx</span> <span class="o">=</span> <span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s_indx</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodelist</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target node </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> not in G&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t_indx</span> <span class="o">=</span> <span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t_indx</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">_simrank_similarity_numpy</span><span class="p">(</span>
         <span class="n">G</span><span class="p">,</span> <span class="n">s_indx</span><span class="p">,</span> <span class="n">t_indx</span><span class="p">,</span> <span class="n">importance_factor</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">,</span> <span class="n">tolerance</span>
@@ -2071,6 +2092,18 @@ document.write(`
 <span class="sd">        the self-similarity (i.e., ``v``) will not be included in</span>
 <span class="sd">        the returned dictionary.</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkXUnfeasible</span>
+<span class="sd">        If `source` is an isolated node.</span>
+
+<span class="sd">    NodeNotFound</span>
+<span class="sd">        If `source` is not in `G`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -------</span>
+<span class="sd">        The isolated nodes in `G` are ignored.</span>
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.star_graph(10)</span>
@@ -2085,6 +2118,18 @@ document.write(`
 <span class="sd">           Association for Computing Machinery. https://doi.org/10.1145/2783258.2783267.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Source node </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> not in G&quot;</span><span class="p">)</span>
+
+    <span class="n">isolates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">isolates</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">isolates</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnfeasible</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Panther similarity is not defined for the isolated source node </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">([</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">isolates</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="n">num_nodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">num_nodes</span> <span class="o">&lt;</span> <span class="n">k</span><span class="p">:</span>
