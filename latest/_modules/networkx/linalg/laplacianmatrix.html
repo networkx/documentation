@@ -518,6 +518,13 @@ document.write(`
                   
   <h1>Source code for networkx.linalg.laplacianmatrix</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Laplacian matrix of graphs.</span>
+
+<span class="sd">All calculations here are done using the out-degree. For Laplacians </span>
+<span class="sd">using in-degree, us `G.reverse(copy=False)` instead of `G`.</span>
+
+<span class="sd">The `laplacian_matrix` function provides an unnormalized matrix, </span>
+<span class="sd">while `normalized_laplacian_matrix`, `directed_laplacian_matrix`, </span>
+<span class="sd">and `directed_combinatorial_laplacian_matrix` are all normalized.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">not_implemented_for</span>
@@ -533,7 +540,6 @@ document.write(`
 
 <div class="viewcode-block" id="laplacian_matrix">
 <a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.laplacian_matrix.html#networkx.linalg.laplacianmatrix.laplacian_matrix">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Laplacian matrix of G.</span>
@@ -563,10 +569,19 @@ document.write(`
 <span class="sd">    -----</span>
 <span class="sd">    For MultiGraph, the edges weights are summed.</span>
 
+<span class="sd">    This returns an unnormalized matrix. For a normalized output,</span>
+<span class="sd">    use `normalized_laplacian_matrix`, `directed_laplacian_matrix`,</span>
+<span class="sd">    or `directed_combinatorial_laplacian_matrix`.</span>
+
+<span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    :func:`~networkx.convert_matrix.to_numpy_array`</span>
 <span class="sd">    normalized_laplacian_matrix</span>
+<span class="sd">    directed_laplacian_matrix</span>
+<span class="sd">    directed_combinatorial_laplacian_matrix</span>
 <span class="sd">    :func:`~networkx.linalg.spectrum.laplacian_spectrum`</span>
 
 <span class="sd">    Examples</span>
@@ -583,6 +598,25 @@ document.write(`
 <span class="sd">     [ 0  0  0  1 -1]</span>
 <span class="sd">     [ 0  0  0 -1  1]]</span>
 
+<span class="sd">    &gt;&gt;&gt; edges = [(1, 2), (2, 1), (2, 4), (4, 3), (3, 4),]</span>
+<span class="sd">    &gt;&gt;&gt; DiG = nx.DiGraph(edges)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.laplacian_matrix(DiG).toarray())</span>
+<span class="sd">    [[ 1 -1  0  0]</span>
+<span class="sd">     [-1  2 -1  0]</span>
+<span class="sd">     [ 0  0  1 -1]</span>
+<span class="sd">     [ 0  0 -1  1]]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(DiG)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.laplacian_matrix(G).toarray())</span>
+<span class="sd">    [[ 1 -1  0  0]</span>
+<span class="sd">     [-1  2 -1  0]</span>
+<span class="sd">     [ 0 -1  2 -1]</span>
+<span class="sd">     [ 0  0 -1  1]]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Langville, Amy N., and Carl D. Meyer. Google’s PageRank and Beyond:</span>
+<span class="sd">       The Science of Search Engine Rankings. Princeton University Press, 2006.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
 
@@ -598,7 +632,6 @@ document.write(`
 
 <div class="viewcode-block" id="normalized_laplacian_matrix">
 <a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.normalized_laplacian_matrix.html#networkx.linalg.laplacianmatrix.normalized_laplacian_matrix">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatch</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">normalized_laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the normalized Laplacian matrix of G.</span>
@@ -638,10 +671,36 @@ document.write(`
 <span class="sd">    If the Graph contains selfloops, D is defined as ``diag(sum(A, 1))``, where A is</span>
 <span class="sd">    the adjacency matrix [2]_.</span>
 
+<span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+
+<span class="sd">    For an unnormalized output, use `laplacian_matrix`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; np.set_printoptions(precision=4) # To print with lower precision</span>
+<span class="sd">    &gt;&gt;&gt; edges = [(1, 2), (2, 1), (2, 4), (4, 3), (3, 4),]</span>
+<span class="sd">    &gt;&gt;&gt; DiG = nx.DiGraph(edges)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.normalized_laplacian_matrix(DiG).toarray())</span>
+<span class="sd">    [[ 1.     -0.7071  0.      0.    ]</span>
+<span class="sd">     [-0.7071  1.     -0.7071  0.    ]</span>
+<span class="sd">     [ 0.      0.      1.     -1.    ]</span>
+<span class="sd">     [ 0.      0.     -1.      1.    ]]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(DiG)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.normalized_laplacian_matrix(G).toarray())</span>
+<span class="sd">    [[ 1.     -0.7071  0.      0.    ]</span>
+<span class="sd">     [-0.7071  1.     -0.5     0.    ]</span>
+<span class="sd">     [ 0.     -0.5     1.     -0.7071]</span>
+<span class="sd">     [ 0.      0.     -0.7071  1.    ]]</span>
+
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    laplacian_matrix</span>
 <span class="sd">    normalized_laplacian_spectrum</span>
+<span class="sd">    directed_laplacian_matrix</span>
+<span class="sd">    directed_combinatorial_laplacian_matrix</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -650,6 +709,8 @@ document.write(`
 <span class="sd">    .. [2] Steve Butler, Interlacing For Weighted Graphs Using The Normalized</span>
 <span class="sd">       Laplacian, Electronic Journal of Linear Algebra, Volume 16, pp. 90-98,</span>
 <span class="sd">       March 2007.</span>
+<span class="sd">    .. [3] Langville, Amy N., and Carl D. Meyer. Google’s PageRank and Beyond:</span>
+<span class="sd">       The Science of Search Engine Rankings. Princeton University Press, 2006.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
@@ -725,7 +786,7 @@ document.write(`
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        L = I - (\Phi^{1/2} P \Phi^{-1/2} + \Phi^{-1/2} P^T \Phi^{1/2} ) / 2</span>
+<span class="sd">        L = I - \frac{1}{2} \left (\Phi^{1/2} P \Phi^{-1/2} + \Phi^{-1/2} P^T \Phi^{1/2} \right )</span>
 
 <span class="sd">    where `I` is the identity matrix, `P` is the transition matrix of the</span>
 <span class="sd">    graph, and `\Phi` a matrix with the Perron vector of `P` in the diagonal and</span>
@@ -767,9 +828,16 @@ document.write(`
 <span class="sd">    -----</span>
 <span class="sd">    Only implemented for DiGraphs</span>
 
+<span class="sd">    The result is always a symmetric matrix.</span>
+
+<span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    laplacian_matrix</span>
+<span class="sd">    normalized_laplacian_matrix</span>
+<span class="sd">    directed_combinatorial_laplacian_matrix</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -820,7 +888,7 @@ document.write(`
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        L = \Phi - (\Phi P + P^T \Phi) / 2</span>
+<span class="sd">        L = \Phi - \frac{1}{2} \left (\Phi P + P^T \Phi \right)</span>
 
 <span class="sd">    where `P` is the transition matrix of the graph and `\Phi` a matrix</span>
 <span class="sd">    with the Perron vector of `P` in the diagonal and zeros elsewhere [1]_.</span>
@@ -861,9 +929,16 @@ document.write(`
 <span class="sd">    -----</span>
 <span class="sd">    Only implemented for DiGraphs</span>
 
+<span class="sd">    The result is always a symmetric matrix.</span>
+
+<span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    laplacian_matrix</span>
+<span class="sd">    normalized_laplacian_matrix</span>
+<span class="sd">    directed_laplacian_matrix</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>

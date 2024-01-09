@@ -605,6 +605,8 @@ If None, then each edge has weight 1.</p>
 <dl class="simple">
 <dt><a class="reference internal" href="networkx.linalg.laplacianmatrix.laplacian_matrix.html#networkx.linalg.laplacianmatrix.laplacian_matrix" title="networkx.linalg.laplacianmatrix.laplacian_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">laplacian_matrix</span></code></a></dt><dd></dd>
 <dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalized_laplacian_spectrum</span></code></dt><dd></dd>
+<dt><a class="reference internal" href="networkx.linalg.laplacianmatrix.directed_laplacian_matrix.html#networkx.linalg.laplacianmatrix.directed_laplacian_matrix" title="networkx.linalg.laplacianmatrix.directed_laplacian_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">directed_laplacian_matrix</span></code></a></dt><dd></dd>
+<dt><a class="reference internal" href="networkx.linalg.laplacianmatrix.directed_combinatorial_laplacian_matrix.html#networkx.linalg.laplacianmatrix.directed_combinatorial_laplacian_matrix" title="networkx.linalg.laplacianmatrix.directed_combinatorial_laplacian_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">directed_combinatorial_laplacian_matrix</span></code></a></dt><dd></dd>
 </dl>
 </div>
 <p class="rubric">Notes</p>
@@ -612,6 +614,9 @@ If None, then each edge has weight 1.</p>
 See <code class="xref py py-func docutils literal notranslate"><span class="pre">to_numpy_array()</span></code> for other options.</p>
 <p>If the Graph contains selfloops, D is defined as <code class="docutils literal notranslate"><span class="pre">diag(sum(A,</span> <span class="pre">1))</span></code>, where A is
 the adjacency matrix <a class="reference internal" href="#r68848064d052-2" id="id2">[2]</a>.</p>
+<p>This calculation uses the out-degree of the graph <code class="xref py py-obj docutils literal notranslate"><span class="pre">G</span></code>. To use the
+in-degree for calculations instead, use <code class="xref py py-obj docutils literal notranslate"><span class="pre">G.reverse(copy=False)</span></code> instead.</p>
+<p>For an unnormalized output, use <a class="reference internal" href="networkx.linalg.laplacianmatrix.laplacian_matrix.html#networkx.linalg.laplacianmatrix.laplacian_matrix" title="networkx.linalg.laplacianmatrix.laplacian_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">laplacian_matrix</span></code></a>.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r68848064d052-1" role="doc-biblioentry">
@@ -625,6 +630,29 @@ CBMS Regional Conference Series in Mathematics, Number 92, 1997.</p>
 Laplacian, Electronic Journal of Linear Algebra, Volume 16, pp. 90-98,
 March 2007.</p>
 </div>
+<div class="citation" id="r68848064d052-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
+<p>Langville, Amy N., and Carl D. Meyer. Google’s PageRank and Beyond:
+The Science of Search Engine Rankings. Princeton University Press, 2006.</p>
+</div>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># To print with lower precision</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">DiG</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">normalized_laplacian_matrix</span><span class="p">(</span><span class="n">DiG</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+<span class="go">[[ 1.     -0.7071  0.      0.    ]</span>
+<span class="go"> [-0.7071  1.     -0.7071  0.    ]</span>
+<span class="go"> [ 0.      0.      1.     -1.    ]</span>
+<span class="go"> [ 0.      0.     -1.      1.    ]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">DiG</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">normalized_laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">())</span>
+<span class="go">[[ 1.     -0.7071  0.      0.    ]</span>
+<span class="go"> [-0.7071  1.     -0.5     0.    ]</span>
+<span class="go"> [ 0.     -0.5     1.     -0.7071]</span>
+<span class="go"> [ 0.      0.     -0.7071  1.    ]]</span>
+</pre></div>
 </div>
 <hr class="docutils" />
 <div class="admonition-additional-backends-implement-this-function admonition">
