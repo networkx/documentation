@@ -1382,6 +1382,25 @@ document.write(`
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="PlanarEmbedding.__init__">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.planarity.PlanarEmbedding.html#networkx.algorithms.planarity.PlanarEmbedding.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">=</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__forbidden</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_edges_from</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__forbidden</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_weighted_edges_from</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__forbidden</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__forbidden</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forbidden operation</span>
+
+<span class="sd">        Any edge additions to a PlanarEmbedding should be done using</span>
+<span class="sd">        method `add_half_edge`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;Use `add_half_edge` method to add edges to a PlanarEmbedding.&quot;</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="PlanarEmbedding.get_data">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/generated/networkx.algorithms.planarity.PlanarEmbedding.get_data.html#networkx.algorithms.planarity.PlanarEmbedding.get_data">[docs]</a>
     <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1428,6 +1447,81 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_half_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">ref</span><span class="p">)</span>
                 <span class="n">ref</span> <span class="o">=</span> <span class="n">w</span></div>
 
+
+<div class="viewcode-block" id="PlanarEmbedding.remove_node">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/generated/networkx.algorithms.planarity.PlanarEmbedding.remove_node.html#networkx.algorithms.planarity.PlanarEmbedding.remove_node">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove node n.</span>
+
+<span class="sd">        Removes the node n and all adjacent edges, updating the</span>
+<span class="sd">        PlanarEmbedding to account for any resulting edge removal.</span>
+<span class="sd">        Attempting to remove a non-existent node will raise an exception.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : node</span>
+<span class="sd">           A node in the graph</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NetworkXError</span>
+<span class="sd">           If n is not in the graph.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        remove_nodes_from</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+                <span class="n">succs_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                <span class="n">un_cw</span> <span class="o">=</span> <span class="n">succs_u</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span>
+                <span class="n">un_ccw</span> <span class="o">=</span> <span class="n">succs_u</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">succs_u</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">un_cw</span><span class="p">:</span>
+                    <span class="n">succs_u</span><span class="p">[</span><span class="n">un_cw</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">un_ccw</span>
+                    <span class="n">succs_u</span><span class="p">[</span><span class="n">un_ccw</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">un_cw</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># NetworkXError if n not in self</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The node </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> is not in the planar embedding.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="PlanarEmbedding.remove_nodes_from">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/generated/networkx.algorithms.planarity.PlanarEmbedding.remove_nodes_from.html#networkx.algorithms.planarity.PlanarEmbedding.remove_nodes_from">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove multiple nodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes : iterable container</span>
+<span class="sd">            A container of nodes (list, dict, set, etc.).  If a node</span>
+<span class="sd">            in the container is not in the graph it is silently ignored.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        remove_node</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        When removing nodes from an iterator over the graph you are changing,</span>
+<span class="sd">        a `RuntimeError` will be raised with message:</span>
+<span class="sd">        `RuntimeError: dictionary changed size during iteration`. This</span>
+<span class="sd">        happens when the graph&#39;s underlying dictionary is modified during</span>
+<span class="sd">        iteration. To avoid this error, evaluate the iterator into a separate</span>
+<span class="sd">        object, e.g. by using `list(iterator_of_nodes)`, and pass this</span>
+<span class="sd">        object to `G.remove_nodes_from`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+
+            <span class="c1"># silently skip non-existing nodes</span>
 
 <div class="viewcode-block" id="PlanarEmbedding.neighbors_cw_order">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/generated/networkx.algorithms.planarity.PlanarEmbedding.neighbors_cw_order.html#networkx.algorithms.planarity.PlanarEmbedding.neighbors_cw_order">[docs]</a>
@@ -1478,6 +1572,7 @@ document.write(`
 <span class="sd">            End node of reference edge.</span>
 <span class="sd">            Omit or pass `None` if adding the first out-half-edge of `start_node`.</span>
 
+
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        NetworkXException</span>
@@ -1500,7 +1595,7 @@ document.write(`
                 <span class="k">if</span> <span class="n">ccw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Only one of cw/ccw can be specified.&quot;</span><span class="p">)</span>
                 <span class="n">ref_ccw</span> <span class="o">=</span> <span class="n">succs</span><span class="p">[</span><span class="n">cw</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">cw</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">ref_ccw</span><span class="p">)</span>
+                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">cw</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">ref_ccw</span><span class="p">)</span>
                 <span class="n">succs</span><span class="p">[</span><span class="n">ref_ccw</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_node</span>
                 <span class="n">succs</span><span class="p">[</span><span class="n">cw</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_node</span>
                 <span class="c1"># when (cw == leftmost_nbr), the newly added neighbor is</span>
@@ -1511,7 +1606,7 @@ document.write(`
                 <span class="k">if</span> <span class="n">ccw</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">succs</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Invalid counterclockwise reference node.&quot;</span><span class="p">)</span>
                 <span class="n">ref_cw</span> <span class="o">=</span> <span class="n">succs</span><span class="p">[</span><span class="n">ccw</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">ref_cw</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">ccw</span><span class="p">)</span>
+                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">ref_cw</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">ccw</span><span class="p">)</span>
                 <span class="n">succs</span><span class="p">[</span><span class="n">ref_cw</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_node</span>
                 <span class="n">succs</span><span class="p">[</span><span class="n">ccw</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">end_node</span>
                 <span class="n">move_leftmost_nbr_to_end</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1524,11 +1619,12 @@ document.write(`
                 <span class="c1"># we keep track of the leftmost neighbor, which we accomplish</span>
                 <span class="c1"># by keeping it as the last key in dict self._succ[start_node]</span>
                 <span class="n">succs</span><span class="p">[</span><span class="n">leftmost_nbr</span><span class="p">]</span> <span class="o">=</span> <span class="n">succs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">leftmost_nbr</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">cw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ccw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Invalid reference node.&quot;</span><span class="p">)</span>
             <span class="c1"># adding the first edge out of start_node</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">end_node</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">end_node</span><span class="p">)</span></div>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">end_node</span><span class="p">,</span> <span class="n">cw</span><span class="o">=</span><span class="n">end_node</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PlanarEmbedding.check_structure">
@@ -1653,6 +1749,85 @@ document.write(`
 <span class="sd">        connect_components</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_half_edge</span><span class="p">(</span><span class="n">start_node</span><span class="p">,</span> <span class="n">end_node</span><span class="p">,</span> <span class="n">ccw</span><span class="o">=</span><span class="n">reference_neighbor</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlanarEmbedding.remove_edge">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/generated/networkx.algorithms.planarity.PlanarEmbedding.remove_edge.html#networkx.algorithms.planarity.PlanarEmbedding.remove_edge">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove the edge between u and v.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        u, v : nodes</span>
+<span class="sd">        Remove the half-edges (u, v) and (v, u) and update the</span>
+<span class="sd">        edge ordering around the removed edge.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NetworkXError</span>
+<span class="sd">        If there is not an edge between u and v.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        remove_edges_from : remove a collection of edges</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">succs_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+            <span class="n">succs_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">uv_cw</span> <span class="o">=</span> <span class="n">succs_u</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span>
+            <span class="n">uv_ccw</span> <span class="o">=</span> <span class="n">succs_u</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span>
+            <span class="n">vu_cw</span> <span class="o">=</span> <span class="n">succs_v</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span>
+            <span class="n">vu_ccw</span> <span class="o">=</span> <span class="n">succs_v</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">succs_u</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">succs_v</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">uv_cw</span><span class="p">:</span>
+                <span class="n">succs_u</span><span class="p">[</span><span class="n">uv_cw</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uv_ccw</span>
+                <span class="n">succs_u</span><span class="p">[</span><span class="n">uv_ccw</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uv_cw</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">vu_cw</span><span class="p">:</span>
+                <span class="n">succs_v</span><span class="p">[</span><span class="n">vu_cw</span><span class="p">][</span><span class="s2">&quot;ccw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vu_ccw</span>
+                <span class="n">succs_v</span><span class="p">[</span><span class="n">vu_ccw</span><span class="p">][</span><span class="s2">&quot;cw&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vu_cw</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The edge </span><span class="si">{</span><span class="n">u</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> is not in the planar embedding.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span></div>
+
+
+<div class="viewcode-block" id="PlanarEmbedding.remove_edges_from">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/generated/networkx.algorithms.planarity.PlanarEmbedding.remove_edges_from.html#networkx.algorithms.planarity.PlanarEmbedding.remove_edges_from">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ebunch</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all edges specified in ebunch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ebunch: list or container of edge tuples</span>
+<span class="sd">            Each pair of half-edges between the nodes given in the tuples</span>
+<span class="sd">            will be removed from the graph. The nodes can be passed as:</span>
+
+<span class="sd">                - 2-tuples (u, v) half-edges (u, v) and (v, u).</span>
+<span class="sd">                - 3-tuples (u, v, k) where k is ignored.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        remove_edge : remove a single edge</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Will fail silently if an edge in ebunch is not in the graph.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.path_graph(4)  # or DiGraph, MultiGraph, MultiDiGraph, etc</span>
+<span class="sd">        &gt;&gt;&gt; ebunch = [(1, 2), (2, 3)]</span>
+<span class="sd">        &gt;&gt;&gt; G.remove_edges_from(ebunch)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">ebunch</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># ignore edge data</span>
+            <span class="c1"># assuming that the PlanarEmbedding is valid, if the half_edge</span>
+            <span class="c1"># (u, v) is in the graph, then so is half_edge (v, u)</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PlanarEmbedding.connect_components">
