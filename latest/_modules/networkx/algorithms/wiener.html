@@ -60,7 +60,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jan 12, 2024"/>
+    <meta name="docbuild:last-update" content="Jan 13, 2024"/>
   </head>
   
   
@@ -517,20 +517,28 @@ document.write(`
                 <article class="bd-article">
                   
   <h1>Source code for networkx.algorithms.wiener</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Functions related to the Wiener index of a graph.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Functions related to the Wiener Index of a graph.</span>
 
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="sd">The Wiener Index is a topological measure of a graph</span>
+<span class="sd">related to the distance between nodes and their degree.</span>
+<span class="sd">The Schultz Index and Gutman Index are similar measures.</span>
+<span class="sd">They are used categorize molecules via the network of</span>
+<span class="sd">atoms connected by chemical bonds. The indices are </span>
+<span class="sd">correlated with functional aspects of the molecules.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">.. [1] `Wikipedia: Wiener Index &lt;https://en.wikipedia.org/wiki/Wiener_index&gt;`_</span>
+<span class="sd">.. [2] M.V. Diudeaa and I. Gutman, Wiener-Type Topological Indices,</span>
+<span class="sd">       Croatica Chemica Acta, 71 (1998), 21-51.</span>
+<span class="sd">       https://hrcak.srce.hr/132323</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
-<span class="kn">from</span> <span class="nn">.components</span> <span class="kn">import</span> <span class="n">is_connected</span><span class="p">,</span> <span class="n">is_strongly_connected</span>
-<span class="kn">from</span> <span class="nn">.shortest_paths</span> <span class="kn">import</span> <span class="n">shortest_path_length</span> <span class="k">as</span> <span class="n">spl</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wiener_index&quot;</span><span class="p">]</span>
-
-<span class="c1">#: Rename the :func:`chain.from_iterable` function for the sake of</span>
-<span class="c1">#: brevity.</span>
-<span class="n">chaini</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wiener_index&quot;</span><span class="p">,</span> <span class="s2">&quot;schultz_index&quot;</span><span class="p">,</span> <span class="s2">&quot;gutman_index&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="wiener_index">
@@ -540,21 +548,23 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Wiener index of the given graph.</span>
 
 <span class="sd">    The *Wiener index* of a graph is the sum of the shortest-path</span>
-<span class="sd">    distances between each pair of reachable nodes. For pairs of nodes</span>
-<span class="sd">    in undirected graphs, only one orientation of the pair is counted.</span>
+<span class="sd">    (weighted) distances between each pair of reachable nodes.</span>
+<span class="sd">    For pairs of nodes in undirected graphs, only one orientation</span>
+<span class="sd">    of the pair is counted.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 
-<span class="sd">    weight : object</span>
-<span class="sd">        The edge attribute to use as distance when computing</span>
-<span class="sd">        shortest-path distances. This is passed directly to the</span>
-<span class="sd">        :func:`networkx.shortest_path_length` function.</span>
+<span class="sd">    weight : string or None, optional (default: None)</span>
+<span class="sd">        If None, every edge has weight 1.</span>
+<span class="sd">        If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">        Any edge attribute not present defaults to 1.</span>
+<span class="sd">        The edge weights are used to computing shortest-path distances.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    float</span>
+<span class="sd">    number</span>
 <span class="sd">        The Wiener index of the graph `G`.</span>
 
 <span class="sd">    Raises</span>
@@ -589,15 +599,156 @@ document.write(`
 <span class="sd">        &gt;&gt;&gt; nx.wiener_index(G)</span>
 <span class="sd">        inf</span>
 
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] `Wikipedia: Wiener Index &lt;https://en.wikipedia.org/wiki/Wiener_index&gt;`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">is_directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">is_directed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span>
-        <span class="ow">not</span> <span class="n">is_directed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="p">):</span>
+    <span class="n">connected</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="k">else</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">connected</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">chaini</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">spl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)))</span>
+
+    <span class="n">spl</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">nbrs</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">spl</span><span class="p">))</span>
     <span class="c1"># Need to account for double counting pairs of nodes in undirected graphs.</span>
-    <span class="k">return</span> <span class="n">total</span> <span class="k">if</span> <span class="n">is_directed</span> <span class="k">else</span> <span class="n">total</span> <span class="o">/</span> <span class="mi">2</span></div>
+    <span class="k">return</span> <span class="n">total</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="k">else</span> <span class="n">total</span> <span class="o">/</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="schultz_index">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.wiener.schultz_index.html#networkx.algorithms.wiener.schultz_index">[docs]</a>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;multigraph&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">schultz_index</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the Schultz Index (of the first kind) of `G`</span>
+
+<span class="sd">    The *Schultz Index* [3]_ of a graph is the sum over all node pairs of</span>
+<span class="sd">    distances times the sum of degrees. Consider an undirected graph `G`.</span>
+<span class="sd">    For each node pair ``(u, v)`` compute ``dist(u, v) * (deg(u) + deg(v)``</span>
+<span class="sd">    where ``dist`` is the shortest path length between two nodes and ``deg``</span>
+<span class="sd">    is the degree of a node.</span>
+
+<span class="sd">    The Schultz Index is the sum of these quantities over all (unordered)</span>
+<span class="sd">    pairs of nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        The undirected graph of interest.</span>
+<span class="sd">    weight : string or None, optional (default: None)</span>
+<span class="sd">        If None, every edge has weight 1.</span>
+<span class="sd">        If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">        Any edge attribute not present defaults to 1.</span>
+<span class="sd">        The edge weights are used to computing shortest-path distances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    number</span>
+<span class="sd">        The first kind of Schultz Index of the graph `G`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    The Schultz Index of the (unweighted) complete graph on *n* nodes</span>
+<span class="sd">    equals the number of pairs of the *n* nodes times ``2 * (n - 1)``,</span>
+<span class="sd">    since each pair of nodes is at distance one and the sum of degree</span>
+<span class="sd">    of two nodes is ``2 * (n - 1)``.</span>
+
+<span class="sd">    &gt;&gt;&gt; n = 10</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(n)</span>
+<span class="sd">    &gt;&gt;&gt; nx.schultz_index(G) == (n * (n - 1) / 2) * (2 * (n - 1))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Graph that is disconnected</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.schultz_index(nx.empty_graph(2))</span>
+<span class="sd">    inf</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] I. Gutman, Selected properties of the Schultz molecular topological index,</span>
+<span class="sd">           J. Chem. Inf. Comput. Sci. 34 (1994), 1087–1089.</span>
+<span class="sd">           https://doi.org/10.1021/ci00021a009</span>
+<span class="sd">    .. [2] M.V. Diudeaa and I. Gutman, Wiener-Type Topological Indices,</span>
+<span class="sd">           Croatica Chemica Acta, 71 (1998), 21-51.</span>
+<span class="sd">           https://hrcak.srce.hr/132323</span>
+<span class="sd">    .. [3] H. P. Schultz, Topological organic chemistry. 1.</span>
+<span class="sd">           Graph theory and topological indices of alkanes,i</span>
+<span class="sd">           J. Chem. Inf. Comput. Sci. 29 (1989), 239–257.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+    <span class="n">spl</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dist</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">+</span> <span class="n">d</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">spl</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="gutman_index">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.wiener.gutman_index.html#networkx.algorithms.wiener.gutman_index">[docs]</a>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;multigraph&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">gutman_index</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the Gutman Index for the graph `G`.</span>
+
+<span class="sd">    The *Gutman Index* measures the topology of networks, especially for molecule</span>
+<span class="sd">    networks of atoms connected by bonds [1]_. It is also called the Schultz Index</span>
+<span class="sd">    of the second kind [2]_.</span>
+
+<span class="sd">    Consider an undirected graph `G` with node set ``V``.</span>
+<span class="sd">    The Gutman Index of a graph is the sum over all (unordered) pairs of nodes</span>
+<span class="sd">    of nodes ``(u, v)``, with distance ``dist(u, v)`` and degrees ``deg(u)``</span>
+<span class="sd">    and ``deg(v)``, of ``dist(u, v) * deg(u) * deg(v)``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight : string or None, optional (default: None)</span>
+<span class="sd">        If None, every edge has weight 1.</span>
+<span class="sd">        If a string, use this edge attribute as the edge weight.</span>
+<span class="sd">        Any edge attribute not present defaults to 1.</span>
+<span class="sd">        The edge weights are used to computing shortest-path distances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    number</span>
+<span class="sd">        The Gutman Index of the graph `G`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    The Gutman Index of the (unweighted) complete graph on *n* nodes</span>
+<span class="sd">    equals the number of pairs of the *n* nodes times ``(n - 1) * (n - 1)``,</span>
+<span class="sd">    since each pair of nodes is at distance one and the product of degree of two</span>
+<span class="sd">    vertices is ``(n - 1) * (n - 1)``.</span>
+
+<span class="sd">    &gt;&gt;&gt; n = 10</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(n)</span>
+<span class="sd">    &gt;&gt;&gt; nx.gutman_index(G) == (n * (n - 1) / 2) * ((n - 1) * (n - 1))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Graphs that are disconnected</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.empty_graph(2)</span>
+<span class="sd">    &gt;&gt;&gt; nx.gutman_index(G)</span>
+<span class="sd">    inf</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M.V. Diudeaa and I. Gutman, Wiener-Type Topological Indices,</span>
+<span class="sd">           Croatica Chemica Acta, 71 (1998), 21-51.</span>
+<span class="sd">           https://hrcak.srce.hr/132323</span>
+<span class="sd">    .. [2] I. Gutman, Selected properties of the Schultz molecular topological index,</span>
+<span class="sd">           J. Chem. Inf. Comput. Sci. 34 (1994), 1087–1089.</span>
+<span class="sd">           https://doi.org/10.1021/ci00021a009</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+    <span class="n">spl</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dist</span> <span class="o">*</span> <span class="n">d</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="n">d</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">vinfo</span> <span class="ow">in</span> <span class="n">spl</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="n">vinfo</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span></div>
 
 </pre></div>
 
