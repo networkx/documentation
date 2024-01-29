@@ -60,7 +60,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jan 28, 2024"/>
+    <meta name="docbuild:last-update" content="Jan 29, 2024"/>
   </head>
   
   
@@ -541,6 +541,7 @@ document.write(`
     <span class="s2">&quot;dorogovtsev_goltsev_mendes_graph&quot;</span><span class="p">,</span>
     <span class="s2">&quot;empty_graph&quot;</span><span class="p">,</span>
     <span class="s2">&quot;full_rary_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;kneser_graph&quot;</span><span class="p">,</span>
     <span class="s2">&quot;ladder_graph&quot;</span><span class="p">,</span>
     <span class="s2">&quot;lollipop_graph&quot;</span><span class="p">,</span>
     <span class="s2">&quot;null_graph&quot;</span><span class="p">,</span>
@@ -613,6 +614,56 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_tree_edges</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+
+<div class="viewcode-block" id="kneser_graph">
+<a class="viewcode-back" href="../../../reference/generated/networkx.generators.classic.kneser_graph.html#networkx.generators.classic.kneser_graph">[docs]</a>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">graphs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">kneser_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the Kneser Graph with parameters `n` and `k`.</span>
+
+<span class="sd">    The Kneser Graph has nodes that are k-tuples (subsets) of the integers</span>
+<span class="sd">    between 0 and ``n-1``. Nodes are adjacent if their corresponding sets are disjoint.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n: int</span>
+<span class="sd">        Number of integers from which to make node subsets.</span>
+<span class="sd">        Subsets are drawn from ``set(range(n))``.</span>
+<span class="sd">    k: int</span>
+<span class="sd">        Size of the subsets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : NetworkX Graph</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.kneser_graph(5, 2)</span>
+<span class="sd">    &gt;&gt;&gt; G.number_of_nodes()</span>
+<span class="sd">    10</span>
+<span class="sd">    &gt;&gt;&gt; G.number_of_edges()</span>
+<span class="sd">    15</span>
+<span class="sd">    &gt;&gt;&gt; nx.is_isomorphic(G, nx.petersen_graph())</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;n should be greater than zero&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;k should be greater than zero and smaller than n&quot;</span><span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="c1"># Create all k-subsets of [0, 1, ..., n-1]</span>
+    <span class="n">subsets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">subsets</span><span class="p">)</span>
+
+    <span class="n">universe</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">comb</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span>  <span class="c1"># only to make it all fit on one line</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">subsets</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">comb</span><span class="p">(</span><span class="n">universe</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">k</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
