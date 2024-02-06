@@ -60,7 +60,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Feb 03, 2024"/>
+    <meta name="docbuild:last-update" content="Feb 06, 2024"/>
   </head>
   
   
@@ -527,6 +527,8 @@ document.write(`
 <span class="sd"> - :func:`matplotlib.pyplot.scatter`</span>
 <span class="sd"> - :obj:`matplotlib.patches.FancyArrowPatch`</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
@@ -987,6 +989,197 @@ document.write(`
 
 
 
+<span class="k">class</span> <span class="nc">FancyArrowFactory</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw arrows with `matplotlib.patches.FancyarrowPatch`&quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">ConnectionStyleFactory</span><span class="p">:</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connectionstyles</span><span class="p">,</span> <span class="n">selfloop_height</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.path</span>  <span class="c1"># call as mpl.path</span>
+            <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mpl</span> <span class="o">=</span> <span class="n">mpl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">np</span> <span class="o">=</span> <span class="n">np</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_connection_styles</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">ConnectionStyle</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">connectionstyles</span>
+            <span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_connection_styles</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selfloop_height</span> <span class="o">=</span> <span class="n">selfloop_height</span>
+
+        <span class="k">def</span> <span class="nf">curved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_index</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_connection_styles</span><span class="p">[</span><span class="n">edge_index</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">self_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_index</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">self_loop_connection</span><span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">posA</span> <span class="o">==</span> <span class="n">posB</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                        <span class="s2">&quot;`self_loop` connection style method&quot;</span>
+                        <span class="s2">&quot;is only to be used for self-loops&quot;</span>
+                    <span class="p">)</span>
+                <span class="c1"># this is called with _screen space_ values</span>
+                <span class="c1"># so convert back to data space</span>
+                <span class="n">data_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">posA</span><span class="p">)</span>
+                <span class="n">v_shift</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">selfloop_height</span>
+                <span class="n">h_shift</span> <span class="o">=</span> <span class="n">v_shift</span> <span class="o">*</span> <span class="mf">0.5</span>
+                <span class="c1"># put the top of the loop first so arrow is not hidden by node</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="c1"># 1</span>
+                        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">],</span>
+                        <span class="c1"># 4 4 4</span>
+                        <span class="p">[</span><span class="n">h_shift</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">h_shift</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="c1"># 4 4 4</span>
+                        <span class="p">[</span><span class="o">-</span><span class="n">h_shift</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                        <span class="p">[</span><span class="o">-</span><span class="n">h_shift</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">],</span>
+                        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">],</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+                <span class="c1"># Rotate self loop 90 deg. if more than 1</span>
+                <span class="c1"># This will allow for maximum of 4 visible self loops</span>
+                <span class="k">if</span> <span class="n">edge_index</span> <span class="o">%</span> <span class="mi">4</span><span class="p">:</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">T</span>
+                    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">edge_index</span> <span class="o">%</span> <span class="mi">4</span><span class="p">):</span>
+                        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span>
+                    <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpl</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">data_loc</span> <span class="o">+</span> <span class="n">path</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">self_loop_connection</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">edge_pos</span><span class="p">,</span>
+        <span class="n">edgelist</span><span class="p">,</span>
+        <span class="n">nodelist</span><span class="p">,</span>
+        <span class="n">edge_indices</span><span class="p">,</span>
+        <span class="n">node_size</span><span class="p">,</span>
+        <span class="n">selfloop_height</span><span class="p">,</span>
+        <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3&quot;</span><span class="p">,</span>
+        <span class="n">node_shape</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+        <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>
+        <span class="n">arrowsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">edge_color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">style</span><span class="o">=</span><span class="s2">&quot;solid&quot;</span><span class="p">,</span>
+        <span class="n">min_source_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">min_target_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.patches</span>  <span class="c1"># call as mpl.patches</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">connectionstyle</span> <span class="o">=</span> <span class="p">[</span><span class="n">connectionstyle</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">):</span>
+            <span class="n">connectionstyle</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;ConnectionStyleFactory arg `connectionstyle` must be str or iterable&quot;</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mpl</span> <span class="o">=</span> <span class="n">mpl</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">np</span> <span class="o">=</span> <span class="n">np</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_pos</span> <span class="o">=</span> <span class="n">edge_pos</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edgelist</span> <span class="o">=</span> <span class="n">edgelist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodelist</span> <span class="o">=</span> <span class="n">nodelist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_shape</span> <span class="o">=</span> <span class="n">node_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_source_margin</span> <span class="o">=</span> <span class="n">min_source_margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_target_margin</span> <span class="o">=</span> <span class="n">min_target_margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edge_indices</span> <span class="o">=</span> <span class="n">edge_indices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_size</span> <span class="o">=</span> <span class="n">node_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connectionstyle_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ConnectionStyleFactory</span><span class="p">(</span>
+            <span class="n">connectionstyle</span><span class="p">,</span> <span class="n">selfloop_height</span><span class="p">,</span> <span class="n">ax</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arrowstyle</span> <span class="o">=</span> <span class="n">arrowstyle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arrowsize</span> <span class="o">=</span> <span class="n">arrowsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">colorConverter</span><span class="o">.</span><span class="n">to_rgba_array</span><span class="p">(</span><span class="n">edge_color</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arrowsize</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrowsize</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;arrowsize should have the same length as edgelist&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">shrink_source</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># space from source to tail</span>
+        <span class="n">shrink_target</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># space from  head to target</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_size</span><span class="p">):</span>  <span class="c1"># many node sizes</span>
+            <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edgelist</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">source_node_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_size</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">source</span><span class="p">)]</span>
+            <span class="n">target_node_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_size</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
+            <span class="n">shrink_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_marker_edge</span><span class="p">(</span><span class="n">source_node_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_shape</span><span class="p">)</span>
+            <span class="n">shrink_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_marker_edge</span><span class="p">(</span><span class="n">target_node_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shrink_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_marker_edge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_shape</span><span class="p">)</span>
+            <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">shrink_source</span>
+        <span class="n">shrink_source</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">shrink_source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_source_margin</span><span class="p">)</span>
+        <span class="n">shrink_target</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">shrink_target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_target_margin</span><span class="p">)</span>
+
+        <span class="c1"># scale factor of arrow head</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrowsize</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">mutation_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrowsize</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mutation_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrowsize</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
+            <span class="n">arrow_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">arrow_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Cycle through colors</span>
+            <span class="n">arrow_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrow_colors</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
+                <span class="n">linewidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">linewidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">linewidth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linewidth</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
+                <span class="n">linestyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Cycle through styles</span>
+                <span class="n">linestyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">linestyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">style</span>
+
+        <span class="k">if</span> <span class="n">x1</span> <span class="o">==</span> <span class="n">x2</span> <span class="ow">and</span> <span class="n">y1</span> <span class="o">==</span> <span class="n">y2</span><span class="p">:</span>
+            <span class="n">connectionstyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectionstyle_factory</span><span class="o">.</span><span class="n">self_loop</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">edge_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">connectionstyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connectionstyle_factory</span><span class="o">.</span><span class="n">curved</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">edge_indices</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">FancyArrowPatch</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span>
+            <span class="n">arrowstyle</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">arrowstyle</span><span class="p">,</span>
+            <span class="n">shrinkA</span><span class="o">=</span><span class="n">shrink_source</span><span class="p">,</span>
+            <span class="n">shrinkB</span><span class="o">=</span><span class="n">shrink_target</span><span class="p">,</span>
+            <span class="n">mutation_scale</span><span class="o">=</span><span class="n">mutation_scale</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">arrow_color</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">,</span>
+            <span class="n">connectionstyle</span><span class="o">=</span><span class="n">connectionstyle</span><span class="p">,</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyle</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># arrows go behind nodes</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_marker_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marker_size</span><span class="p">,</span> <span class="n">marker</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">marker</span> <span class="ow">in</span> <span class="s2">&quot;s^&gt;v&lt;d&quot;</span><span class="p">:</span>  <span class="c1"># `large` markers need extra space</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">marker_size</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">marker_size</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+
 <div class="viewcode-block" id="draw_networkx_edges">
 <a class="viewcode-back" href="../../../reference/generated/networkx.drawing.nx_pylab.draw_networkx_edges.html#networkx.drawing.nx_pylab.draw_networkx_edges">[docs]</a>
 <span class="k">def</span> <span class="nf">draw_networkx_edges</span><span class="p">(</span>
@@ -1083,11 +1276,12 @@ document.write(`
 <span class="sd">        width. See `matplotlib.patches.FancyArrowPatch` for attribute</span>
 <span class="sd">        `mutation_scale` for more info.</span>
 
-<span class="sd">    connectionstyle : string (default=&quot;arc3&quot;)</span>
+<span class="sd">    connectionstyle : string or iterable of strings (default=&quot;arc3&quot;)</span>
 <span class="sd">        Pass the connectionstyle parameter to create curved arc of rounding</span>
 <span class="sd">        radius rad. For example, connectionstyle=&#39;arc3,rad=0.2&#39;.</span>
 <span class="sd">        See `matplotlib.patches.ConnectionStyle` and</span>
 <span class="sd">        `matplotlib.patches.FancyArrowPatch` for more info.</span>
+<span class="sd">        If Iterable, index indicates i&#39;th edge key of MultiGraph</span>
 
 <span class="sd">    node_size : scalar or array (default=300)</span>
 <span class="sd">        Size of nodes. Though the nodes are not drawn with this function, the</span>
@@ -1167,11 +1361,11 @@ document.write(`
 <span class="sd">    draw_networkx_edge_labels</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+
     <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
     <span class="kn">import</span> <span class="nn">matplotlib.collections</span>  <span class="c1"># call as mpl.collections</span>
     <span class="kn">import</span> <span class="nn">matplotlib.colors</span>  <span class="c1"># call as mpl.colors</span>
-    <span class="kn">import</span> <span class="nn">matplotlib.patches</span>  <span class="c1"># call as mpl.patches</span>
-    <span class="kn">import</span> <span class="nn">matplotlib.path</span>  <span class="c1"># call as mpl.path</span>
     <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -1179,56 +1373,65 @@ document.write(`
     <span class="c1"># undirected graphs (for performance reasons) and use FancyArrowPatches</span>
     <span class="c1"># for directed graphs.</span>
     <span class="c1"># The `arrows` keyword can be used to override the default behavior</span>
-    <span class="n">use_linecollection</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">arrows</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">arrows</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">use_linecollection</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="ow">or</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arrows</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument `arrows` must be of type bool or None&quot;</span><span class="p">)</span>
         <span class="n">use_linecollection</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">arrows</span>
+
+    <span class="k">if</span> <span class="n">arrowstyle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s2">&quot;-|&gt;&quot;</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">connectionstyle</span> <span class="o">=</span> <span class="p">[</span><span class="n">connectionstyle</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">):</span>
+        <span class="n">connectionstyle</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;draw_networkx_edges arg `connectionstyle` must be str or iterable&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># Some kwargs only apply to FancyArrowPatches. Warn users when they use</span>
     <span class="c1"># non-default values for these kwargs when LineCollection is being used</span>
     <span class="c1"># instead of silently ignoring the specified option</span>
-    <span class="k">if</span> <span class="n">use_linecollection</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">arrowstyle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">arrowsize</span> <span class="o">!=</span> <span class="mi">10</span><span class="p">,</span>
-            <span class="n">connectionstyle</span> <span class="o">!=</span> <span class="s2">&quot;arc3&quot;</span><span class="p">,</span>
-            <span class="n">min_source_margin</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="n">min_target_margin</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
-        <span class="p">]</span>
-    <span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">warnings</span>
-
+    <span class="k">if</span> <span class="n">use_linecollection</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">The </span><span class="si">{0}</span><span class="s2"> keyword argument is not applicable when drawing edges</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;with LineCollection.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;To make this warning go away, either specify `arrows=True` to</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="s2">&quot;force FancyArrowPatches or use the default value for </span><span class="si">{0}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;force FancyArrowPatches or use the default values.</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="s2">&quot;Note that using FancyArrowPatches may be slow for large graphs.</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">arrowstyle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;arrowstyle&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;arrowstyle&quot;</span><span class="p">),</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">arrowsize</span> <span class="o">!=</span> <span class="mi">10</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;arrowsize&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">connectionstyle</span> <span class="o">!=</span> <span class="s2">&quot;arc3&quot;</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;connectionstyle&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;arrowsize&quot;</span><span class="p">),</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">min_source_margin</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;min_source_margin&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;min_source_margin&quot;</span><span class="p">),</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">min_target_margin</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;min_target_margin&quot;</span><span class="p">)</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">arrowstyle</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
-            <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s2">&quot;-|&gt;&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;min_target_margin&quot;</span><span class="p">),</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">cs</span> <span class="o">!=</span> <span class="s2">&quot;arc3&quot;</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">connectionstyle</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;connectionstyle&quot;</span><span class="p">),</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">edgelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">edgelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
+        <span class="n">edgelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>  <span class="c1"># (u, v, k) for multigraph (u, v) otherwise</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no edges!</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+            <span class="n">key_count</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">edge_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">key_count</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">])])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edge_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># no edges!</span>
         <span class="k">return</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1237,7 +1440,6 @@ document.write(`
     <span class="c1"># FancyArrowPatch handles color=None different from LineCollection</span>
     <span class="k">if</span> <span class="n">edge_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;k&quot;</span>
-    <span class="n">edgelist_tuple</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">edgelist</span><span class="p">))</span>
 
     <span class="c1"># set edge positions</span>
     <span class="n">edge_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">])</span>
@@ -1260,7 +1462,40 @@ document.write(`
         <span class="n">color_normal</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">edge_vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">edge_vmax</span><span class="p">)</span>
         <span class="n">edge_color</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge_cmap</span><span class="p">(</span><span class="n">color_normal</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edge_color</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_draw_networkx_edges_line_collection</span><span class="p">():</span>
+    <span class="c1"># compute initial view</span>
+    <span class="n">minx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">maxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">miny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">maxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">maxx</span> <span class="o">-</span> <span class="n">minx</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">maxy</span> <span class="o">-</span> <span class="n">miny</span>
+
+    <span class="c1"># Self-loops are scaled by view extent, except in cases the extent</span>
+    <span class="c1"># is 0, e.g. for a single node. In this case, fall back to scaling</span>
+    <span class="c1"># by the maximum node size</span>
+    <span class="n">selfloop_height</span> <span class="o">=</span> <span class="n">h</span> <span class="k">if</span> <span class="n">h</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.005</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">node_size</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">fancy_arrow_factory</span> <span class="o">=</span> <span class="n">FancyArrowFactory</span><span class="p">(</span>
+        <span class="n">edge_pos</span><span class="p">,</span>
+        <span class="n">edgelist</span><span class="p">,</span>
+        <span class="n">nodelist</span><span class="p">,</span>
+        <span class="n">edge_indices</span><span class="p">,</span>
+        <span class="n">node_size</span><span class="p">,</span>
+        <span class="n">selfloop_height</span><span class="p">,</span>
+        <span class="n">connectionstyle</span><span class="p">,</span>
+        <span class="n">node_shape</span><span class="p">,</span>
+        <span class="n">arrowstyle</span><span class="p">,</span>
+        <span class="n">arrowsize</span><span class="p">,</span>
+        <span class="n">edge_color</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">,</span>
+        <span class="n">min_source_margin</span><span class="p">,</span>
+        <span class="n">min_target_margin</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Draw the edges</span>
+    <span class="k">if</span> <span class="n">use_linecollection</span><span class="p">:</span>
         <span class="n">edge_collection</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">LineCollection</span><span class="p">(</span>
             <span class="n">edge_pos</span><span class="p">,</span>
             <span class="n">colors</span><span class="o">=</span><span class="n">edge_color</span><span class="p">,</span>
@@ -1274,171 +1509,31 @@ document.write(`
         <span class="n">edge_collection</span><span class="o">.</span><span class="n">set_zorder</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># edges go behind nodes</span>
         <span class="n">edge_collection</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">edge_collection</span><span class="p">)</span>
+        <span class="n">edge_viz_obj</span> <span class="o">=</span> <span class="n">edge_collection</span>
 
-        <span class="k">return</span> <span class="n">edge_collection</span>
-
-    <span class="k">def</span> <span class="nf">_draw_networkx_edges_fancy_arrow_patch</span><span class="p">():</span>
-        <span class="c1"># Note: Waiting for someone to implement arrow to intersection with</span>
-        <span class="c1"># marker.  Meanwhile, this works well for polygons with more than 4</span>
-        <span class="c1"># sides and circle.</span>
-
-        <span class="k">def</span> <span class="nf">to_marker_edge</span><span class="p">(</span><span class="n">marker_size</span><span class="p">,</span> <span class="n">marker</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">marker</span> <span class="ow">in</span> <span class="s2">&quot;s^&gt;v&lt;d&quot;</span><span class="p">:</span>  <span class="c1"># `large` markers need extra space</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">marker_size</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">marker_size</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-
-        <span class="c1"># Draw arrows with `matplotlib.patches.FancyarrowPatch`</span>
-        <span class="n">arrow_collection</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arrowsize</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrowsize</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;arrowsize should have the same length as edgelist&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">mutation_scale</span> <span class="o">=</span> <span class="n">arrowsize</span>  <span class="c1"># scale factor of arrow head</span>
-
-        <span class="n">base_connection_style</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">ConnectionStyle</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">)</span>
-
-        <span class="c1"># Fallback for self-loop scale. Left outside of _connectionstyle so it is</span>
-        <span class="c1"># only computed once</span>
-        <span class="n">max_nodesize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">node_size</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-
-        <span class="k">def</span> <span class="nf">_connectionstyle</span><span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="c1"># check if we need to do a self-loop</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">posA</span> <span class="o">==</span> <span class="n">posB</span><span class="p">):</span>
-                <span class="c1"># Self-loops are scaled by view extent, except in cases the extent</span>
-                <span class="c1"># is 0, e.g. for a single node. In this case, fall back to scaling</span>
-                <span class="c1"># by the maximum node size</span>
-                <span class="n">selfloop_ht</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="o">*</span> <span class="n">max_nodesize</span> <span class="k">if</span> <span class="n">h</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">h</span>
-                <span class="c1"># this is called with _screen space_ values so convert back</span>
-                <span class="c1"># to data space</span>
-                <span class="n">data_loc</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">posA</span><span class="p">)</span>
-                <span class="n">v_shift</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">selfloop_ht</span>
-                <span class="n">h_shift</span> <span class="o">=</span> <span class="n">v_shift</span> <span class="o">*</span> <span class="mf">0.5</span>
-                <span class="c1"># put the top of the loop first so arrow is not hidden by node</span>
-                <span class="n">path</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="c1"># 1</span>
-                    <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
-                    <span class="c1"># 4 4 4</span>
-                    <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">h_shift</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
-                    <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">h_shift</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span>
-                    <span class="n">data_loc</span><span class="p">,</span>
-                    <span class="c1"># 4 4 4</span>
-                    <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="o">-</span><span class="n">h_shift</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span>
-                    <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="o">-</span><span class="n">h_shift</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
-                    <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
-                <span class="p">]</span>
-
-                <span class="n">ret</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
-            <span class="c1"># if not, fall back to the user specified behavior</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ret</span> <span class="o">=</span> <span class="n">base_connection_style</span><span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">ret</span>
-
-        <span class="c1"># FancyArrowPatch doesn&#39;t handle color strings</span>
-        <span class="n">arrow_colors</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">colorConverter</span><span class="o">.</span><span class="n">to_rgba_array</span><span class="p">(</span><span class="n">edge_color</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fancy_edges_indices</span><span class="p">,</span> <span class="n">edge_pos</span><span class="p">):</span>
-            <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">src</span>
-            <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">dst</span>
-            <span class="n">shrink_source</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># space from source to tail</span>
-            <span class="n">shrink_target</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># space from  head to target</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arrowsize</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="c1"># Scale each factor of each arrow based on arrowsize list</span>
-                <span class="n">mutation_scale</span> <span class="o">=</span> <span class="n">arrowsize</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">node_size</span><span class="p">):</span>  <span class="c1"># many node sizes</span>
-                <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">edgelist</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">source_node_size</span> <span class="o">=</span> <span class="n">node_size</span><span class="p">[</span><span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">source</span><span class="p">)]</span>
-                <span class="n">target_node_size</span> <span class="o">=</span> <span class="n">node_size</span><span class="p">[</span><span class="n">nodelist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
-                <span class="n">shrink_source</span> <span class="o">=</span> <span class="n">to_marker_edge</span><span class="p">(</span><span class="n">source_node_size</span><span class="p">,</span> <span class="n">node_shape</span><span class="p">)</span>
-                <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">to_marker_edge</span><span class="p">(</span><span class="n">target_node_size</span><span class="p">,</span> <span class="n">node_shape</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">shrink_source</span> <span class="o">=</span> <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">to_marker_edge</span><span class="p">(</span><span class="n">node_size</span><span class="p">,</span> <span class="n">node_shape</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">shrink_source</span> <span class="o">&lt;</span> <span class="n">min_source_margin</span><span class="p">:</span>
-                <span class="n">shrink_source</span> <span class="o">=</span> <span class="n">min_source_margin</span>
-
-            <span class="k">if</span> <span class="n">shrink_target</span> <span class="o">&lt;</span> <span class="n">min_target_margin</span><span class="p">:</span>
-                <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">min_target_margin</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrow_colors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
-                <span class="n">arrow_color</span> <span class="o">=</span> <span class="n">arrow_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrow_colors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">arrow_color</span> <span class="o">=</span> <span class="n">arrow_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Cycle through colors</span>
-                <span class="n">arrow_color</span> <span class="o">=</span> <span class="n">arrow_colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrow_colors</span><span class="p">)]</span>
-
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">width</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
-                    <span class="n">line_width</span> <span class="o">=</span> <span class="n">width</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">line_width</span> <span class="o">=</span> <span class="n">width</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">width</span><span class="p">)]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">line_width</span> <span class="o">=</span> <span class="n">width</span>
-
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">style</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
-            <span class="p">):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">style</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">i</span><span class="p">:</span>
-                    <span class="n">linestyle</span> <span class="o">=</span> <span class="n">style</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>  <span class="c1"># Cycle through styles</span>
-                    <span class="n">linestyle</span> <span class="o">=</span> <span class="n">style</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">style</span><span class="p">)]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">linestyle</span> <span class="o">=</span> <span class="n">style</span>
-
-            <span class="n">arrow</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">FancyArrowPatch</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span>
-                <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span>
-                <span class="n">arrowstyle</span><span class="o">=</span><span class="n">arrowstyle</span><span class="p">,</span>
-                <span class="n">shrinkA</span><span class="o">=</span><span class="n">shrink_source</span><span class="p">,</span>
-                <span class="n">shrinkB</span><span class="o">=</span><span class="n">shrink_target</span><span class="p">,</span>
-                <span class="n">mutation_scale</span><span class="o">=</span><span class="n">mutation_scale</span><span class="p">,</span>
-                <span class="n">color</span><span class="o">=</span><span class="n">arrow_color</span><span class="p">,</span>
-                <span class="n">linewidth</span><span class="o">=</span><span class="n">line_width</span><span class="p">,</span>
-                <span class="n">connectionstyle</span><span class="o">=</span><span class="n">_connectionstyle</span><span class="p">,</span>
-                <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyle</span><span class="p">,</span>
-                <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="p">)</span>  <span class="c1"># arrows go behind nodes</span>
-
-            <span class="n">arrow_collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">arrow_collection</span>
-
-    <span class="c1"># compute initial view</span>
-    <span class="n">minx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]))</span>
-    <span class="n">maxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]))</span>
-    <span class="n">miny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
-    <span class="n">maxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
-    <span class="n">w</span> <span class="o">=</span> <span class="n">maxx</span> <span class="o">-</span> <span class="n">minx</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="n">maxy</span> <span class="o">-</span> <span class="n">miny</span>
-
-    <span class="c1"># Draw the edges</span>
-    <span class="k">if</span> <span class="n">use_linecollection</span><span class="p">:</span>
-        <span class="n">edge_viz_obj</span> <span class="o">=</span> <span class="n">_draw_networkx_edges_line_collection</span><span class="p">()</span>
         <span class="c1"># Make sure selfloop edges are also drawn</span>
+        <span class="c1"># ---------------------------------------</span>
         <span class="n">selfloops_to_draw</span> <span class="o">=</span> <span class="p">[</span><span class="n">loop</span> <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">selfloop_edges</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="k">if</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">selfloops_to_draw</span><span class="p">:</span>
-            <span class="n">fancy_edges_indices</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">edgelist_tuple</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span> <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">selfloops_to_draw</span>
-            <span class="p">]</span>
-            <span class="n">edge_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">selfloops_to_draw</span><span class="p">])</span>
-            <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
-            <span class="n">_draw_networkx_edges_fancy_arrow_patch</span><span class="p">()</span>
+            <span class="n">edgelist_tuple</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">edgelist</span><span class="p">))</span>
+            <span class="n">arrow_collection</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">selfloops_to_draw</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">edgelist_tuple</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+                <span class="n">arrow</span> <span class="o">=</span> <span class="n">fancy_arrow_factory</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">arrow_collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">fancy_edges_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">))</span>
-        <span class="n">edge_viz_obj</span> <span class="o">=</span> <span class="n">_draw_networkx_edges_fancy_arrow_patch</span><span class="p">()</span>
+        <span class="n">edge_viz_obj</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)):</span>
+            <span class="n">arrow</span> <span class="o">=</span> <span class="n">fancy_arrow_factory</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
+            <span class="n">edge_viz_obj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
 
     <span class="c1"># update view after drawing</span>
     <span class="n">padx</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">h</span>
     <span class="n">corners</span> <span class="o">=</span> <span class="p">(</span><span class="n">minx</span> <span class="o">-</span> <span class="n">padx</span><span class="p">,</span> <span class="n">miny</span> <span class="o">-</span> <span class="n">pady</span><span class="p">),</span> <span class="p">(</span><span class="n">maxx</span> <span class="o">+</span> <span class="n">padx</span><span class="p">,</span> <span class="n">maxy</span> <span class="o">+</span> <span class="n">pady</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">update_datalim</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
-
     <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
         <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
         <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
@@ -1598,6 +1693,9 @@ document.write(`
     <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">rotate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">clip_on</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">node_size</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw edge labels.</span>
 
@@ -1652,6 +1750,19 @@ document.write(`
 <span class="sd">    clip_on : bool (default=True)</span>
 <span class="sd">        Turn on clipping of edge labels at axis boundaries</span>
 
+<span class="sd">    node_size : scalar or array (default=300)</span>
+<span class="sd">        Size of nodes.  If an array it must be the same length as nodelist.</span>
+
+<span class="sd">    nodelist : list, optional (default=G.nodes())</span>
+<span class="sd">       This provides the node order for the `node_size` array (if it is an array).</span>
+
+<span class="sd">    connectionstyle : string or iterable of strings (default=&quot;arc3&quot;)</span>
+<span class="sd">        Pass the connectionstyle parameter to create curved arc of rounding</span>
+<span class="sd">        radius rad. For example, connectionstyle=&#39;arc3,rad=0.2&#39;.</span>
+<span class="sd">        See `matplotlib.patches.ConnectionStyle` and</span>
+<span class="sd">        `matplotlib.patches.FancyArrowPatch` for more info.</span>
+<span class="sd">        If Iterable, index indicates i&#39;th edge key of MultiGraph</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
@@ -1673,73 +1784,204 @@ document.write(`
 <span class="sd">    draw_networkx_edges</span>
 <span class="sd">    draw_networkx_labels</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
     <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">edge_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="p">{(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="n">d</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)}</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">edge_labels</span>
-        <span class="c1"># Informative exception for multiedges</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>  <span class="c1"># ensures no edge key provided</span>
-        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
-                <span class="s2">&quot;draw_networkx_edge_labels does not support multiedges.&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
-        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="k">pass</span>
+    <span class="k">class</span> <span class="nc">CurvedArrowText</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">Text</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">arrow</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">label_pos</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">labels_horizontal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="c1"># Bind to FancyArrowPatch</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arrow</span> <span class="o">=</span> <span class="n">arrow</span>
+            <span class="c1"># how far along the text should be on the curve,</span>
+            <span class="c1"># 0 is at start, 1 is at end etc.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">label_pos</span> <span class="o">=</span> <span class="n">label_pos</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">labels_horizontal</span> <span class="o">=</span> <span class="n">labels_horizontal</span>
+            <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_text_pos_angle</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
 
-    <span class="n">text_items</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">)</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">n1</span><span class="p">]</span>
-        <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">n2</span><span class="p">]</span>
-        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">x1</span> <span class="o">*</span> <span class="n">label_pos</span> <span class="o">+</span> <span class="n">x2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_pos</span><span class="p">),</span>
-            <span class="n">y1</span> <span class="o">*</span> <span class="n">label_pos</span> <span class="o">+</span> <span class="n">y2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_pos</span><span class="p">),</span>
+            <span class="c1"># Create text object</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># Bind to axis</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_get_arrow_path_disp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arrow</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            This is part of FancyArrowPatch._get_path_in_displaycoord</span>
+<span class="sd">            It omits the second part of the method where path is converted</span>
+<span class="sd">                to polygon based on width</span>
+<span class="sd">            The transform is taken from ax, not the object, as the object</span>
+<span class="sd">                has not been added yet, and doesn&#39;t have transform</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">dpi_cor</span> <span class="o">=</span> <span class="n">arrow</span><span class="o">.</span><span class="n">_dpi_cor</span>
+            <span class="c1"># trans_data = arrow.get_transform()</span>
+            <span class="n">trans_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span>
+            <span class="k">if</span> <span class="n">arrow</span><span class="o">.</span><span class="n">_posA_posB</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">posA</span> <span class="o">=</span> <span class="n">arrow</span><span class="o">.</span><span class="n">_convert_xy_units</span><span class="p">(</span><span class="n">arrow</span><span class="o">.</span><span class="n">_posA_posB</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">posB</span> <span class="o">=</span> <span class="n">arrow</span><span class="o">.</span><span class="n">_convert_xy_units</span><span class="p">(</span><span class="n">arrow</span><span class="o">.</span><span class="n">_posA_posB</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">)</span> <span class="o">=</span> <span class="n">trans_data</span><span class="o">.</span><span class="n">transform</span><span class="p">((</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">))</span>
+                <span class="n">_path</span> <span class="o">=</span> <span class="n">arrow</span><span class="o">.</span><span class="n">get_connectionstyle</span><span class="p">()(</span>
+                    <span class="n">posA</span><span class="p">,</span>
+                    <span class="n">posB</span><span class="p">,</span>
+                    <span class="n">patchA</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">patchA</span><span class="p">,</span>
+                    <span class="n">patchB</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">patchB</span><span class="p">,</span>
+                    <span class="n">shrinkA</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">shrinkA</span> <span class="o">*</span> <span class="n">dpi_cor</span><span class="p">,</span>
+                    <span class="n">shrinkB</span><span class="o">=</span><span class="n">arrow</span><span class="o">.</span><span class="n">shrinkB</span> <span class="o">*</span> <span class="n">dpi_cor</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_path</span> <span class="o">=</span> <span class="n">trans_data</span><span class="o">.</span><span class="n">transform_path</span><span class="p">(</span><span class="n">arrow</span><span class="o">.</span><span class="n">_path_original</span><span class="p">)</span>
+            <span class="c1"># Return is in display coordinates</span>
+            <span class="k">return</span> <span class="n">_path</span>
+
+        <span class="k">def</span> <span class="nf">_update_text_pos_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arrow</span><span class="p">):</span>
+            <span class="c1"># Fractional label position</span>
+            <span class="n">path_disp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_arrow_path_disp</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="p">(</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">),</span> <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="o">=</span> <span class="n">path_disp</span><span class="o">.</span><span class="n">vertices</span>
+            <span class="c1"># Text position at a proportion t along the line in display coords</span>
+            <span class="c1"># default is 0.5 so text appears at the halfway point</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_pos</span>
+            <span class="n">tt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">t</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">tt</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">tt</span> <span class="o">*</span> <span class="n">cx</span> <span class="o">+</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x2</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">tt</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="n">tt</span> <span class="o">*</span> <span class="n">cy</span> <span class="o">+</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y2</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_horizontal</span><span class="p">:</span>
+                <span class="c1"># Horizontal text labels</span>
+                <span class="n">angle</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Labels parallel to curve</span>
+                <span class="n">change_x</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">tt</span> <span class="o">*</span> <span class="p">(</span><span class="n">cx</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">cx</span><span class="p">)</span>
+                <span class="n">change_y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">tt</span> <span class="o">*</span> <span class="p">(</span><span class="n">cy</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">cy</span><span class="p">)</span>
+                <span class="n">angle</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">change_y</span><span class="p">,</span> <span class="n">change_x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="mi">360</span>
+                <span class="c1"># Text is &quot;right way up&quot;</span>
+                <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">:</span>
+                    <span class="n">angle</span> <span class="o">-=</span> <span class="mi">180</span>
+                <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">90</span><span class="p">:</span>
+                    <span class="n">angle</span> <span class="o">+=</span> <span class="mi">180</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">angle</span>
+
+        <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">):</span>
+            <span class="c1"># recalculate the text position and angle</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_text_pos_angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrow</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_rotation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">angle</span><span class="p">)</span>
+            <span class="c1"># redraw text</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+
+    <span class="c1"># use default box of white with white border</span>
+    <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;boxstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;round&quot;</span><span class="p">,</span> <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">connectionstyle</span> <span class="o">=</span> <span class="p">[</span><span class="n">connectionstyle</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">):</span>
+        <span class="n">connectionstyle</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+            <span class="s2">&quot;draw_networkx_edges arg `connectionstyle` must be&quot;</span>
+            <span class="s2">&quot;string or iterable of strings&quot;</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">rotate</span><span class="p">:</span>
-            <span class="c1"># in degrees</span>
-            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mi">360</span>
-            <span class="c1"># make label orientation &quot;right-side-up&quot;</span>
-            <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">:</span>
-                <span class="n">angle</span> <span class="o">-=</span> <span class="mi">180</span>
-            <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">90</span><span class="p">:</span>
-                <span class="n">angle</span> <span class="o">+=</span> <span class="mi">180</span>
-            <span class="c1"># transform data coordinate angle to screen coordinate angle</span>
-            <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
-            <span class="n">trans_angle</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">transform_angles</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">angle</span><span class="p">,)),</span> <span class="n">xy</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">trans_angle</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="c1"># use default box of white with white border</span>
-        <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">bbox</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;boxstyle&quot;</span><span class="p">:</span> <span class="s2">&quot;round&quot;</span><span class="p">,</span> <span class="s2">&quot;ec&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">&quot;fc&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">edge_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwds</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;keys&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">edge_labels</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">edge</span><span class="p">):</span> <span class="n">d</span> <span class="k">for</span> <span class="o">*</span><span class="n">edge</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)}</span>
+    <span class="c1"># NOTHING TO PLOT</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">edge_labels</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">edgelist</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">edge_labels</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+
+    <span class="c1"># set edge positions</span>
+    <span class="n">edge_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">key_count</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">edge_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">key_count</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">e</span><span class="p">[:</span><span class="mi">2</span><span class="p">])])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edgelist</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edge_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">edgelist</span><span class="p">)</span>
+
+    <span class="c1"># Used to determine self loop mid-point</span>
+    <span class="c1"># Note, that this will not be accurate,</span>
+    <span class="c1">#   if not drawing edge_labels for all edges drawn</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">edge_labels</span><span class="p">:</span>
+        <span class="n">miny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
+        <span class="n">maxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">maxy</span> <span class="o">-</span> <span class="n">miny</span>
+    <span class="n">selfloop_height</span> <span class="o">=</span> <span class="n">h</span> <span class="k">if</span> <span class="n">h</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.005</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">node_size</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">fancy_arrow_factory</span> <span class="o">=</span> <span class="n">FancyArrowFactory</span><span class="p">(</span>
+        <span class="n">edge_pos</span><span class="p">,</span>
+        <span class="n">edgelist</span><span class="p">,</span>
+        <span class="n">nodelist</span><span class="p">,</span>
+        <span class="n">edge_indices</span><span class="p">,</span>
+        <span class="n">node_size</span><span class="p">,</span>
+        <span class="n">selfloop_height</span><span class="p">,</span>
+        <span class="n">connectionstyle</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">text_items</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">edgelist</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>  <span class="c1"># this makes &quot;1&quot; and 1 labeled the same</span>
 
-        <span class="n">t</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
-            <span class="n">x</span><span class="p">,</span>
-            <span class="n">y</span><span class="p">,</span>
-            <span class="n">label</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="n">font_size</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="n">font_color</span><span class="p">,</span>
-            <span class="n">family</span><span class="o">=</span><span class="n">font_family</span><span class="p">,</span>
-            <span class="n">weight</span><span class="o">=</span><span class="n">font_weight</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-            <span class="n">horizontalalignment</span><span class="o">=</span><span class="n">horizontalalignment</span><span class="p">,</span>
-            <span class="n">verticalalignment</span><span class="o">=</span><span class="n">verticalalignment</span><span class="p">,</span>
-            <span class="n">rotation</span><span class="o">=</span><span class="n">trans_angle</span><span class="p">,</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
-            <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
-            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">clip_on</span><span class="o">=</span><span class="n">clip_on</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">text_items</span><span class="p">[(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">arrow</span> <span class="o">=</span> <span class="n">fancy_arrow_factory</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n1</span> <span class="o">==</span> <span class="n">n2</span><span class="p">:</span>
+            <span class="n">connectionstyle_obj</span> <span class="o">=</span> <span class="n">arrow</span><span class="o">.</span><span class="n">get_connectionstyle</span><span class="p">()</span>
+            <span class="n">posA</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="n">n1</span><span class="p">])</span>
+            <span class="n">path_disp</span> <span class="o">=</span> <span class="n">connectionstyle_obj</span><span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posA</span><span class="p">)</span>
+            <span class="n">path_data</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform_path</span><span class="p">(</span><span class="n">path_disp</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">path_data</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">text_items</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">label</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">font_size</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">font_color</span><span class="p">,</span>
+                <span class="n">family</span><span class="o">=</span><span class="n">font_family</span><span class="p">,</span>
+                <span class="n">weight</span><span class="o">=</span><span class="n">font_weight</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">horizontalalignment</span><span class="o">=</span><span class="n">horizontalalignment</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="n">verticalalignment</span><span class="p">,</span>
+                <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+                <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+                <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">clip_on</span><span class="o">=</span><span class="n">clip_on</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">text_items</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span> <span class="o">=</span> <span class="n">CurvedArrowText</span><span class="p">(</span>
+                <span class="n">arrow</span><span class="p">,</span>
+                <span class="n">label</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">font_size</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">font_color</span><span class="p">,</span>
+                <span class="n">family</span><span class="o">=</span><span class="n">font_family</span><span class="p">,</span>
+                <span class="n">weight</span><span class="o">=</span><span class="n">font_weight</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">horizontalalignment</span><span class="o">=</span><span class="n">horizontalalignment</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="n">verticalalignment</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+                <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+                <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">clip_on</span><span class="o">=</span><span class="n">clip_on</span><span class="p">,</span>
+                <span class="n">label_pos</span><span class="o">=</span><span class="n">label_pos</span><span class="p">,</span>
+                <span class="n">labels_horizontal</span><span class="o">=</span><span class="ow">not</span> <span class="n">rotate</span><span class="p">,</span>
+                <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="p">)</span>
 
     <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
         <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
