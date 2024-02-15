@@ -544,6 +544,7 @@ document.write(`
     <span class="s2">&quot;fruchterman_reingold_layout&quot;</span><span class="p">,</span>
     <span class="s2">&quot;spiral_layout&quot;</span><span class="p">,</span>
     <span class="s2">&quot;multipartite_layout&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bfs_layout&quot;</span><span class="p">,</span>
     <span class="s2">&quot;arf_layout&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -1571,8 +1572,9 @@ document.write(`
 <span class="sd">    G : NetworkX graph or list of nodes</span>
 <span class="sd">        A position will be assigned to every node in G.</span>
 
-<span class="sd">    subset_key : string (default=&#39;subset&#39;)</span>
-<span class="sd">        Key of node data to be used as layer subset.</span>
+<span class="sd">    subset_key : string or dict (default=&#39;subset&#39;)</span>
+<span class="sd">        If a string, the key of node data in G that holds the node subset.</span>
+<span class="sd">        If a dict, keyed by layer number to the nodes in that layer/subset.</span>
 
 <span class="sd">    align : string (default=&#39;vertical&#39;)</span>
 <span class="sd">        The alignment of nodes. Vertical or horizontal.</span>
@@ -1593,6 +1595,12 @@ document.write(`
 <span class="sd">    &gt;&gt;&gt; G = nx.complete_multipartite_graph(28, 16, 10)</span>
 <span class="sd">    &gt;&gt;&gt; pos = nx.multipartite_layout(G)</span>
 
+<span class="sd">    or use a dict to provide the layers of the layout</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph([(0, 1), (1, 2), (1, 3), (3, 4)])</span>
+<span class="sd">    &gt;&gt;&gt; layers = {&quot;a&quot;: [0], &quot;b&quot;: [1], &quot;c&quot;: [2, 3], &quot;d&quot;: [4]}</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.multipartite_layout(G, subset_key=layers)</span>
+
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    This algorithm currently only works in two dimensions and does not</span>
@@ -1612,25 +1620,31 @@ document.write(`
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{}</span>
 
-    <span class="n">layers</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">layer</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">subset_key</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;all nodes must have subset_key (default=&#39;subset&#39;) as data&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">layers</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+</span> <span class="n">layers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># check if subset_key is dict-like</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">subset_key</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;all nodes must be in one subset of `subset_key` dict&quot;</span>
+            <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># subset_key is not a dict, hence a string</span>
+        <span class="n">node_to_subset</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">get_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">subset_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_to_subset</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;all nodes need a subset_key attribute: </span><span class="si">{</span><span class="n">subset_key</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">subset_key</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">groups</span><span class="p">(</span><span class="n">node_to_subset</span><span class="p">)</span>
 
     <span class="c1"># Sort by layer, if possible</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">layers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">subset_key</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-        <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">subset_key</span>
 
     <span class="n">pos</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">width</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
         <span class="n">height</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
         <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -1842,6 +1856,56 @@ document.write(`
     <span class="n">pos_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
     <span class="n">pos_v</span> <span class="o">=</span> <span class="n">rescale_layout</span><span class="p">(</span><span class="n">pos_v</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">pos_v</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="bfs_layout">
+<a class="viewcode-back" href="../../../reference/generated/networkx.drawing.layout.bfs_layout.html#networkx.drawing.layout.bfs_layout">[docs]</a>
+<span class="k">def</span> <span class="nf">bfs_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Position nodes according to breadth-first search algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        A position will be assigned to every node in G.</span>
+
+<span class="sd">    start : node in `G`</span>
+<span class="sd">        Starting node for bfs</span>
+
+<span class="sd">    center : array-like or None</span>
+<span class="sd">        Coordinate pair around which to center the layout.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pos : dict</span>
+<span class="sd">        A dictionary of positions keyed by node.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; pos = nx.bfs_layout(G, 0)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm currently only works in two dimensions and does not</span>
+<span class="sd">    try to minimize edge crossings.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">center</span> <span class="o">=</span> <span class="n">_process_params</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Compute layers with BFS</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_layers</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="k">for</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">layers</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+            <span class="s2">&quot;bfs_layout didn&#39;t include all nodes. Perhaps use input graph:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;        G.subgraph(nx.node_connected_component(G, start))&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Compute node positions with multipartite_layout</span>
+    <span class="k">return</span> <span class="n">multipartite_layout</span><span class="p">(</span>
+        <span class="n">G</span><span class="p">,</span> <span class="n">subset_key</span><span class="o">=</span><span class="n">layers</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="n">align</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">center</span>
+    <span class="p">)</span></div>
 
 </pre></div>
 

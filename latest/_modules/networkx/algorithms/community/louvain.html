@@ -513,6 +513,7 @@ document.write(`
 <span></span><span class="sd">&quot;&quot;&quot;Function for detecting communities based on Louvain Community Detection</span>
 <span class="sd">Algorithm&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
@@ -527,7 +528,7 @@ document.write(`
 <span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">louvain_communities</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.0000001</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.0000001</span><span class="p">,</span> <span class="n">max_level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Find the best partition of a graph using the Louvain Community Detection</span>
 <span class="sd">    Algorithm.</span>
@@ -570,7 +571,7 @@ document.write(`
 <span class="sd">    increased modularity.</span>
 
 <span class="sd">    The above two phases are executed until no modularity gain is achieved (or is less than</span>
-<span class="sd">    the `threshold`).</span>
+<span class="sd">    the `threshold`, or until `max_levels` is reached).</span>
 
 <span class="sd">    Be careful with self-loops in the input graph. These are treated as</span>
 <span class="sd">    previously reduced communities -- as if the process had been started</span>
@@ -593,6 +594,10 @@ document.write(`
 <span class="sd">        Modularity gain threshold for each level. If the gain of modularity</span>
 <span class="sd">        between 2 levels of the algorithm is less than the given threshold</span>
 <span class="sd">        then the algorithm stops and returns the resulting communities.</span>
+<span class="sd">    max_level : int or None, optional (default=None)</span>
+<span class="sd">        The maximum number of levels (steps of the algorithm) to compute.</span>
+<span class="sd">        Must be a positive integer or None. If None, then there is no max</span>
+<span class="sd">        level and the threshold parameter determines the stopping condition.</span>
 <span class="sd">    seed : integer, random_state, or None (default)</span>
 <span class="sd">        Indicator of random number generation state.</span>
 <span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
@@ -629,9 +634,13 @@ document.write(`
 <span class="sd">    louvain_partitions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">d</span> <span class="o">=</span> <span class="n">louvain_partitions</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
-    <span class="n">q</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">q</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+    <span class="n">partitions</span> <span class="o">=</span> <span class="n">louvain_partitions</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_level</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_level argument must be a positive integer or None&quot;</span><span class="p">)</span>
+        <span class="n">partitions</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">partitions</span><span class="p">,</span> <span class="n">max_level</span><span class="p">)</span>
+    <span class="n">final_partition</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">partitions</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">final_partition</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
 
 
 
