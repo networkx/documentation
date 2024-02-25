@@ -61,7 +61,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Feb 24, 2024"/>
+    <meta name="docbuild:last-update" content="Feb 25, 2024"/>
   </head>
   
   
@@ -598,7 +598,6 @@ document.write(`
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">importlib.metadata</span> <span class="kn">import</span> <span class="n">entry_points</span>
@@ -1484,25 +1483,36 @@ document.write(`
                 <span class="k">continue</span>
 
             <span class="n">func_info</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-            <span class="k">if</span> <span class="s2">&quot;extra_docstring&quot;</span> <span class="ow">in</span> <span class="n">func_info</span><span class="p">:</span>
+
+            <span class="c1"># Renaming extra_docstring to additional_docs</span>
+            <span class="k">if</span> <span class="n">func_docs</span> <span class="o">:=</span> <span class="p">(</span>
+                <span class="n">func_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;additional_docs&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">func_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_docstring&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">line</span> <span class="k">else</span> <span class="n">line</span>
-                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">func_info</span><span class="p">[</span><span class="s2">&quot;extra_docstring&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">line</span> <span class="k">else</span> <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">func_docs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">add_gap</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">add_gap</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="s2">&quot;extra_parameters&quot;</span> <span class="ow">in</span> <span class="n">func_info</span><span class="p">:</span>
+
+            <span class="c1"># Renaming extra_parameters to additional_parameters</span>
+            <span class="k">if</span> <span class="n">extra_parameters</span> <span class="o">:=</span> <span class="p">(</span>
+                <span class="n">func_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_parameters&quot;</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">func_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;additional_parameters&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">if</span> <span class="n">add_gap</span><span class="p">:</span>
                     <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  Extra parameters:&quot;</span><span class="p">)</span>
-                <span class="n">extra_parameters</span> <span class="o">=</span> <span class="n">func_info</span><span class="p">[</span><span class="s2">&quot;extra_parameters&quot;</span><span class="p">]</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;  Additional parameters:&quot;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">extra_parameters</span><span class="p">):</span>
                     <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">desc</span> <span class="o">:=</span> <span class="n">extra_parameters</span><span class="p">[</span><span class="n">param</span><span class="p">]:</span>
                         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      </span><span class="si">{</span><span class="n">desc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">func_url</span> <span class="o">:=</span> <span class="n">func_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">):</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[`Source &lt;</span><span class="si">{</span><span class="n">func_url</span><span class="si">}</span><span class="s2">&gt;`_]&quot;</span><span class="p">)</span>
                 <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="n">lines</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>  <span class="c1"># Remove last empty line</span>
