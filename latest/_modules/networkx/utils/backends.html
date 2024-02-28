@@ -61,7 +61,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Feb 25, 2024"/>
+    <meta name="docbuild:last-update" content="Feb 28, 2024"/>
   </head>
   
   
@@ -691,6 +691,8 @@ document.write(`
         <span class="n">preserve_node_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">preserve_graph_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">preserve_all_attrs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mutates_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">returns_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dispatches to a backend algorithm based on input graph types.</span>
 
@@ -748,6 +750,18 @@ document.write(`
 <span class="sd">            Whether to preserve all edge, node and graph attributes.</span>
 <span class="sd">            This overrides all the other preserve_*_attrs.</span>
 
+<span class="sd">        mutates_input : bool or dict, default False</span>
+<span class="sd">            For bool, whether the functions mutates an input graph argument.</span>
+<span class="sd">            For dict of ``{arg_name: arg_pos}``, arguments that indicates whether an</span>
+<span class="sd">            input graph will be mutated, and ``arg_name`` may begin with ``&quot;not &quot;``</span>
+<span class="sd">            to negate the logic (for example, this is used by ``copy=`` arguments).</span>
+<span class="sd">            By default, dispatching doesn&#39;t convert input graphs to a different</span>
+<span class="sd">            backend for functions that mutate input graphs.</span>
+
+<span class="sd">        returns_graph : bool, default False</span>
+<span class="sd">            Whether the function can return or yield a graph object. By default,</span>
+<span class="sd">            dispatching doesn&#39;t convert input graphs to a different backend for</span>
+<span class="sd">            functions that return graphs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">partial</span><span class="p">(</span>
@@ -760,6 +774,8 @@ document.write(`
                 <span class="n">preserve_node_attrs</span><span class="o">=</span><span class="n">preserve_node_attrs</span><span class="p">,</span>
                 <span class="n">preserve_graph_attrs</span><span class="o">=</span><span class="n">preserve_graph_attrs</span><span class="p">,</span>
                 <span class="n">preserve_all_attrs</span><span class="o">=</span><span class="n">preserve_all_attrs</span><span class="p">,</span>
+                <span class="n">mutates_input</span><span class="o">=</span><span class="n">mutates_input</span><span class="p">,</span>
+                <span class="n">returns_graph</span><span class="o">=</span><span class="n">returns_graph</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;name&#39; and &#39;graphs&#39; must be passed by keyword&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
@@ -795,6 +811,9 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">preserve_edge_attrs</span> <span class="o">=</span> <span class="n">preserve_edge_attrs</span> <span class="ow">or</span> <span class="n">preserve_all_attrs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preserve_node_attrs</span> <span class="o">=</span> <span class="n">preserve_node_attrs</span> <span class="ow">or</span> <span class="n">preserve_all_attrs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">preserve_graph_attrs</span> <span class="o">=</span> <span class="n">preserve_graph_attrs</span> <span class="ow">or</span> <span class="n">preserve_all_attrs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mutates_input</span> <span class="o">=</span> <span class="n">mutates_input</span>
+        <span class="c1"># Keep `returns_graph` private for now, b/c we may extend info on return types</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span> <span class="o">=</span> <span class="n">returns_graph</span>
 
         <span class="k">if</span> <span class="n">edge_attrs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edge_attrs</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
@@ -818,6 +837,16 @@ document.write(`
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Bad type for preserve_graph_attrs: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_graph_attrs</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="s2">&quot; Expected bool or set.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mutates_input</span><span class="p">,</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Bad type for mutates_input: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mutates_input</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">&quot; Expected bool or dict.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Bad type for returns_graph: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">&quot; Expected bool.&quot;</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graphs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -957,15 +986,6 @@ document.write(`
         <span class="c1">#     if (val := args[pos] if pos &lt; len(args) else kwargs.get(gname)) is not None</span>
         <span class="c1"># }</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_testing</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automatic_backends</span> <span class="ow">and</span> <span class="n">backend_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Special path if we are running networkx tests with a backend.</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_and_call_for_tests</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_automatic_backends</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">args</span><span class="p">,</span>
-                <span class="n">kwargs</span><span class="p">,</span>
-                <span class="n">fallback_to_nx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fallback_to_nx</span><span class="p">,</span>
-            <span class="p">)</span>
-
         <span class="c1"># Check if any graph comes from a backend</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_graphs</span><span class="p">:</span>
             <span class="c1"># Make sure we don&#39;t lose values by consuming an iterator</span>
@@ -1004,6 +1024,17 @@ document.write(`
                     <span class="nb">getattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s2">&quot;__networkx_backend__&quot;</span><span class="p">,</span> <span class="s2">&quot;networkx&quot;</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">graphs_resolved</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
                 <span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_testing</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automatic_backends</span> <span class="ow">and</span> <span class="n">backend_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Special path if we are running networkx tests with a backend.</span>
+            <span class="c1"># This even runs for (and handles) functions that mutate input graphs.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_and_call_for_tests</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_automatic_backends</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">args</span><span class="p">,</span>
+                <span class="n">kwargs</span><span class="p">,</span>
+                <span class="n">fallback_to_nx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fallback_to_nx</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">has_backends</span><span class="p">:</span>
             <span class="c1"># Dispatchable graphs found! Dispatch to backend function.</span>
             <span class="c1"># We don&#39;t handle calls with different backend graphs yet,</span>
@@ -1036,7 +1067,8 @@ document.write(`
             <span class="n">backend</span> <span class="o">=</span> <span class="n">_load_backend</span><span class="p">(</span><span class="n">graph_backend_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
                 <span class="k">if</span> <span class="s2">&quot;networkx&quot;</span> <span class="ow">in</span> <span class="n">graph_backend_names</span><span class="p">:</span>
-                    <span class="c1"># We need to convert networkx graphs to backend graphs</span>
+                    <span class="c1"># We need to convert networkx graphs to backend graphs.</span>
+                    <span class="c1"># There is currently no need to check `self.mutates_input` here.</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_and_call</span><span class="p">(</span>
                         <span class="n">graph_backend_name</span><span class="p">,</span>
                         <span class="n">args</span><span class="p">,</span>
@@ -1057,8 +1089,31 @@ document.write(`
             <span class="p">)</span>
 
         <span class="c1"># Only networkx graphs; try to convert and run with a backend with automatic</span>
-        <span class="c1"># conversion, but don&#39;t do this by default for graph generators or loaders.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphs</span><span class="p">:</span>
+        <span class="c1"># conversion, but don&#39;t do this by default for graph generators or loaders,</span>
+        <span class="c1"># or if the functions mutates an input graph or returns a graph.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span>
+            <span class="ow">and</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mutates_input</span>
+                <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mutates_input</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+                <span class="c1"># If `mutates_input` begins with &quot;not &quot;, then assume the argument is boolean,</span>
+                <span class="c1"># otherwise treat it as a node or edge attribute if it&#39;s not None.</span>
+                <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="ow">not</span> <span class="p">(</span>
+                        <span class="n">args</span><span class="p">[</span><span class="n">arg_pos</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">arg_pos</span>
+                        <span class="k">else</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg_name</span><span class="p">[</span><span class="mi">4</span><span class="p">:],</span> <span class="kc">True</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">arg_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;not &quot;</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="p">(</span>
+                        <span class="n">args</span><span class="p">[</span><span class="n">arg_pos</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">arg_pos</span> <span class="k">else</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg_name</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">for</span> <span class="n">arg_name</span><span class="p">,</span> <span class="n">arg_pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mutates_input</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="c1"># Should we warn or log if we don&#39;t convert b/c the input will be mutated?</span>
             <span class="k">for</span> <span class="n">backend_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automatic_backends</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_backend_run</span><span class="p">(</span><span class="n">backend_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_and_call</span><span class="p">(</span>
@@ -1373,6 +1428,40 @@ document.write(`
             <span class="n">pytest</span><span class="o">.</span><span class="n">xfail</span><span class="p">(</span>
                 <span class="n">exc</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">args</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> raised </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
+        <span class="c1"># Verify that `self._returns_graph` is correct. This compares the return type</span>
+        <span class="c1"># to the type expected from `self._returns_graph`. This handles tuple and list</span>
+        <span class="c1"># return types, but *does not* catch functions that yield graphs.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span>
+            <span class="o">!=</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;__networkx_backend__&quot;</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">list</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;__networkx_backend__&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="c1"># May return Graph or None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;check_planarity&quot;</span><span class="p">,</span> <span class="s2">&quot;check_planarity_recursive&quot;</span><span class="p">}</span>
+                <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="c1"># May return Graph or dict</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;held_karp_ascent&quot;</span><span class="p">}</span>
+                <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
+                <span class="c1"># yields graphs</span>
+                <span class="s2">&quot;all_triads&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;general_k_edge_subgraphs&quot;</span><span class="p">,</span>
+                <span class="c1"># yields graphs or arrays</span>
+                <span class="s2">&quot;nonisomorphic_trees&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`returns_graph` is incorrect for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">{</span>
             <span class="s2">&quot;edmonds_karp_core&quot;</span><span class="p">,</span>
