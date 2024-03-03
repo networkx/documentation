@@ -61,7 +61,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Mar 02, 2024"/>
+    <meta name="docbuild:last-update" content="Mar 03, 2024"/>
   </head>
   
   
@@ -512,8 +512,8 @@ document.write(`
   <h1>Source code for networkx.linalg.laplacianmatrix</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Laplacian matrix of graphs.</span>
 
-<span class="sd">All calculations here are done using the out-degree. For Laplacians </span>
-<span class="sd">using in-degree, us `G.reverse(copy=False)` instead of `G`.</span>
+<span class="sd">All calculations here are done using the out-degree. For Laplacians using</span>
+<span class="sd">in-degree, use `G.reverse(copy=False)` instead of `G` and take the transpose.</span>
 
 <span class="sd">The `laplacian_matrix` function provides an unnormalized matrix, </span>
 <span class="sd">while `normalized_laplacian_matrix`, `directed_laplacian_matrix`, </span>
@@ -567,7 +567,8 @@ document.write(`
 <span class="sd">    or `directed_combinatorial_laplacian_matrix`.</span>
 
 <span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
-<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` and</span>
+<span class="sd">    take the transpose.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -604,11 +605,26 @@ document.write(`
 <span class="sd">     [-1  2 -1  0]</span>
 <span class="sd">     [ 0  0  1 -1]</span>
 <span class="sd">     [ 0  0 -1  1]]</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.Graph(DiG)</span>
-<span class="sd">    &gt;&gt;&gt; print(nx.laplacian_matrix(G).toarray())</span>
+
+<span class="sd">    Notice that node 4 is represented by the third column and row. This is because</span>
+<span class="sd">    by default the row/column order is the order of `G.nodes` (i.e. the node added</span>
+<span class="sd">    order -- in the edgelist, 4 first appears in (2, 4), before node 3 in edge (4, 3).)</span>
+<span class="sd">    To control the node order of the matrix, use the `nodelist` argument.</span>
+
+<span class="sd">    &gt;&gt;&gt; print(nx.laplacian_matrix(DiG, nodelist=[1, 2, 3, 4]).toarray())</span>
 <span class="sd">    [[ 1 -1  0  0]</span>
-<span class="sd">     [-1  2 -1  0]</span>
-<span class="sd">     [ 0 -1  2 -1]</span>
+<span class="sd">     [-1  2  0 -1]</span>
+<span class="sd">     [ 0  0  1 -1]</span>
+<span class="sd">     [ 0  0 -1  1]]</span>
+
+<span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` and</span>
+<span class="sd">    take the transpose.</span>
+
+<span class="sd">    &gt;&gt;&gt; print(nx.laplacian_matrix(DiG.reverse(copy=False)).toarray().T)</span>
+<span class="sd">    [[ 1 -1  0  0]</span>
+<span class="sd">     [-1  1 -1  0]</span>
+<span class="sd">     [ 0  0  2 -1]</span>
 <span class="sd">     [ 0  0 -1  1]]</span>
 
 <span class="sd">    References</span>
@@ -671,7 +687,8 @@ document.write(`
 <span class="sd">    the adjacency matrix [2]_.</span>
 
 <span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
-<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` and</span>
+<span class="sd">    take the transpose.</span>
 
 <span class="sd">    For an unnormalized output, use `laplacian_matrix`.</span>
 
@@ -693,7 +710,18 @@ document.write(`
 <span class="sd">     [-0.7071  1.     -0.7071  0.    ]</span>
 <span class="sd">     [ 0.      0.      1.     -1.    ]</span>
 <span class="sd">     [ 0.      0.     -1.      1.    ]]</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.Graph(DiG)</span>
+
+<span class="sd">    Notice that node 4 is represented by the third column and row. This is because</span>
+<span class="sd">    by default the row/column order is the order of `G.nodes` (i.e. the node added</span>
+<span class="sd">    order -- in the edgelist, 4 first appears in (2, 4), before node 3 in edge (4, 3).)</span>
+<span class="sd">    To control the node order of the matrix, use the `nodelist` argument.</span>
+
+<span class="sd">    &gt;&gt;&gt; print(nx.normalized_laplacian_matrix(DiG, nodelist=[1, 2, 3, 4]).toarray())</span>
+<span class="sd">    [[ 1.     -0.7071  0.      0.    ]</span>
+<span class="sd">     [-0.7071  1.      0.     -0.7071]</span>
+<span class="sd">     [ 0.      0.      1.     -1.    ]</span>
+<span class="sd">     [ 0.      0.     -1.      1.    ]]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(edges)</span>
 <span class="sd">    &gt;&gt;&gt; print(nx.normalized_laplacian_matrix(G).toarray())</span>
 <span class="sd">    [[ 1.     -0.7071  0.      0.    ]</span>
 <span class="sd">     [-0.7071  1.     -0.5     0.    ]</span>
@@ -723,16 +751,16 @@ document.write(`
     <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_scipy_sparse_array</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">)</span>
-    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">diags</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="c1"># TODO: rm csr_array wrapper when spdiags can produce arrays</span>
-    <span class="n">D</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">))</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">))</span>
     <span class="n">L</span> <span class="o">=</span> <span class="n">D</span> <span class="o">-</span> <span class="n">A</span>
     <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
         <span class="n">diags_sqrt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span>
     <span class="n">diags_sqrt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="c1"># TODO: rm csr_array wrapper when spdiags can produce arrays</span>
-    <span class="n">DH</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">))</span>
+    <span class="n">DH</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">DH</span> <span class="o">@</span> <span class="p">(</span><span class="n">L</span> <span class="o">@</span> <span class="n">DH</span><span class="p">)</span></div>
 
 
@@ -740,36 +768,99 @@ document.write(`
 <div class="viewcode-block" id="total_spanning_tree_weight">
 <a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.total_spanning_tree_weight.html#networkx.linalg.laplacianmatrix.total_spanning_tree_weight">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">total_spanning_tree_weight</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">total_spanning_tree_weight</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the total weight of all spanning trees of `G`.</span>
 
-<span class="sd">    Kirchoff&#39;s Tree Matrix Theorem states that the determinant of any cofactor of the</span>
-<span class="sd">    Laplacian matrix of a graph is the number of spanning trees in the graph. For a</span>
-<span class="sd">    weighted Laplacian matrix, it is the sum across all spanning trees of the</span>
-<span class="sd">    multiplicative weight of each tree. That is, the weight of each tree is the</span>
-<span class="sd">    product of its edge weights.</span>
+<span class="sd">    Kirchoff&#39;s Tree Matrix Theorem [1]_, [2]_ states that the determinant of any</span>
+<span class="sd">    cofactor of the Laplacian matrix of a graph is the number of spanning trees</span>
+<span class="sd">    in the graph. For a weighted Laplacian matrix, it is the sum across all</span>
+<span class="sd">    spanning trees of the multiplicative weight of each tree. That is, the</span>
+<span class="sd">    weight of each tree is the product of its edge weights.</span>
+
+<span class="sd">    For unweighted graphs, the total weight equals the number of spanning trees in `G`.</span>
+
+<span class="sd">    For directed graphs, the total weight follows by summing over all directed</span>
+<span class="sd">    spanning trees in `G` that start in the `root` node [3]_.</span>
+
+<span class="sd">    .. deprecated:: 3.3</span>
+
+<span class="sd">       ``total_spanning_tree_weight`` is deprecated and will be removed in v3.5.</span>
+<span class="sd">       Use ``nx.number_of_spanning_trees(G)`` instead.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX Graph</span>
-<span class="sd">        The graph to use Kirchhoff&#39;s theorem on.</span>
 
-<span class="sd">    weight : string or None</span>
-<span class="sd">        The key for the edge attribute holding the edge weight. If `None`, then</span>
-<span class="sd">        each edge is assumed to have a weight of 1 and this function returns the</span>
-<span class="sd">        total number of spanning trees in `G`.</span>
+<span class="sd">    weight : string or None, optional (default=None)</span>
+<span class="sd">        The key for the edge attribute holding the edge weight.</span>
+<span class="sd">        If None, then each edge has weight 1.</span>
+
+<span class="sd">    root : node (only required for directed graphs)</span>
+<span class="sd">       A node in the directed graph `G`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    float</span>
-<span class="sd">        The sum of the total multiplicative weights for all spanning trees in `G`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="sd">    total_weight : float</span>
+<span class="sd">        Undirected graphs:</span>
+<span class="sd">            The sum of the total multiplicative weights for all spanning trees in `G`.</span>
+<span class="sd">        Directed graphs:</span>
+<span class="sd">            The sum of the total multiplicative weights for all spanning trees of `G`,</span>
+<span class="sd">            rooted at node `root`.</span>
 
-    <span class="n">G_laplacian</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">laplacian_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
-    <span class="c1"># Determinant ignoring first row and column</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">G_laplacian</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])))</span></div>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `G` does not contain any nodes.</span>
+
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the graph `G` is not (weakly) connected,</span>
+<span class="sd">        or if `G` is directed and the root node is not specified or not in G.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; round(nx.total_spanning_tree_weight(G))</span>
+<span class="sd">    125</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2, weight=2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1, 3, weight=1)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(2, 3, weight=1)</span>
+<span class="sd">    &gt;&gt;&gt; round(nx.total_spanning_tree_weight(G, &quot;weight&quot;))</span>
+<span class="sd">    5</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Self-loops are excluded. Multi-edges are contracted in one edge</span>
+<span class="sd">    equal to the sum of the weights.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Wikipedia</span>
+<span class="sd">       &quot;Kirchhoff&#39;s theorem.&quot;</span>
+<span class="sd">       https://en.wikipedia.org/wiki/Kirchhoff%27s_theorem</span>
+<span class="sd">    .. [2] Kirchhoff, G. R.</span>
+<span class="sd">        Über die Auflösung der Gleichungen, auf welche man</span>
+<span class="sd">        bei der Untersuchung der linearen Vertheilung</span>
+<span class="sd">        Galvanischer Ströme geführt wird</span>
+<span class="sd">        Annalen der Physik und Chemie, vol. 72, pp. 497-508, 1847.</span>
+<span class="sd">    .. [3] Margoliash, J.</span>
+<span class="sd">        &quot;Matrix-Tree Theorem for Directed Graphs&quot;</span>
+<span class="sd">        https://www.math.uchicago.edu/~may/VIGRE/VIGRE2010/REUPapers/Margoliash.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">total_spanning_tree_weight is deprecated and will be removed in v3.5.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Use `nx.number_of_spanning_trees(G)` instead.&quot;</span>
+        <span class="p">),</span>
+        <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">number_of_spanning_trees</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">)</span></div>
 
 
 
@@ -836,7 +927,8 @@ document.write(`
 <span class="sd">    The result is always a symmetric matrix.</span>
 
 <span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
-<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` and</span>
+<span class="sd">    take the transpose.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -937,7 +1029,8 @@ document.write(`
 <span class="sd">    The result is always a symmetric matrix.</span>
 
 <span class="sd">    This calculation uses the out-degree of the graph `G`. To use the</span>
-<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` instead.</span>
+<span class="sd">    in-degree for calculations instead, use `G.reverse(copy=False)` and</span>
+<span class="sd">    take the transpose.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
