@@ -590,6 +590,17 @@ document.write(`
 <span class="sd">If a backend only partially implements some algorithms, it can define</span>
 <span class="sd">a ``can_run(name, args, kwargs)`` function that returns True or False</span>
 <span class="sd">indicating whether it can run the algorithm with the given arguments.</span>
+<span class="sd">It may also return a string indicating why the algorithm can&#39;t be run;</span>
+<span class="sd">this string may be used in the future to give helpful info to the user.</span>
+
+<span class="sd">A backend may also define ``should_run(name, args, kwargs)`` that is similar</span>
+<span class="sd">to ``can_run``, but answers whether the backend *should* be run (converting</span>
+<span class="sd">if necessary). Like ``can_run``, it receives the original arguments so it</span>
+<span class="sd">can decide whether it should be run by inspecting the arguments. ``can_run``</span>
+<span class="sd">runs before ``should_run``, so ``should_run`` may assume ``can_run`` is True.</span>
+
+<span class="sd">If not implemented by the backend, ``can_run`` and ``should_run`` are</span>
+<span class="sd">assumed to always return True if the backend implements the algorithm.</span>
 
 <span class="sd">A special ``on_start_tests(items)`` function may be defined by the backend.</span>
 <span class="sd">It will be called with the list of NetworkX tests discovered. Each item</span>
@@ -647,10 +658,18 @@ document.write(`
 <span class="n">_loaded_backends</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore[var-annotated]</span>
 
 
+<span class="k">def</span> <span class="nf">_always_run</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
 <span class="k">def</span> <span class="nf">_load_backend</span><span class="p">(</span><span class="n">backend_name</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">backend_name</span> <span class="ow">in</span> <span class="n">_loaded_backends</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_loaded_backends</span><span class="p">[</span><span class="n">backend_name</span><span class="p">]</span>
     <span class="n">rv</span> <span class="o">=</span> <span class="n">_loaded_backends</span><span class="p">[</span><span class="n">backend_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">backends</span><span class="p">[</span><span class="n">backend_name</span><span class="p">]</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="s2">&quot;can_run&quot;</span><span class="p">):</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">can_run</span> <span class="o">=</span> <span class="n">_always_run</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="s2">&quot;should_run&quot;</span><span class="p">):</span>
+        <span class="n">rv</span><span class="o">.</span><span class="n">should_run</span> <span class="o">=</span> <span class="n">_always_run</span>
     <span class="k">return</span> <span class="n">rv</span>
 
 
@@ -1091,6 +1110,7 @@ document.write(`
         <span class="c1"># Only networkx graphs; try to convert and run with a backend with automatic</span>
         <span class="c1"># conversion, but don&#39;t do this by default for graph generators or loaders,</span>
         <span class="c1"># or if the functions mutates an input graph or returns a graph.</span>
+        <span class="c1"># Only convert and run if `backend.should_run(...)` returns True.</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span>
             <span class="ow">and</span> <span class="p">(</span>
@@ -1115,7 +1135,7 @@ document.write(`
         <span class="p">):</span>
             <span class="c1"># Should we warn or log if we don&#39;t convert b/c the input will be mutated?</span>
             <span class="k">for</span> <span class="n">backend_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_automatic_backends</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_backend_run</span><span class="p">(</span><span class="n">backend_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_backend_run</span><span class="p">(</span><span class="n">backend_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_and_call</span><span class="p">(</span>
                         <span class="n">backend_name</span><span class="p">,</span>
                         <span class="n">args</span><span class="p">,</span>
@@ -1126,10 +1146,27 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_can_backend_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend_name</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Can the specified backend run this algorithms with these arguments?&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Can the specified backend run this algorithm with these arguments?&quot;&quot;&quot;</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">_load_backend</span><span class="p">(</span><span class="n">backend_name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
-            <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;can_run&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">backend</span><span class="o">.</span><span class="n">can_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># `backend.can_run` and `backend.should_run` may return strings that describe</span>
+        <span class="c1"># why they can&#39;t or shouldn&#39;t be run. We plan to use the strings in the future.</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">can_run</span> <span class="o">:=</span> <span class="n">backend</span><span class="o">.</span><span class="n">can_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">can_run</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_should_backend_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend_name</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Can/should the specified backend run this algorithm with these arguments?&quot;&quot;&quot;</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">_load_backend</span><span class="p">(</span><span class="n">backend_name</span><span class="p">)</span>
+        <span class="c1"># `backend.can_run` and `backend.should_run` may return strings that describe</span>
+        <span class="c1"># why they can&#39;t or shouldn&#39;t be run. We plan to use the strings in the future.</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">can_run</span> <span class="o">:=</span> <span class="n">backend</span><span class="o">.</span><span class="n">can_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">can_run</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">should_run</span> <span class="o">:=</span> <span class="n">backend</span><span class="o">.</span><span class="n">should_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">should_run</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_convert_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>

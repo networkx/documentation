@@ -811,7 +811,16 @@ will cause a <code class="docutils literal notranslate"><span class="pre">pytest
 tests are working, while avoiding causing an explicit failure.</p>
 <p>If a backend only partially implements some algorithms, it can define
 a <code class="docutils literal notranslate"><span class="pre">can_run(name,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code> function that returns True or False
-indicating whether it can run the algorithm with the given arguments.</p>
+indicating whether it can run the algorithm with the given arguments.
+It may also return a string indicating why the algorithm can’t be run;
+this string may be used in the future to give helpful info to the user.</p>
+<p>A backend may also define <code class="docutils literal notranslate"><span class="pre">should_run(name,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code> that is similar
+to <code class="docutils literal notranslate"><span class="pre">can_run</span></code>, but answers whether the backend <em>should</em> be run (converting
+if necessary). Like <code class="docutils literal notranslate"><span class="pre">can_run</span></code>, it receives the original arguments so it
+can decide whether it should be run by inspecting the arguments. <code class="docutils literal notranslate"><span class="pre">can_run</span></code>
+runs before <code class="docutils literal notranslate"><span class="pre">should_run</span></code>, so <code class="docutils literal notranslate"><span class="pre">should_run</span></code> may assume <code class="docutils literal notranslate"><span class="pre">can_run</span></code> is True.</p>
+<p>If not implemented by the backend, <code class="docutils literal notranslate"><span class="pre">can_run</span></code> and <code class="docutils literal notranslate"><span class="pre">should_run</span></code> are
+assumed to always return True if the backend implements the algorithm.</p>
 <p>A special <code class="docutils literal notranslate"><span class="pre">on_start_tests(items)</span></code> function may be defined by the backend.
 It will be called with the list of NetworkX tests discovered. Each item
 is a test object that can be marked as xfail if the backend does not support
