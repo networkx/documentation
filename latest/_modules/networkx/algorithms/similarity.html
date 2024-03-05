@@ -61,7 +61,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Mar 04, 2024"/>
+    <meta name="docbuild:last-update" content="Mar 05, 2024"/>
   </head>
   
   
@@ -532,6 +532,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">np_random_state</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;graph_edit_distance&quot;</span><span class="p">,</span>
@@ -2194,9 +2195,10 @@ document.write(`
 
 <div class="viewcode-block" id="generate_random_paths">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.similarity.generate_random_paths.html#networkx.algorithms.similarity.generate_random_paths">[docs]</a>
+<span class="nd">@np_random_state</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">generate_random_paths</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">,</span> <span class="n">path_length</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">index_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">,</span> <span class="n">path_length</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">index_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Randomly generate `sample_size` paths of length `path_length`.</span>
 
@@ -2217,6 +2219,9 @@ document.write(`
 <span class="sd">    weight : string or None, optional (default=&quot;weight&quot;)</span>
 <span class="sd">        The name of an edge attribute that holds the numerical value</span>
 <span class="sd">        used as a weight. If None then each edge has weight 1.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -2250,6 +2255,10 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+    <span class="n">randint_fn</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">seed</span><span class="o">.</span><span class="n">integers</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="k">else</span> <span class="n">seed</span><span class="o">.</span><span class="n">randint</span>
+    <span class="p">)</span>
+
     <span class="c1"># Calculate transition probabilities between</span>
     <span class="c1"># every pair of vertices according to Eq. (3)</span>
     <span class="n">adj_mat</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy_array</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span>
@@ -2261,7 +2270,7 @@ document.write(`
 
     <span class="k">for</span> <span class="n">path_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sample_size</span><span class="p">):</span>
         <span class="c1"># Sample current vertex v = v_i uniformly at random</span>
-        <span class="n">node_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">num_nodes</span><span class="p">)</span>
+        <span class="n">node_index</span> <span class="o">=</span> <span class="n">randint_fn</span><span class="p">(</span><span class="n">num_nodes</span><span class="p">)</span>
         <span class="n">node</span> <span class="o">=</span> <span class="n">node_map</span><span class="p">[</span><span class="n">node_index</span><span class="p">]</span>
 
         <span class="c1"># Add v into p_r and add p_r into the path set</span>
@@ -2279,7 +2288,7 @@ document.write(`
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">path_length</span><span class="p">):</span>
             <span class="c1"># Randomly sample a neighbor (v_j) according</span>
             <span class="c1"># to transition probabilities from ``node`` (v) to its neighbors</span>
-            <span class="n">nbr_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+            <span class="n">nbr_index</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
                 <span class="n">num_nodes</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">transition_probabilities</span><span class="p">[</span><span class="n">starting_index</span><span class="p">]</span>
             <span class="p">)</span>
 
