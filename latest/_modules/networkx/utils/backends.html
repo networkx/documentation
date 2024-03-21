@@ -61,7 +61,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Mar 20, 2024"/>
+    <meta name="docbuild:last-update" content="Mar 21, 2024"/>
   </head>
   
   
@@ -511,102 +511,163 @@ document.write(`
                   
   <h1>Source code for networkx.utils.backends</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Code to support various backends in a plugin dispatch architecture.</span>
+<span class="sd">NetworkX utilizes a plugin-dispatch architecture, which means we can plug in and</span>
+<span class="sd">out of backends with minimal code changes. A valid NetworkX backend specifies</span>
+<span class="sd">`entry points &lt;https://packaging.python.org/en/latest/specifications/entry-points&gt;`_,</span>
+<span class="sd">named ``networkx.backends`` and an optional ``networkx.backend_info`` when it is</span>
+<span class="sd">installed (not imported). This allows NetworkX to dispatch (redirect) function calls</span>
+<span class="sd">to the backend so the execution flows to the designated backend</span>
+<span class="sd">implementation, similar to how plugging a charger into a socket redirects the</span>
+<span class="sd">electricity to your phone. This design enhances flexibility and integration, making</span>
+<span class="sd">NetworkX more adaptable and efficient. </span>
 
-<span class="sd">Create a Dispatcher</span>
-<span class="sd">-------------------</span>
+<span class="sd">For example, you can convert the NetworkX Graph object ``G`` into a Graph-like</span>
+<span class="sd">object specific to the backend and then pass that in the NetworkX function::</span>
 
-<span class="sd">To be a valid backend, a package must register an entry_point</span>
-<span class="sd">of `networkx.backends` with a key pointing to the handler.</span>
+<span class="sd">    H = nxp.ParallelGraph(G)</span>
+<span class="sd">    nx.betweenness_centrality(H, k=10)</span>
 
-<span class="sd">For example::</span>
+<span class="sd">or you can specify the backend as a kwarg::</span>
 
-<span class="sd">    entry_points={&#39;networkx.backends&#39;: &#39;sparse = networkx_backend_sparse&#39;}</span>
+<span class="sd">    nx.betweenness_centrality(G, k=10, backend=&quot;parallel&quot;)</span>
 
-<span class="sd">The backend must create a Graph-like object which contains an attribute</span>
-<span class="sd">``__networkx_backend__`` with a value of the entry point name.</span>
+<span class="sd">Also, you might have seen the ``@nx._dispatchable`` decorator on many of the NetworkX</span>
+<span class="sd">functions in the codebase. It is used to redirect the execution of a function to its</span>
+<span class="sd">backend implementation and manage all the ``backend_kwargs``. When a dispatchable</span>
+<span class="sd">NetworkX algorithm encounters a nx.Graph-like object with a ``__networkx_backend__``</span>
+<span class="sd">attribute, it will look for the associated dispatch object in the entry_points, load</span>
+<span class="sd">it, and dispatch the computation work to it. Currently, the following are the trusted</span>
+<span class="sd">backends of NetworkX:</span>
 
-<span class="sd">Continuing the example above::</span>
+<span class="sd">- `graphblas &lt;https://github.com/python-graphblas/graphblas-algorithms&gt;`_</span>
+<span class="sd">- `cugraph &lt;https://github.com/rapidsai/cugraph/tree/branch-24.04/python/nx-cugraph&gt;`_</span>
+<span class="sd">- `parallel &lt;https://github.com/networkx/nx-parallel&gt;`_</span>
+<span class="sd">- ``loopback`` is for testing purposes only and is not a real backend.</span>
 
-<span class="sd">    class WrappedSparse:</span>
-<span class="sd">        __networkx_backend__ = &quot;sparse&quot;</span>
-<span class="sd">        ...</span>
+<span class="sd">Note that the ``backend_name`` is ``parallel`` and the package name is ``nx-parallel``, and</span>
+<span class="sd">we use ``nx_parallel`` while installing and importing the package.</span>
 
-<span class="sd">When a dispatchable NetworkX algorithm encounters a Graph-like object</span>
-<span class="sd">with a ``__networkx_backend__`` attribute, it will look for the associated</span>
-<span class="sd">dispatch object in the entry_points, load it, and dispatch the work to it.</span>
+<span class="sd">Creating a Custom backend</span>
+<span class="sd">-------------------------</span>
+
+<span class="sd">1.  To be a valid backend that is discoverable by NetworkX, your package must</span>
+<span class="sd">    register an `entry-point &lt;https://packaging.python.org/en/latest/specifications/entry-points/#entry-points&gt;`_</span>
+<span class="sd">    ``networkx.backends`` in the package&#39;s metadata, with a `key pointing to your</span>
+<span class="sd">    dispatch object &lt;https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata&gt;`_ .</span>
+<span class="sd">    For example, if you are using ``setuptools`` to manage your backend package,</span>
+<span class="sd">    you can `add the following to your pyproject.toml file &lt;https://setuptools.pypa.io/en/latest/userguide/entry_point.html&gt;`_::</span>
+
+<span class="sd">        [project.entry-points.&quot;networkx.backends&quot;]</span>
+<span class="sd">        backend_name = &quot;your_dispatcher_class&quot;</span>
+
+<span class="sd">    You can also add the ``backend_info`` entry-point. It points towards the ``get_info``</span>
+<span class="sd">    function that returns all the backend information, which is then used to build the</span>
+<span class="sd">    &quot;Additional Backend Implementation&quot; box at the end of algorithm&#39;s documentation</span>
+<span class="sd">    page (e.g. `nx-cugraph&#39;s get_info function &lt;https://github.com/rapidsai/cugraph/blob/branch-24.04/python/nx-cugraph/_nx_cugraph/__init__.py&gt;`_)::</span>
+
+<span class="sd">        [project.entry-points.&quot;networkx.backend_info&quot;]</span>
+<span class="sd">        backend_name = &quot;your_get_info_function&quot;</span>
+
+<span class="sd">    Note that this would only work if your backend is a trusted backend of NetworkX,</span>
+<span class="sd">    and is present in the `.circleci/config.yml` and</span>
+<span class="sd">    `.github/workflows/deploy-docs.yml` files in the NetworkX repository.</span>
+
+<span class="sd">2.  The backend must create an ``nx.Graph``-like object which contains an attribute</span>
+<span class="sd">    ``__networkx_backend__`` with a value of the entry point name::</span>
+
+<span class="sd">        class BackendGraph:</span>
+<span class="sd">            __networkx_backend__ = &quot;backend_name&quot;</span>
+<span class="sd">            ...</span>
 
 
-<span class="sd">Testing</span>
-<span class="sd">-------</span>
-<span class="sd">To assist in validating the backend algorithm implementations, if an</span>
-<span class="sd">environment variable ``NETWORKX_TEST_BACKEND`` is set to a registered</span>
-<span class="sd">backend key, the dispatch machinery will automatically convert regular</span>
-<span class="sd">networkx Graphs and DiGraphs to the backend equivalent by calling</span>
-<span class="sd">``&lt;backend dispatcher&gt;.convert_from_nx(G, edge_attrs=edge_attrs, name=name)``.</span>
-<span class="sd">Set ``NETWORKX_FALLBACK_TO_NX`` environment variable to have tests</span>
-<span class="sd">use networkx graphs for algorithms not implemented by the backend.</span>
+<span class="sd">Testing the Custom backend</span>
+<span class="sd">--------------------------</span>
 
-<span class="sd">The arguments to ``convert_from_nx`` are:</span>
+<span class="sd">To test your custom backend, you can run the NetworkX test suite with your backend.</span>
+<span class="sd">This also ensures that the custom backend is compatible with NetworkX&#39;s API.</span>
 
-<span class="sd">- ``G`` : networkx Graph</span>
-<span class="sd">- ``edge_attrs`` : dict, optional</span>
-<span class="sd">    Dict that maps edge attributes to default values if missing in ``G``.</span>
-<span class="sd">    If None, then no edge attributes will be converted and default may be 1.</span>
-<span class="sd">- ``node_attrs``: dict, optional</span>
-<span class="sd">    Dict that maps node attribute to default values if missing in ``G``.</span>
-<span class="sd">    If None, then no node attributes will be converted.</span>
-<span class="sd">- ``preserve_edge_attrs`` : bool</span>
-<span class="sd">    Whether to preserve all edge attributes.</span>
-<span class="sd">- ``preserve_node_attrs`` : bool</span>
-<span class="sd">    Whether to preserve all node attributes.</span>
-<span class="sd">- ``preserve_graph_attrs`` : bool</span>
-<span class="sd">    Whether to preserve all graph attributes.</span>
-<span class="sd">- ``preserve_all_attrs`` : bool</span>
-<span class="sd">    Whether to preserve all graph, node, and edge attributes.</span>
-<span class="sd">- ``name`` : str</span>
-<span class="sd">    The name of the algorithm.</span>
-<span class="sd">- ``graph_name`` : str</span>
-<span class="sd">    The name of the graph argument being converted.</span>
+<span class="sd">Environment Variable Setup</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
 
-<span class="sd">The converted object is then passed to the backend implementation of</span>
-<span class="sd">the algorithm. The result is then passed to</span>
-<span class="sd">``&lt;backend dispatcher&gt;.convert_to_nx(result, name=name)`` to convert back</span>
-<span class="sd">to a form expected by the NetworkX tests.</span>
+<span class="sd">To enable automatic testing with your custom backend, follow these steps:</span>
 
-<span class="sd">By defining ``convert_from_nx`` and ``convert_to_nx`` methods and setting</span>
-<span class="sd">the environment variable, NetworkX will automatically route tests on</span>
-<span class="sd">dispatchable algorithms to the backend, allowing the full networkx test</span>
-<span class="sd">suite to be run against the backend implementation.</span>
+<span class="sd">1. Set Backend Environment Variables: </span>
+<span class="sd">    - ``NETWORKX_TEST_BACKEND`` : Setting this to your registered backend key will let</span>
+<span class="sd">      the NetworkX&#39;s dispatch machinery automatically convert a regular NetworkX</span>
+<span class="sd">      ``Graph``, ``DiGraph``, ``MultiGraph``, etc. to their backend equivalents, using</span>
+<span class="sd">      ``your_dispatcher_class.convert_from_nx(G, ...)`` function.</span>
+<span class="sd">    - ``NETWORKX_FALLBACK_TO_NX`` (default=False) : Setting this variable to `True` will</span>
+<span class="sd">      instruct tests to use a NetworkX ``Graph`` for algorithms not implemented by your</span>
+<span class="sd">      custom backend. Setting this to `False` will only run the tests for algorithms</span>
+<span class="sd">      implemented by your custom backend and tests for other algorithms will ``xfail``.</span>
 
-<span class="sd">Example pytest invocation::</span>
+<span class="sd">2. Defining ``convert_from_nx`` and ``convert_to_nx`` methods:</span>
+<span class="sd">    The arguments to ``convert_from_nx`` are:</span>
 
-<span class="sd">    NETWORKX_TEST_BACKEND=sparse pytest --pyargs networkx</span>
+<span class="sd">    - ``G`` : NetworkX Graph</span>
+<span class="sd">    - ``edge_attrs`` : dict, optional</span>
+<span class="sd">        Dictionary mapping edge attributes to default values if missing in ``G``.</span>
+<span class="sd">        If None, then no edge attributes will be converted and default may be 1.</span>
+<span class="sd">    - ``node_attrs``: dict, optional</span>
+<span class="sd">        Dictionary mapping node attributes to default values if missing in ``G``.</span>
+<span class="sd">        If None, then no node attributes will be converted.</span>
+<span class="sd">    - ``preserve_edge_attrs`` : bool</span>
+<span class="sd">        Whether to preserve all edge attributes.</span>
+<span class="sd">    - ``preserve_node_attrs`` : bool</span>
+<span class="sd">        Whether to preserve all node attributes.</span>
+<span class="sd">    - ``preserve_graph_attrs`` : bool</span>
+<span class="sd">        Whether to preserve all graph attributes.</span>
+<span class="sd">    - ``preserve_all_attrs`` : bool</span>
+<span class="sd">        Whether to preserve all graph, node, and edge attributes.</span>
+<span class="sd">    - ``name`` : str</span>
+<span class="sd">        The name of the algorithm.</span>
+<span class="sd">    - ``graph_name`` : str</span>
+<span class="sd">        The name of the graph argument being converted.</span>
 
-<span class="sd">Dispatchable algorithms which are not implemented by the backend</span>
-<span class="sd">will cause a ``pytest.xfail()``, giving some indication that not all</span>
-<span class="sd">tests are working, while avoiding causing an explicit failure.</span>
+<span class="sd">Running Tests</span>
+<span class="sd">~~~~~~~~~~~~~</span>
 
-<span class="sd">If a backend only partially implements some algorithms, it can define</span>
-<span class="sd">a ``can_run(name, args, kwargs)`` function that returns True or False</span>
-<span class="sd">indicating whether it can run the algorithm with the given arguments.</span>
-<span class="sd">It may also return a string indicating why the algorithm can&#39;t be run;</span>
-<span class="sd">this string may be used in the future to give helpful info to the user.</span>
+<span class="sd">You can invoke NetworkX tests for your custom backend with the following commands::</span>
 
-<span class="sd">A backend may also define ``should_run(name, args, kwargs)`` that is similar</span>
-<span class="sd">to ``can_run``, but answers whether the backend *should* be run (converting</span>
-<span class="sd">if necessary). Like ``can_run``, it receives the original arguments so it</span>
-<span class="sd">can decide whether it should be run by inspecting the arguments. ``can_run``</span>
-<span class="sd">runs before ``should_run``, so ``should_run`` may assume ``can_run`` is True.</span>
+<span class="sd">    NETWORKX_TEST_BACKEND=&lt;backend_name&gt;</span>
+<span class="sd">    NETWORKX_FALLBACK_TO_NX=True # or False</span>
+<span class="sd">    pytest --pyargs networkx</span>
 
-<span class="sd">If not implemented by the backend, ``can_run`` and ``should_run`` are</span>
-<span class="sd">assumed to always return True if the backend implements the algorithm.</span>
+<span class="sd">Conversions while running tests :</span>
 
-<span class="sd">A special ``on_start_tests(items)`` function may be defined by the backend.</span>
-<span class="sd">It will be called with the list of NetworkX tests discovered. Each item</span>
-<span class="sd">is a test object that can be marked as xfail if the backend does not support</span>
-<span class="sd">the test using `item.add_marker(pytest.mark.xfail(reason=...))`.</span>
+<span class="sd">- Convert NetworkX graphs using ``&lt;your_dispatcher_class&gt;.convert_from_nx(G, ...)`` into</span>
+<span class="sd">  the backend graph.</span>
+<span class="sd">- Pass the backend graph objects to the backend implementation of the algorithm.</span>
+<span class="sd">- Convert the result back to a form expected by NetworkX tests using </span>
+<span class="sd">  ``&lt;your_dispatcher_class&gt;.convert_to_nx(result, ...)``.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">-   Dispatchable algorithms that are not implemented by the backend</span>
+<span class="sd">    will cause a ``pytest.xfail``, giving some indication that not all</span>
+<span class="sd">    tests are running, while avoiding causing an explicit failure.</span>
+
+<span class="sd">-   If a backend only partially implements some algorithms, it can define</span>
+<span class="sd">    a ``can_run(name, args, kwargs)`` function that returns True or False</span>
+<span class="sd">    indicating whether it can run the algorithm with the given arguments.</span>
+<span class="sd">    It may also return a string indicating why the algorithm can&#39;t be run;</span>
+<span class="sd">    this string may be used in the future to give helpful info to the user.</span>
+
+<span class="sd">-   A backend may also define ``should_run(name, args, kwargs)`` that is similar</span>
+<span class="sd">    to ``can_run``, but answers whether the backend *should* be run (converting</span>
+<span class="sd">    if necessary). Like ``can_run``, it receives the original arguments so it</span>
+<span class="sd">    can decide whether it should be run by inspecting the arguments. ``can_run``</span>
+<span class="sd">    runs before ``should_run``, so ``should_run`` may assume ``can_run`` is True.</span>
+<span class="sd">    If not implemented by the backend, ``can_run`` and ``should_run`` are</span>
+<span class="sd">    assumed to always return True if the backend implements the algorithm.</span>
+
+<span class="sd">-   A special ``on_start_tests(items)`` function may be defined by the backend.</span>
+<span class="sd">    It will be called with the list of NetworkX tests discovered. Each item</span>
+<span class="sd">    is a test object that can be marked as xfail if the backend does not support</span>
+<span class="sd">    the test using ``item.add_marker(pytest.mark.xfail(reason=...))``.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -615,7 +676,6 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
-<span class="kn">from</span> <span class="nn">..exception</span> <span class="kn">import</span> <span class="n">NetworkXNotImplemented</span>
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">argmap</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;_dispatchable&quot;</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">]</span>
@@ -626,6 +686,27 @@ document.write(`
 
 
 <span class="k">def</span> <span class="nf">_get_backends</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">load_and_call</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve NetworkX ``backends`` and ``backend_info`` from the entry points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    group : str</span>
+<span class="sd">        The entry_point to be retrieved.</span>
+<span class="sd">    load_and_call : bool, optional</span>
+<span class="sd">        If True, load and call the backend. Defaults to False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary mapping backend names to their respective backend objects.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ------</span>
+<span class="sd">    If a backend is defined more than once, a warning is issued.</span>
+<span class="sd">    The `nx-loopback` backend is removed if it exists, as it is only available during testing.</span>
+<span class="sd">    A warning is displayed if an error occurs while loading a backend.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">)</span>
     <span class="n">rv</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
@@ -646,7 +727,6 @@ document.write(`
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">rv</span><span class="p">[</span><span class="n">ep</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ep</span>
-    <span class="c1"># nx-loopback backend is only available when testing (added in conftest.py)</span>
     <span class="n">rv</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;nx-loopback&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">rv</span>
 
@@ -702,17 +782,19 @@ document.write(`
 
 
 <span class="k">class</span> <span class="nc">_dispatchable</span><span class="p">:</span>
-    <span class="c1"># Allow any of the following decorator forms:</span>
-    <span class="c1">#  - @_dispatchable</span>
-    <span class="c1">#  - @_dispatchable()</span>
-    <span class="c1">#  - @_dispatchable(name=&quot;override_name&quot;)</span>
-    <span class="c1">#  - @_dispatchable(graphs=&quot;graph&quot;)</span>
-    <span class="c1">#  - @_dispatchable(edge_attrs=&quot;weight&quot;)</span>
-    <span class="c1">#  - @_dispatchable(graphs={&quot;G&quot;: 0, &quot;H&quot;: 1}, edge_attrs={&quot;weight&quot;: &quot;default&quot;})</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Allow any of the following decorator forms:</span>
+<span class="sd">    - @_dispatchable</span>
+<span class="sd">    - @_dispatchable()</span>
+<span class="sd">    - @_dispatchable(name=&quot;override_name&quot;)</span>
+<span class="sd">    - @_dispatchable(graphs=&quot;graph&quot;)</span>
+<span class="sd">    - @_dispatchable(edge_attrs=&quot;weight&quot;)</span>
+<span class="sd">    - @_dispatchable(graphs={&quot;G&quot;: 0, &quot;H&quot;: 1}, edge_attrs={&quot;weight&quot;: &quot;default&quot;})</span>
 
-    <span class="c1"># These class attributes are currently used to allow backends to run networkx tests.</span>
-    <span class="c1"># For example: `PYTHONPATH=. pytest --backend graphblas --fallback-to-nx`</span>
-    <span class="c1"># Future work: add configuration to control these</span>
+<span class="sd">    These class attributes are currently used to allow backends to run networkx tests.</span>
+<span class="sd">    For example: `PYTHONPATH=. pytest --backend graphblas --fallback-to-nx`</span>
+<span class="sd">    Future work: add configuration to control these.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">_is_testing</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_fallback_to_nx</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NETWORKX_FALLBACK_TO_NX&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
@@ -733,16 +815,24 @@ document.write(`
         <span class="n">mutates_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">returns_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dispatches to a backend algorithm based on input graph types.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A decorator function that dispatches to ``func``&#39;s backend implementation</span>
+<span class="sd">        based on the input graph types.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        func : function</span>
+<span class="sd">        func : callable, optional</span>
+<span class="sd">            The function to be decorated. If ``func`` is not provided, returns a</span>
+<span class="sd">            partial object that can be used to decorate a function later. If ``func``</span>
+<span class="sd">            is provided, returns a new callable object that dispatches to a backend</span>
+<span class="sd">            algorithm based on input graph types.</span>
 
 <span class="sd">        name : str, optional</span>
 <span class="sd">            The name of the algorithm to use for dispatching. If not provided,</span>
 <span class="sd">            the name of ``func`` will be used. ``name`` is useful to avoid name</span>
 <span class="sd">            conflicts, as all dispatched algorithms live in a single namespace.</span>
+<span class="sd">            For example, ``tournament.is_strongly_connected`` had a name conflict</span>
+<span class="sd">            with the standard ``nx.is_strongly_connected``, so we used</span>
+<span class="sd">            ``@_dispatchable(name=&quot;tournament_is_strongly_connected&quot;)``.</span>
 
 <span class="sd">        graphs : str or dict or None, default &quot;G&quot;</span>
 <span class="sd">            If a string, the parameter name of the graph, which must be the first</span>
@@ -942,6 +1032,10 @@ document.write(`
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">__doc__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If the cached documentation exists, it is returned.</span>
+<span class="sd">        Otherwise, the documentation is generated using _make_doc() method,</span>
+<span class="sd">        cached, and then returned.&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="p">(</span><span class="n">rv</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_doc</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">rv</span>
         <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_doc</span><span class="p">()</span>
@@ -949,11 +1043,17 @@ document.write(`
 
     <span class="nd">@__doc__</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">__doc__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the original documentation to the given value and resets the</span>
+<span class="sd">        cached documentation.&quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_orig_doc</span> <span class="o">=</span> <span class="n">val</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cached_doc</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">__signature__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the signature of the original function, with the addition of</span>
+<span class="sd">        the `backend` and `backend_kwargs` parameters.&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_func</span><span class="p">)</span>
             <span class="c1"># `backend` is now a reserved argument used by dispatching.</span>
@@ -987,6 +1087,9 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the result of the original function, or the backend function if</span>
+<span class="sd">        the backend is specified and that backend implements `func`.&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">backends</span><span class="p">:</span>
             <span class="c1"># Fast path if no backends are installed</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1118,7 +1221,7 @@ document.write(`
                 <span class="c1"># All graphs are backend graphs--no need to convert!</span>
                 <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="c1"># Future work: try to convert and run with other backends in backend_priority</span>
-            <span class="k">raise</span> <span class="n">NetworkXNotImplemented</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNotImplemented</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; not implemented by </span><span class="si">{</span><span class="n">graph_backend_name</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
@@ -1411,7 +1514,7 @@ document.write(`
                 <span class="n">backend_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span>
             <span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="o">*</span><span class="n">converted_args</span><span class="p">,</span> <span class="o">**</span><span class="n">converted_kwargs</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">NetworkXNotImplemented</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNotImplemented</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">fallback_to_nx</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">raise</span>
@@ -1486,7 +1589,7 @@ document.write(`
                 <span class="n">backend_name</span><span class="p">,</span> <span class="n">args1</span><span class="p">,</span> <span class="n">kwargs1</span>
             <span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="o">*</span><span class="n">converted_args</span><span class="p">,</span> <span class="o">**</span><span class="n">converted_kwargs</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">NetworkXNotImplemented</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNotImplemented</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">fallback_to_nx</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_func</span><span class="p">(</span><span class="o">*</span><span class="n">args2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs2</span><span class="p">)</span>
             <span class="kn">import</span> <span class="nn">pytest</span>
@@ -1667,6 +1770,9 @@ document.write(`
         <span class="k">return</span> <span class="n">converted_result</span>
 
     <span class="k">def</span> <span class="nf">_make_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate the backends section at the end for functions having an alternate</span>
+<span class="sd">        backend implementation(s) using the `backend_info` entry-point.&quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">backends</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_doc</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>

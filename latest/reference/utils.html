@@ -64,7 +64,7 @@
     <link rel="prev" title="Exceptions" href="exceptions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Mar 20, 2024"/>
+    <meta name="docbuild:last-update" content="Mar 21, 2024"/>
   </head>
   
   
@@ -713,52 +713,113 @@ random selections.</p>
 <h2>Backends<a class="headerlink" href="#backends" title="Link to this heading">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This is an experimental feature to dispatch your computations to an alternate
-backend like <a class="reference external" href="https://github.com/python-graphblas/graphblas-algorithms">GraphBLAS</a>
-instead of using pure Python dictionaries for computation.
-Things will change and break in the future!</p>
+<p>NetworkX backends are experimental. They let you execute an alternate
+backend implementation instead of NetworkX’s pure Python dictionaries
+implementation. Things will change and break in the future!</p>
 </div>
-<p id="module-networkx.utils.backends">Code to support various backends in a plugin dispatch architecture.</p>
-<section id="create-a-dispatcher">
-<h3>Create a Dispatcher<a class="headerlink" href="#create-a-dispatcher" title="Link to this heading">#</a></h3>
-<p>To be a valid backend, a package must register an entry_point
-of <code class="xref py py-obj docutils literal notranslate"><span class="pre">networkx.backends</span></code> with a key pointing to the handler.</p>
-<p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entry_points</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;networkx.backends&#39;</span><span class="p">:</span> <span class="s1">&#39;sparse = networkx_backend_sparse&#39;</span><span class="p">}</span>
+<p id="module-networkx.utils.backends">NetworkX utilizes a plugin-dispatch architecture, which means we can plug in and
+out of backends with minimal code changes. A valid NetworkX backend specifies
+<a class="reference external" href="https://packaging.python.org/en/latest/specifications/entry-points">entry points</a>,
+named <code class="docutils literal notranslate"><span class="pre">networkx.backends</span></code> and an optional <code class="docutils literal notranslate"><span class="pre">networkx.backend_info</span></code> when it is
+installed (not imported). This allows NetworkX to dispatch (redirect) function calls
+to the backend so the execution flows to the designated backend
+implementation, similar to how plugging a charger into a socket redirects the
+electricity to your phone. This design enhances flexibility and integration, making
+NetworkX more adaptable and efficient.</p>
+<p>For example, you can convert the NetworkX Graph object <code class="docutils literal notranslate"><span class="pre">G</span></code> into a Graph-like
+object specific to the backend and then pass that in the NetworkX function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">H</span> <span class="o">=</span> <span class="n">nxp</span><span class="o">.</span><span class="n">ParallelGraph</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="n">nx</span><span class="o">.</span><span class="n">betweenness_centrality</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The backend must create a Graph-like object which contains an attribute
-<code class="docutils literal notranslate"><span class="pre">__networkx_backend__</span></code> with a value of the entry point name.</p>
-<p>Continuing the example above:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">WrappedSparse</span><span class="p">:</span>
-    <span class="n">__networkx_backend__</span> <span class="o">=</span> <span class="s2">&quot;sparse&quot;</span>
+<p>or you can specify the backend as a kwarg:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nx</span><span class="o">.</span><span class="n">betweenness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;parallel&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Also, you might have seen the <code class="docutils literal notranslate"><span class="pre">&#64;nx._dispatchable</span></code> decorator on many of the NetworkX
+functions in the codebase. It is used to redirect the execution of a function to its
+backend implementation and manage all the <code class="docutils literal notranslate"><span class="pre">backend_kwargs</span></code>. When a dispatchable
+NetworkX algorithm encounters a nx.Graph-like object with a <code class="docutils literal notranslate"><span class="pre">__networkx_backend__</span></code>
+attribute, it will look for the associated dispatch object in the entry_points, load
+it, and dispatch the computation work to it. Currently, the following are the trusted
+backends of NetworkX:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/python-graphblas/graphblas-algorithms">graphblas</a></p></li>
+<li><p><a class="reference external" href="https://github.com/rapidsai/cugraph/tree/branch-24.04/python/nx-cugraph">cugraph</a></p></li>
+<li><p><a class="reference external" href="https://github.com/networkx/nx-parallel">parallel</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loopback</span></code> is for testing purposes only and is not a real backend.</p></li>
+</ul>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">backend_name</span></code> is <code class="docutils literal notranslate"><span class="pre">parallel</span></code> and the package name is <code class="docutils literal notranslate"><span class="pre">nx-parallel</span></code>, and
+we use <code class="docutils literal notranslate"><span class="pre">nx_parallel</span></code> while installing and importing the package.</p>
+<section id="creating-a-custom-backend">
+<h3>Creating a Custom backend<a class="headerlink" href="#creating-a-custom-backend" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p>To be a valid backend that is discoverable by NetworkX, your package must
+register an <a class="reference external" href="https://packaging.python.org/en/latest/specifications/entry-points/#entry-points">entry-point</a>
+<code class="docutils literal notranslate"><span class="pre">networkx.backends</span></code> in the package’s metadata, with a <a class="reference external" href="https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-package-metadata">key pointing to your
+dispatch object</a> .
+For example, if you are using <code class="docutils literal notranslate"><span class="pre">setuptools</span></code> to manage your backend package,
+you can <a class="reference external" href="https://setuptools.pypa.io/en/latest/userguide/entry_point.html">add the following to your pyproject.toml file</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">project</span><span class="o">.</span><span class="n">entry</span><span class="o">-</span><span class="n">points</span><span class="o">.</span><span class="s2">&quot;networkx.backends&quot;</span><span class="p">]</span>
+<span class="n">backend_name</span> <span class="o">=</span> <span class="s2">&quot;your_dispatcher_class&quot;</span>
+</pre></div>
+</div>
+<p>You can also add the <code class="docutils literal notranslate"><span class="pre">backend_info</span></code> entry-point. It points towards the <code class="docutils literal notranslate"><span class="pre">get_info</span></code>
+function that returns all the backend information, which is then used to build the
+“Additional Backend Implementation” box at the end of algorithm’s documentation
+page (e.g. <a class="reference external" href="https://github.com/rapidsai/cugraph/blob/branch-24.04/python/nx-cugraph/_nx_cugraph/__init__.py">nx-cugraph’s get_info function</a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">project</span><span class="o">.</span><span class="n">entry</span><span class="o">-</span><span class="n">points</span><span class="o">.</span><span class="s2">&quot;networkx.backend_info&quot;</span><span class="p">]</span>
+<span class="n">backend_name</span> <span class="o">=</span> <span class="s2">&quot;your_get_info_function&quot;</span>
+</pre></div>
+</div>
+<p>Note that this would only work if your backend is a trusted backend of NetworkX,
+and is present in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">circleci/config.yml</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">github/workflows/deploy-docs.yml</span></code> files in the NetworkX repository.</p>
+</li>
+<li><p>The backend must create an <code class="docutils literal notranslate"><span class="pre">nx.Graph</span></code>-like object which contains an attribute
+<code class="docutils literal notranslate"><span class="pre">__networkx_backend__</span></code> with a value of the entry point name:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BackendGraph</span><span class="p">:</span>
+    <span class="n">__networkx_backend__</span> <span class="o">=</span> <span class="s2">&quot;backend_name&quot;</span>
     <span class="o">...</span>
 </pre></div>
 </div>
-<p>When a dispatchable NetworkX algorithm encounters a Graph-like object
-with a <code class="docutils literal notranslate"><span class="pre">__networkx_backend__</span></code> attribute, it will look for the associated
-dispatch object in the entry_points, load it, and dispatch the work to it.</p>
+</li>
+</ol>
 </section>
-<section id="testing">
-<h3>Testing<a class="headerlink" href="#testing" title="Link to this heading">#</a></h3>
-<p>To assist in validating the backend algorithm implementations, if an
-environment variable <code class="docutils literal notranslate"><span class="pre">NETWORKX_TEST_BACKEND</span></code> is set to a registered
-backend key, the dispatch machinery will automatically convert regular
-networkx Graphs and DiGraphs to the backend equivalent by calling
-<code class="docutils literal notranslate"><span class="pre">&lt;backend</span> <span class="pre">dispatcher&gt;.convert_from_nx(G,</span> <span class="pre">edge_attrs=edge_attrs,</span> <span class="pre">name=name)</span></code>.
-Set <code class="docutils literal notranslate"><span class="pre">NETWORKX_FALLBACK_TO_NX</span></code> environment variable to have tests
-use networkx graphs for algorithms not implemented by the backend.</p>
-<p>The arguments to <code class="docutils literal notranslate"><span class="pre">convert_from_nx</span></code> are:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">G</span></code> : networkx Graph</p></li>
+<section id="testing-the-custom-backend">
+<h3>Testing the Custom backend<a class="headerlink" href="#testing-the-custom-backend" title="Link to this heading">#</a></h3>
+<p>To test your custom backend, you can run the NetworkX test suite with your backend.
+This also ensures that the custom backend is compatible with NetworkX’s API.</p>
+<section id="environment-variable-setup">
+<h4>Environment Variable Setup<a class="headerlink" href="#environment-variable-setup" title="Link to this heading">#</a></h4>
+<p>To enable automatic testing with your custom backend, follow these steps:</p>
+<ol class="arabic simple">
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">edge_attrs</span></code><span class="classifier">dict, optional</span></dt><dd><p>Dict that maps edge attributes to default values if missing in <code class="docutils literal notranslate"><span class="pre">G</span></code>.
+<dt>Set Backend Environment Variables: </dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NETWORKX_TEST_BACKEND</span></code> : Setting this to your registered backend key will let
+the NetworkX’s dispatch machinery automatically convert a regular NetworkX
+<code class="docutils literal notranslate"><span class="pre">Graph</span></code>, <code class="docutils literal notranslate"><span class="pre">DiGraph</span></code>, <code class="docutils literal notranslate"><span class="pre">MultiGraph</span></code>, etc. to their backend equivalents, using
+<code class="docutils literal notranslate"><span class="pre">your_dispatcher_class.convert_from_nx(G,</span> <span class="pre">...)</span></code> function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NETWORKX_FALLBACK_TO_NX</span></code> (default=False) : Setting this variable to <a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code></a> will
+instruct tests to use a NetworkX <code class="docutils literal notranslate"><span class="pre">Graph</span></code> for algorithms not implemented by your
+custom backend. Setting this to <a class="reference external" href="https://docs.python.org/3/library/constants.html#False" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code></a> will only run the tests for algorithms
+implemented by your custom backend and tests for other algorithms will <code class="docutils literal notranslate"><span class="pre">xfail</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Defining <code class="docutils literal notranslate"><span class="pre">convert_from_nx</span></code> and <code class="docutils literal notranslate"><span class="pre">convert_to_nx</span></code> methods:</dt><dd><p>The arguments to <code class="docutils literal notranslate"><span class="pre">convert_from_nx</span></code> are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">G</span></code> : NetworkX Graph</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">edge_attrs</span></code><span class="classifier">dict, optional</span></dt><dd><p>Dictionary mapping edge attributes to default values if missing in <code class="docutils literal notranslate"><span class="pre">G</span></code>.
 If None, then no edge attributes will be converted and default may be 1.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">node_attrs</span></code>: dict, optional</dt><dd><p>Dict that maps node attribute to default values if missing in <code class="docutils literal notranslate"><span class="pre">G</span></code>.
+<dt><code class="docutils literal notranslate"><span class="pre">node_attrs</span></code>: dict, optional</dt><dd><p>Dictionary mapping node attributes to default values if missing in <code class="docutils literal notranslate"><span class="pre">G</span></code>.
 If None, then no node attributes will be converted.</p>
 </dd>
 </dl>
@@ -794,42 +855,57 @@ If None, then no node attributes will be converted.</p>
 </dl>
 </li>
 </ul>
-<p>The converted object is then passed to the backend implementation of
-the algorithm. The result is then passed to
-<code class="docutils literal notranslate"><span class="pre">&lt;backend</span> <span class="pre">dispatcher&gt;.convert_to_nx(result,</span> <span class="pre">name=name)</span></code> to convert back
-to a form expected by the NetworkX tests.</p>
-<p>By defining <code class="docutils literal notranslate"><span class="pre">convert_from_nx</span></code> and <code class="docutils literal notranslate"><span class="pre">convert_to_nx</span></code> methods and setting
-the environment variable, NetworkX will automatically route tests on
-dispatchable algorithms to the backend, allowing the full networkx test
-suite to be run against the backend implementation.</p>
-<p>Example pytest invocation:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NETWORKX_TEST_BACKEND</span><span class="o">=</span><span class="n">sparse</span> <span class="n">pytest</span> <span class="o">--</span><span class="n">pyargs</span> <span class="n">networkx</span>
+</dd>
+</dl>
+</li>
+</ol>
+</section>
+<section id="running-tests">
+<h4>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">#</a></h4>
+<p>You can invoke NetworkX tests for your custom backend with the following commands:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NETWORKX_TEST_BACKEND</span><span class="o">=&lt;</span><span class="n">backend_name</span><span class="o">&gt;</span>
+<span class="n">NETWORKX_FALLBACK_TO_NX</span><span class="o">=</span><span class="kc">True</span> <span class="c1"># or False</span>
+<span class="n">pytest</span> <span class="o">--</span><span class="n">pyargs</span> <span class="n">networkx</span>
 </pre></div>
 </div>
-<p>Dispatchable algorithms which are not implemented by the backend
-will cause a <code class="docutils literal notranslate"><span class="pre">pytest.xfail()</span></code>, giving some indication that not all
-tests are working, while avoiding causing an explicit failure.</p>
-<p>If a backend only partially implements some algorithms, it can define
+<p>Conversions while running tests :</p>
+<ul class="simple">
+<li><p>Convert NetworkX graphs using <code class="docutils literal notranslate"><span class="pre">&lt;your_dispatcher_class&gt;.convert_from_nx(G,</span> <span class="pre">...)</span></code> into
+the backend graph.</p></li>
+<li><p>Pass the backend graph objects to the backend implementation of the algorithm.</p></li>
+<li><p>Convert the result back to a form expected by NetworkX tests using 
+<code class="docutils literal notranslate"><span class="pre">&lt;your_dispatcher_class&gt;.convert_to_nx(result,</span> <span class="pre">...)</span></code>.</p></li>
+</ul>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h4>
+<ul class="simple">
+<li><p>Dispatchable algorithms that are not implemented by the backend
+will cause a <code class="docutils literal notranslate"><span class="pre">pytest.xfail</span></code>, giving some indication that not all
+tests are running, while avoiding causing an explicit failure.</p></li>
+<li><p>If a backend only partially implements some algorithms, it can define
 a <code class="docutils literal notranslate"><span class="pre">can_run(name,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code> function that returns True or False
 indicating whether it can run the algorithm with the given arguments.
 It may also return a string indicating why the algorithm can’t be run;
-this string may be used in the future to give helpful info to the user.</p>
-<p>A backend may also define <code class="docutils literal notranslate"><span class="pre">should_run(name,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code> that is similar
+this string may be used in the future to give helpful info to the user.</p></li>
+<li><p>A backend may also define <code class="docutils literal notranslate"><span class="pre">should_run(name,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code> that is similar
 to <code class="docutils literal notranslate"><span class="pre">can_run</span></code>, but answers whether the backend <em>should</em> be run (converting
 if necessary). Like <code class="docutils literal notranslate"><span class="pre">can_run</span></code>, it receives the original arguments so it
 can decide whether it should be run by inspecting the arguments. <code class="docutils literal notranslate"><span class="pre">can_run</span></code>
-runs before <code class="docutils literal notranslate"><span class="pre">should_run</span></code>, so <code class="docutils literal notranslate"><span class="pre">should_run</span></code> may assume <code class="docutils literal notranslate"><span class="pre">can_run</span></code> is True.</p>
-<p>If not implemented by the backend, <code class="docutils literal notranslate"><span class="pre">can_run</span></code> and <code class="docutils literal notranslate"><span class="pre">should_run</span></code> are
-assumed to always return True if the backend implements the algorithm.</p>
-<p>A special <code class="docutils literal notranslate"><span class="pre">on_start_tests(items)</span></code> function may be defined by the backend.
+runs before <code class="docutils literal notranslate"><span class="pre">should_run</span></code>, so <code class="docutils literal notranslate"><span class="pre">should_run</span></code> may assume <code class="docutils literal notranslate"><span class="pre">can_run</span></code> is True.
+If not implemented by the backend, <code class="docutils literal notranslate"><span class="pre">can_run</span></code> and <code class="docutils literal notranslate"><span class="pre">should_run</span></code> are
+assumed to always return True if the backend implements the algorithm.</p></li>
+<li><p>A special <code class="docutils literal notranslate"><span class="pre">on_start_tests(items)</span></code> function may be defined by the backend.
 It will be called with the list of NetworkX tests discovered. Each item
 is a test object that can be marked as xfail if the backend does not support
-the test using <code class="xref py py-obj docutils literal notranslate"><span class="pre">item.add_marker(pytest.mark.xfail(reason=...))</span></code>.</p>
+the test using <code class="docutils literal notranslate"><span class="pre">item.add_marker(pytest.mark.xfail(reason=...))</span></code>.</p></li>
+</ul>
+</section>
 </section>
 <table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/networkx.utils.backends._dispatchable.html#networkx.utils.backends._dispatchable" title="networkx.utils.backends._dispatchable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_dispatchable</span></code></a>([func, name, graphs, ...])</p></td>
-<td><p>Dispatches to a backend algorithm based on input graph types.</p></td>
+<td><p>A decorator function that dispatches to <code class="docutils literal notranslate"><span class="pre">func</span></code>'s backend implementation based on the input graph types.</p></td>
 </tr>
 </tbody>
 </table>
@@ -865,8 +941,13 @@ the test using <code class="xref py py-obj docutils literal notranslate"><span c
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-networkx.utils.rcm">Cuthill-Mckee Ordering</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-networkx.utils.mapped_queue">Mapped Queue</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backends">Backends</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-dispatcher">Create a Dispatcher</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing">Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-custom-backend">Creating a Custom backend</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-the-custom-backend">Testing the Custom backend</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variable-setup">Environment Variable Setup</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
