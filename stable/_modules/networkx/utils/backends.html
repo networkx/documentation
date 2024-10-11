@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>networkx.utils.backends &#8212; NetworkX 3.4 documentation</title>
+    <title>networkx.utils.backends &#8212; NetworkX 3.4.1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../_static/documentation_options.js?v=4540d3b6"></script>
+    <script src="../../../_static/documentation_options.js?v=6b0d3a6e"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/copybutton.js?v=e333d19b"></script>
@@ -50,19 +50,19 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.15.4';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://networkx.org/documentation/latest/_static/version_switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '3.4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '3.4.1';
         DOCUMENTATION_OPTIONS.show_version_warning_banner = true;
         </script>
     <link rel="canonical" href="https://networkx.org/documentation/stable/_modules/networkx/utils/backends.html" />
     <link rel="search" type="application/opensearchdescription+xml"
-          title="Search within NetworkX 3.4 documentation"
+          title="Search within NetworkX 3.4.1 documentation"
           href="../../../_static/opensearch.xml"/>
     <link rel="icon" href="../../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Oct 10, 2024"/>
+    <meta name="docbuild:last-update" content="Oct 11, 2024"/>
   </head>
   
   
@@ -140,8 +140,8 @@
       
     
     
-    <img src="../../../_static/networkx_banner.svg" class="logo__image only-light" alt="NetworkX 3.4 documentation - Home"/>
-    <script>document.write(`<img src="../../../_static/networkx_banner.svg" class="logo__image only-dark" alt="NetworkX 3.4 documentation - Home"/>`);</script>
+    <img src="../../../_static/networkx_banner.svg" class="logo__image only-light" alt="NetworkX 3.4.1 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/networkx_banner.svg" class="logo__image only-dark" alt="NetworkX 3.4.1 documentation - Home"/>`);</script>
   
   
 </a></div>
@@ -1018,6 +1018,7 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
+<span class="kn">from</span> <span class="nn">.configs</span> <span class="kn">import</span> <span class="n">BackendPriorities</span><span class="p">,</span> <span class="n">Config</span><span class="p">,</span> <span class="n">NetworkXConfig</span>
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">argmap</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;_dispatchable&quot;</span><span class="p">]</span>
@@ -1079,30 +1080,11 @@ document.write(`
 <span class="c1"># It is valid to use &quot;networkx&quot;` as backend argument and in `config.backend_priority`.</span>
 <span class="c1"># We may make &quot;networkx&quot; a &quot;proper&quot; backend and have it in `backends` and `config.backends`.</span>
 <span class="n">backends</span> <span class="o">=</span> <span class="n">_get_backends</span><span class="p">(</span><span class="s2">&quot;networkx.backends&quot;</span><span class="p">)</span>
-<span class="n">backend_info</span> <span class="o">=</span> <span class="n">_get_backends</span><span class="p">(</span><span class="s2">&quot;networkx.backend_info&quot;</span><span class="p">,</span> <span class="n">load_and_call</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="c1"># Ensure all backends are in `backend_info`</span>
-<span class="n">backend_info</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">backend</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">backend</span> <span class="ow">in</span> <span class="n">backends</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">backend_info</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">backend_info</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># fill backend_info after networkx is imported in __init__.py</span>
 
 <span class="c1"># Load and cache backends on-demand</span>
 <span class="n">_loaded_backends</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># type: ignore[var-annotated]</span>
 <span class="n">_registered_algorithms</span> <span class="o">=</span> <span class="p">{}</span>
-
-<span class="c1"># We must import from config after defining `backends` above</span>
-<span class="kn">from</span> <span class="nn">.configs</span> <span class="kn">import</span> <span class="n">Config</span><span class="p">,</span> <span class="n">config</span>
-
-<span class="c1"># Initialize default configuration for backends</span>
-<span class="n">config</span><span class="o">.</span><span class="n">backends</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span>
-    <span class="o">**</span><span class="p">{</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="p">(</span>
-            <span class="n">cfg</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span> <span class="o">:=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;default_config&quot;</span><span class="p">],</span> <span class="n">Config</span><span class="p">)</span> <span class="k">else</span> <span class="n">Config</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;default_config&quot;</span> <span class="ow">in</span> <span class="n">info</span>
-        <span class="k">else</span> <span class="n">Config</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">backend</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">backend_info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-<span class="n">backend_info</span><span class="p">[</span><span class="s2">&quot;networkx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">backends</span><span class="p">)</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;All installed NetworkX backends and their configs.&quot;</span>
 
 
 <span class="c1"># Get default configuration from environment variables at import time</span>
@@ -1110,13 +1092,51 @@ document.write(`
     <span class="k">return</span> <span class="p">[</span><span class="n">stripped</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">stripped</span> <span class="o">:=</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())]</span>
 
 
-<span class="k">def</span> <span class="nf">_set_backend_priority_from_environment</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize ``nx.config.backend_priority``.</span>
+<span class="k">def</span> <span class="nf">_set_configs_from_environment</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize ``config.backend_priority``, load backend_info and config.</span>
 
 <span class="sd">    This gets default values from environment variables (see ``nx.config`` for details).</span>
 <span class="sd">    This function is run at the very end of importing networkx. It is run at this time</span>
-<span class="sd">    for predictability and cleanliness, but it may be fine to run this function whenever.</span>
+<span class="sd">    to avoid loading backend_info before the rest of networkx is imported in case a</span>
+<span class="sd">    backend uses networkx for its backend_info (e.g. subclassing the Config class.)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># backend_info is defined above as empty dict. Fill it after import finishes.</span>
+    <span class="n">backend_info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_get_backends</span><span class="p">(</span><span class="s2">&quot;networkx.backend_info&quot;</span><span class="p">,</span> <span class="n">load_and_call</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="n">backend_info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">backend</span> <span class="ow">in</span> <span class="n">backends</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">backend_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># set up config based on backend_info and environment</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">NetworkXConfig</span><span class="p">(</span>
+        <span class="n">backend_priority</span><span class="o">=</span><span class="n">BackendPriorities</span><span class="p">(</span>
+            <span class="n">algos</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">generators</span><span class="o">=</span><span class="p">[],</span>
+        <span class="p">),</span>
+        <span class="n">backends</span><span class="o">=</span><span class="n">Config</span><span class="p">(</span>
+            <span class="o">**</span><span class="p">{</span>
+                <span class="n">backend</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">cfg</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span> <span class="o">:=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;default_config&quot;</span><span class="p">],</span> <span class="n">Config</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="n">Config</span><span class="p">(</span><span class="o">**</span><span class="n">cfg</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;default_config&quot;</span> <span class="ow">in</span> <span class="n">info</span>
+                <span class="k">else</span> <span class="n">Config</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">backend</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">backend_info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="p">),</span>
+        <span class="n">cache_converted_graphs</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NETWORKX_CACHE_CONVERTED_GRAPHS&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">fallback_to_nx</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NETWORKX_FALLBACK_TO_NX&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+        <span class="n">warnings_to_ignore</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NETWORKX_WARNINGS_TO_IGNORE&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">backend_info</span><span class="p">[</span><span class="s2">&quot;networkx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">backends</span><span class="p">)</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;All installed NetworkX backends and their configs.&quot;</span>
+
     <span class="c1"># NETWORKX_BACKEND_PRIORITY is the same as NETWORKX_BACKEND_PRIORITY_ALGOS</span>
     <span class="n">priorities</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">key</span><span class="p">[</span><span class="mi">26</span><span class="p">:]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">val</span>
@@ -1138,8 +1158,7 @@ document.write(`
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">priorities</span><span class="p">):</span>
         <span class="n">backend_priority</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_comma_sep_to_list</span><span class="p">(</span><span class="n">priorities</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
 
-
-<span class="n">_set_backend_priority_from_environment</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">config</span>
 
 
 <span class="k">def</span> <span class="nf">_always_run</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
@@ -1172,7 +1191,7 @@ document.write(`
                 <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span>
 
     <span class="c1"># Note that chaining `@classmethod` and `@property` was removed in Python 3.13</span>
     <span class="n">_fallback_to_nx</span> <span class="o">=</span> <span class="n">_fallback_to_nx</span><span class="p">()</span>  <span class="c1"># type: ignore[assignment,misc]</span>
@@ -1552,11 +1571,11 @@ document.write(`
                 <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">graphs_resolved</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
             <span class="p">}</span>
 
-        <span class="n">backend_priority</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">backend_priority</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="o">.</span><span class="n">generators</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="o">.</span><span class="n">generators</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_returns_graph</span>
-            <span class="k">else</span> <span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="o">.</span><span class="n">algos</span><span class="p">,</span>
+            <span class="k">else</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="o">.</span><span class="n">algos</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_testing</span> <span class="ow">and</span> <span class="n">backend_priority</span> <span class="ow">and</span> <span class="n">backend_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Special path if we are running networkx tests with a backend.</span>
@@ -1565,7 +1584,7 @@ document.write(`
                 <span class="n">backend_priority</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                 <span class="n">args</span><span class="p">,</span>
                 <span class="n">kwargs</span><span class="p">,</span>
-                <span class="n">fallback_to_nx</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span><span class="p">,</span>
+                <span class="n">fallback_to_nx</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="n">graph_backend_names</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
@@ -1697,7 +1716,7 @@ document.write(`
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                    <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
                         <span class="c1"># Consider dropping the `isinstance` check here to allow</span>
                         <span class="c1"># duck-type graphs, but let&#39;s wait for a backend to ask us.</span>
                         <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">)</span>
@@ -1716,7 +1735,7 @@ document.write(`
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">extra</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
                         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg_template</span> <span class="o">%</span> <span class="n">extra</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="k">elif</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
                 <span class="c1"># Consider dropping the `isinstance` check here to allow</span>
                 <span class="c1"># duck-type graphs, but let&#39;s wait for a backend to ask us.</span>
                 <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">)</span>
@@ -1740,7 +1759,7 @@ document.write(`
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># We may generalize fallback configuration as e.g. `nx.config.backend_fallback`</span>
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">graph_backend_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fallback_to_nx</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">graph_backend_names</span><span class="p">:</span>
             <span class="c1"># Use &quot;networkx&quot; by default if there are no inputs from backends.</span>
             <span class="c1"># For example, graph generators should probably return NetworkX graphs</span>
             <span class="c1"># instead of raising NotImplementedError.</span>
@@ -2295,7 +2314,7 @@ document.write(`
             <span class="p">)</span>
             <span class="n">compat_key</span><span class="p">,</span> <span class="n">rv</span> <span class="o">=</span> <span class="n">_get_from_cache</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">mutations</span><span class="o">=</span><span class="n">mutations</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s2">&quot;cache&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">warnings_to_ignore</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;cache&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">warnings_to_ignore</span><span class="p">:</span>
                     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                         <span class="s2">&quot;Note: conversions to backend graphs are saved to cache &quot;</span>
                         <span class="s2">&quot;(`G.__networkx_cache__` on the original graph) by default.&quot;</span>
@@ -2441,7 +2460,7 @@ document.write(`
                 <span class="n">backend_name</span><span class="p">,</span>
                 <span class="n">args</span><span class="p">,</span>
                 <span class="n">kwargs</span><span class="p">,</span>
-                <span class="n">use_cache</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">cache_converted_graphs</span><span class="p">,</span>
+                <span class="n">use_cache</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">cache_converted_graphs</span><span class="p">,</span>
                 <span class="n">mutations</span><span class="o">=</span><span class="n">mutations</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
