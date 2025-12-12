@@ -71,7 +71,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Dec 11, 2025"/>
+    <meta name="docbuild:last-update" content="Dec 12, 2025"/>
   </head>
   
   
@@ -1487,13 +1487,13 @@ max value is computed.</p>
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 
-<span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-17</span>
+<span class="n">tiny</span> <span class="o">=</span> <span class="mf">5e-17</span>
 
 <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
 <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.3</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.3</span> <span class="o">+</span> <span class="n">tiny</span><span class="p">)</span>
 
 <span class="n">path</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -1529,6 +1529,33 @@ results to be approximate rather than exact. Multiplying weights by a large
 number and converting them to integers can help reduce some subtle comparison
 issues, but it does not fully eliminate them. NetworkX does not automatically
 apply tolerances in numeric comparisons.</p>
+<p>Below is a version of the previous example using the recommended technique with
+different precision tolerances.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+
+<span class="n">tiny</span> <span class="o">=</span> <span class="mf">5e-17</span>
+
+<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.3</span> <span class="o">+</span> <span class="n">tiny</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">precision</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">17</span><span class="p">]:</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="k">lambda</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">precision</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;With </span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2"> precision digits, path is </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>With 16 precision digits, path is [&#39;A&#39;, &#39;D&#39;]
+With 17 precision digits, path is [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;]
+</pre></div>
+</div>
+</div>
+</div>
 </section>
 <section id="using-networkx-backends">
 <span id="id1"></span><h2>Using NetworkX backends<a class="headerlink" href="#using-networkx-backends" title="Link to this heading">#</a></h2>
@@ -1692,7 +1719,7 @@ using one of</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/b70819cdb8c6a17f575fdd73ef7dc150a19c10148023c197325e8d22b139bd9f.png" src="_images/b70819cdb8c6a17f575fdd73ef7dc150a19c10148023c197325e8d22b139bd9f.png" />
+<img alt="_images/f239957d86d66e6bf4c63bb511facdcedde237fb9e2496d02933b05c55167a50.png" src="_images/f239957d86d66e6bf4c63bb511facdcedde237fb9e2496d02933b05c55167a50.png" />
 </div>
 </div>
 <p>when drawing to an interactive display. Note that you may need to issue a
@@ -1720,7 +1747,7 @@ Matplotlib</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="_images/07e29995d14ccc2bfe776de571c85f67f62c570e10b93fa0a178c80a1481c910.png" src="_images/07e29995d14ccc2bfe776de571c85f67f62c570e10b93fa0a178c80a1481c910.png" />
+<img alt="_images/be14683971a00cfd6225a97c3726832a3fffeb215777472fb9cd8e4feda729bd.png" src="_images/be14683971a00cfd6225a97c3726832a3fffeb215777472fb9cd8e4feda729bd.png" />
 </div>
 </div>
 <p>You can find additional options via <a class="reference internal" href="reference/generated/networkx.drawing.nx_pylab.draw_networkx.html#networkx.drawing.nx_pylab.draw_networkx" title="networkx.drawing.nx_pylab.draw_networkx"><code class="xref py py-func docutils literal notranslate"><span class="pre">draw_networkx()</span></code></a> and
