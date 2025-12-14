@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Dec 13, 2025"/>
+    <meta name="docbuild:last-update" content="Dec 14, 2025"/>
   </head>
   
   
@@ -523,6 +523,7 @@
     <span class="s2">&quot;floyd_warshall_predecessor_and_distance&quot;</span><span class="p">,</span>
     <span class="s2">&quot;reconstruct_path&quot;</span><span class="p">,</span>
     <span class="s2">&quot;floyd_warshall_numpy&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;floyd_warshall_tree&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -602,6 +603,153 @@
         <span class="c1"># The second term has the same shape as A due to broadcasting</span>
         <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:][</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[:,</span> <span class="n">i</span><span class="p">][:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">A</span></div>
+
+
+
+<div class="viewcode-block" id="floyd_warshall_tree">
+<a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.shortest_paths.dense.floyd_warshall_tree.html#networkx.algorithms.shortest_paths.dense.floyd_warshall_tree">[docs]</a>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">floyd_warshall_tree</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Find all-pairs shortest path lengths using a Tree-based</span>
+<span class="sd">    modification of Floyd&#39;s algorithm.</span>
+
+<span class="sd">    This variant implements the Tree algorithm of Brodnik, Grgurovic and Pozar.</span>
+<span class="sd">    It differs from the classical Floyd Warshall algorithm by using a shortest</span>
+<span class="sd">    path tree rooted at each intermediate vertex w. For every w, the algorithm</span>
+<span class="sd">    builds a tree ``OUT_w`` of shortest paths for the current iteration and</span>
+<span class="sd">    scans the tree in depth first order. If an update at a vertex v cannot</span>
+<span class="sd">    improve any distance, the algorithm skips the entire subtree below v,</span>
+<span class="sd">    since none of its nodes can produce a shorter path, as proved in [1]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+
+<span class="sd">    weight : string, optional (default= &#39;weight&#39;)</span>
+<span class="sd">        Edge data key corresponding to the edge weight.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    predecessor, distance : dict and dict-of-dict</span>
+<span class="sd">        Predecessor is a dict keyed by node to the predecessor node in</span>
+<span class="sd">        the shortest path. The distance output is a dict keyed by source</span>
+<span class="sd">        node to a dict keyed by target node to the distance value of the</span>
+<span class="sd">        shortest path between the source and target.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_weighted_edges_from(</span>
+<span class="sd">    ...     [</span>
+<span class="sd">    ...         (&quot;s&quot;, &quot;u&quot;, 10),</span>
+<span class="sd">    ...         (&quot;s&quot;, &quot;x&quot;, 5),</span>
+<span class="sd">    ...         (&quot;u&quot;, &quot;v&quot;, 1),</span>
+<span class="sd">    ...         (&quot;u&quot;, &quot;x&quot;, 2),</span>
+<span class="sd">    ...         (&quot;v&quot;, &quot;y&quot;, 1),</span>
+<span class="sd">    ...         (&quot;x&quot;, &quot;u&quot;, 3),</span>
+<span class="sd">    ...         (&quot;x&quot;, &quot;v&quot;, 5),</span>
+<span class="sd">    ...         (&quot;x&quot;, &quot;y&quot;, 2),</span>
+<span class="sd">    ...         (&quot;y&quot;, &quot;s&quot;, 7),</span>
+<span class="sd">    ...         (&quot;y&quot;, &quot;v&quot;, 6),</span>
+<span class="sd">    ...     ]</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; predecessors, distances = nx.floyd_warshall_tree(G)</span>
+<span class="sd">    &gt;&gt;&gt; nx.reconstruct_path(&quot;s&quot;, &quot;v&quot;, predecessors)</span>
+<span class="sd">    [&#39;s&#39;, &#39;x&#39;, &#39;u&#39;, &#39;v&#39;]</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Floyd&#39;s algorithm is appropriate for finding shortest paths</span>
+<span class="sd">    in dense graphs or graphs with negative weights when Dijkstra&#39;s algorithm</span>
+<span class="sd">    fails.  This algorithm can still fail if there are negative cycles.</span>
+<span class="sd">    It has worst case running time $O(|V|^3)$ with running space of $O(|V|^2)$.</span>
+
+<span class="sd">    For complete directed graphs with independent edge weights drawn from the</span>
+<span class="sd">    uniform distribution on [0, 1], the expected running time is</span>
+<span class="sd">    $O(|V|^2 (\log |V|)^2)$, as shown in [1]_.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    floyd_warshall_predecessor_and_distance</span>
+<span class="sd">    floyd_warshall</span>
+<span class="sd">    floyd_warshall_numpy</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Brodnik, Andrej, Marko Grgurovic, and Rok Pozar.</span>
+<span class="sd">       &quot;Modifications of the Floyd-Warshall algorithm with</span>
+<span class="sd">       nearly quadratic expected-time.&quot;</span>
+<span class="sd">       Ars Math. Contemp. 22, no. 1 (2022).</span>
+<span class="sd">       https://doi.org/10.26493/1855-3974.2467.497</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+    <span class="c1"># dictionary-of-dictionaries representation for dist and pred</span>
+    <span class="c1"># use some defaultdict magick here</span>
+    <span class="c1"># for dist the default is the floating point inf value</span>
+    <span class="n">inf</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">inf</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># initialize path distance dictionary to be the adjacency matrix</span>
+    <span class="c1"># also set the distance to self to 0 (zero diagonal)</span>
+    <span class="n">undirected</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">e_weight</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">])</span>
+        <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+        <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
+            <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">])</span>
+            <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="c1"># dont check for those w, `from` which `no` path exists</span>
+    <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">pred_w</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># out_w will store the adjacency list of the OUT_W tree of the paper,</span>
+        <span class="c1"># it is a tree, parent --&gt; list of children</span>
+        <span class="n">out_w</span> <span class="o">=</span> <span class="p">{</span><span class="n">parent</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">pred_w</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>  <span class="c1"># w to v path exist</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">w</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">out_w</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># dfs order dict and skip dict in practical improvements in the paper</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="p">]</span>
+        <span class="n">dfs_dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># {node: next node in dfs order}</span>
+        <span class="n">skip_dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># {node: next node after subtree is skipped}</span>
+
+        <span class="n">node</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="n">next_node</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">dfs_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_node</span>
+            <span class="k">if</span> <span class="n">stack</span><span class="p">:</span>
+                <span class="n">skip_dict</span><span class="p">[</span><span class="n">next_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">out_w</span><span class="p">[</span><span class="n">next_node</span><span class="p">])</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">next_node</span>
+
+        <span class="n">dist_w</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>  <span class="c1"># for speed</span>
+        <span class="c1"># main inner loop starts here</span>
+        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="n">w</span><span class="p">:</span>  <span class="c1"># small optimization</span>
+                <span class="k">continue</span>
+            <span class="n">dist_u</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+            <span class="n">dist_uw</span> <span class="o">=</span> <span class="n">dist_u</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">dist_uw</span> <span class="o">==</span> <span class="n">inf</span><span class="p">:</span>  <span class="c1"># small optimization</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># note: we skip v=w as relaxation would always fail</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">dfs_dict</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+            <span class="k">while</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dist_uwv</span> <span class="o">=</span> <span class="n">dist_uw</span> <span class="o">+</span> <span class="n">dist_w</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dist_u</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">dist_uwv</span><span class="p">:</span>
+                    <span class="n">dist_u</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_uwv</span>
+                    <span class="c1"># update/new entries to be created in pred[u]</span>
+                    <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred_w</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>  <span class="c1"># v must be in pred_w as checked above</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">dfs_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">skip_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pred</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span></div>
 
 
 
