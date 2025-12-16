@@ -70,7 +70,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Dec 14, 2025"/>
+    <meta name="docbuild:last-update" content="Dec 16, 2025"/>
   </head>
   
   
@@ -731,6 +731,123 @@ layers of nested mappings being read-only.</p>
 </table>
 </div>
 </section>
+<section id="reporting-views">
+<h2>Reporting Views<a class="headerlink" href="#reporting-views" title="Link to this heading">#</a></h2>
+<p>NetworkX provides lightweight <em>reporting views</em> — read-only objects that
+report information about a graph without copying it. The most commonly used
+reporting views are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NodeView</span></code> — returned by <code class="docutils literal notranslate"><span class="pre">G.nodes</span></code> or <code class="docutils literal notranslate"><span class="pre">G.nodes(...)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EdgeView</span></code> — returned by <code class="docutils literal notranslate"><span class="pre">G.edges</span></code> or <code class="docutils literal notranslate"><span class="pre">G.edges(...)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DegreeView</span></code> — returned by <code class="docutils literal notranslate"><span class="pre">G.degree</span></code> or <code class="docutils literal notranslate"><span class="pre">G.degree(...)</span></code>.</p></li>
+</ul>
+<section id="quick-overview">
+<h3>Quick overview<a class="headerlink" href="#quick-overview" title="Link to this heading">#</a></h3>
+<p>Views are quick-to-create, live (they reflect changes to the graph), and
+provide Pythonic access patterns:</p>
+<ul class="simple">
+<li><p>set-like membership and set operations for nodes and edges (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">in</span> <span class="pre">G.nodes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">G.nodes</span> <span class="pre">&amp;</span> <span class="pre">H.nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">(u,</span> <span class="pre">v)</span> <span class="pre">in</span> <span class="pre">G.edges</span></code>),</p></li>
+<li><p>iteration (<code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">n</span> <span class="pre">in</span> <span class="pre">G.nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">u,</span> <span class="pre">v</span> <span class="pre">in</span> <span class="pre">G.edges</span></code>),</p></li>
+<li><p>mapping-style lookups (<code class="docutils literal notranslate"><span class="pre">G.nodes[n]</span></code> returns the node attribute dict;
+<code class="docutils literal notranslate"><span class="pre">G.edges[u,</span> <span class="pre">v]</span></code> returns the edge attribute dict),</p></li>
+<li><p>data-filtered iteration via <code class="docutils literal notranslate"><span class="pre">.data(...)</span></code> and conversion to concrete
+containers via <code class="docutils literal notranslate"><span class="pre">list(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">dict(...)</span></code>.</p></li>
+</ul>
+</section>
+<section id="common-usage-patterns">
+<h3>Common usage patterns<a class="headerlink" href="#common-usage-patterns" title="Link to this heading">#</a></h3>
+<p><strong>NodeView / NodeDataView</strong></p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">G.nodes</span></code> when you need membership tests, set-like operations, or to
+look up a node’s attribute dict with <code class="docutils literal notranslate"><span class="pre">G.nodes[n]</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">G.nodes(data=...)</span></code> or <code class="docutils literal notranslate"><span class="pre">G.nodes.data(attr_name,</span> <span class="pre">default=...)</span></code> to
+iterate node/data pairs or to extract a single attribute for all nodes.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+<span class="go">[0, 1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="go">[(0, None), (1, None), (2, None), (3, &#39;red&#39;)]</span>
+</pre></div>
+</div>
+<p><strong>EdgeView / EdgeDataView</strong></p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">G.edges</span></code> to iterate or test membership for edges.</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">G.edges(data=...)</span></code> or <code class="docutils literal notranslate"><span class="pre">G.edges(nbunch=...,</span> <span class="pre">data=...,</span> <span class="pre">keys=...)</span></code> to
+iterate edges with data, restrict to edges incident to a set of nodes, or
+include multigraph keys.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Iteration of <code class="docutils literal notranslate"><span class="pre">G.edges()</span></code> yields node pairs as 2-tuples even for multigraphs.
+Use <code class="docutils literal notranslate"><span class="pre">G.edges(keys=True)</span></code> to receive 3-tuples <code class="docutils literal notranslate"><span class="pre">(u,</span> <span class="pre">v,</span> <span class="pre">key)</span></code> for multigraphs.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">[(0, 1, 3)]</span>
+</pre></div>
+</div>
+<p><strong>DegreeView</strong></p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">G.degree</span></code> to iterate <code class="docutils literal notranslate"><span class="pre">(node,</span> <span class="pre">degree)</span></code> pairs or query a single node
+with <code class="docutils literal notranslate"><span class="pre">G.degree[n]</span></code>.</p></li>
+<li><p>The function interface <code class="docutils literal notranslate"><span class="pre">G.degree(nbunch=...,</span> <span class="pre">weight=...)</span></code> allows:
+* <code class="docutils literal notranslate"><span class="pre">weight=&quot;attr&quot;</span></code> to compute weighted degree using the named edge attribute, and
+* <code class="docutils literal notranslate"><span class="pre">nbunch</span></code> to restrict iteration to a subset of nodes while still allowing direct lookups.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">cycle_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+<span class="go">{0: 2, 1: 2, 2: 2, 3: 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add an edge with a weight attribute and compute weighted degrees:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">))</span>
+<span class="go">{0: 6, 1: 6, 2: 2, 3: 2}</span>
+</pre></div>
+</div>
+</section>
+<section id="note-on-how-degree-is-computed">
+<h3>Note on how degree is computed<a class="headerlink" href="#note-on-how-degree-is-computed" title="Link to this heading">#</a></h3>
+<p>NetworkX does not store a persistent degree value for each node. Instead, the
+degree is computed when requested by examining the neighbor dictionary for a
+node and counting or summing edge attributes as needed. For multigraphs the key
+dict for each neighbor is scanned; for weighted degree the requested edge
+attribute values are summed.</p>
+<p>Because computing degree accesses the adjacency structures, some applications
+cache degree values in a separate dictionary to avoid repeated recomputation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G_degree</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">)</span>   <span class="c1"># make a cached snapshot of degrees</span>
+</pre></div>
+</div>
+<p>If you cache degrees, remember to update the cached dict when you modify edges.</p>
+</section>
+<section id="performance-pitfalls">
+<h3>Performance &amp; pitfalls<a class="headerlink" href="#performance-pitfalls" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Views are <strong>read-only</strong> wrappers — they do not copy graph data. If you need a stable snapshot
+(for example when you will modify the graph while iterating), materialize the view using
+<code class="docutils literal notranslate"><span class="pre">list(view)</span></code> or <code class="docutils literal notranslate"><span class="pre">dict(view)</span></code>.</p></li>
+<li><p>Avoid modifying the graph while iterating over a view (same rule as iterating a dict).</p></li>
+<li><p>DataViews that return full attribute dicts expose writable dicts (modifying those dicts
+modifies the underlying graph attributes). Use this intentionally.</p></li>
+<li><p>Edge set operations on undirected graphs use 2-tuple representations; be careful when
+comparing sets that may contain both <code class="docutils literal notranslate"><span class="pre">(u,</span> <span class="pre">v)</span></code> and <code class="docutils literal notranslate"><span class="pre">(v,</span> <span class="pre">u)</span></code>.</p></li>
+<li><p>DegreeView with <code class="docutils literal notranslate"><span class="pre">weight</span></code> performs a sum over edge attributes and can be more expensive
+than unweighted degree calculations.</p></li>
+</ul>
+</section>
+<section id="note">
+<h3>Note<a class="headerlink" href="#note" title="Link to this heading">#</a></h3>
+<p>This is a short summary for the Graph Types reference page. For the full
+implementation and detailed docstrings see <code class="xref py py-mod docutils literal notranslate"><span class="pre">networkx.classes.reportviews</span></code>.</p>
+</section>
+</section>
 <section id="filters">
 <h2>Filters<a class="headerlink" href="#filters" title="Link to this heading">#</a></h2>
 <div class="admonition note">
@@ -809,6 +926,14 @@ you build new ones. They may instead contain all the filters you ever need.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-graph-types">Basic graph types</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-networkx.classes.graphviews">Graph Views</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-networkx.classes.coreviews">Core Views</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reporting-views">Reporting Views</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-overview">Quick overview</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-usage-patterns">Common usage patterns</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#note-on-how-degree-is-computed">Note on how degree is computed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-pitfalls">Performance &amp; pitfalls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#note">Note</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filters">Filters</a></li>
 </ul>
   </nav></div>
