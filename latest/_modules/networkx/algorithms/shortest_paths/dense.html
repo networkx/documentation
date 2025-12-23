@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Dec 22, 2025"/>
+    <meta name="docbuild:last-update" content="Dec 23, 2025"/>
   </head>
   
   
@@ -516,7 +516,10 @@
   <h1>Source code for networkx.algorithms.shortest_paths.dense</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Floyd-Warshall algorithm for shortest paths.&quot;&quot;&quot;</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms.shortest_paths.weighted</span><span class="w"> </span><span class="kn">import</span> <span class="n">_weight_function</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;floyd_warshall&quot;</span><span class="p">,</span>
@@ -525,6 +528,26 @@
     <span class="s2">&quot;floyd_warshall_numpy&quot;</span><span class="p">,</span>
     <span class="s2">&quot;floyd_warshall_tree&quot;</span><span class="p">,</span>
 <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_pred_dist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize pred and dist to be used in Floyd Warshall algorithms&quot;&quot;&quot;</span>
+    <span class="c1"># dictionary-of-dictionaries representation for dist and pred</span>
+    <span class="c1"># use some defaultdict magick here</span>
+    <span class="c1"># for dist the default is the floating point inf value</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)))</span>
+    <span class="n">pred</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1"># initialize path distance dictionary to be the adjacency matrix</span>
+    <span class="c1"># also set the distance to self to 0 (zero diagonal)</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">_weight_function</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">unbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">e_attr</span> <span class="ow">in</span> <span class="n">unbr</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">cost</span> <span class="o">=</span> <span class="n">weight</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">e_attr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># for hidden edge, weight() returns None</span>
+                <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">cost</span>
+                <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+    <span class="k">return</span> <span class="n">pred</span><span class="p">,</span> <span class="n">dist</span>
 
 
 <div class="viewcode-block" id="floyd_warshall_numpy">
@@ -625,8 +648,18 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 
-<span class="sd">    weight : string, optional (default= &#39;weight&#39;)</span>
-<span class="sd">        Edge data key corresponding to the edge weight.</span>
+<span class="sd">    weight : string or function (default= &#39;weight&#39;)</span>
+<span class="sd">        If this is a string, then edge weights will be accessed via the</span>
+<span class="sd">        edge attribute with this key (that is, the weight of the edge</span>
+<span class="sd">        joining `u` to `v` will be ``G.edges[u, v][weight]``). If no</span>
+<span class="sd">        such edge attribute exists, the weight of the edge is assumed to</span>
+<span class="sd">        be one.</span>
+
+<span class="sd">        If this is a function, the weight of an edge is the value</span>
+<span class="sd">        returned by the function. The function must accept exactly three</span>
+<span class="sd">        positional arguments: the two endpoints of an edge and the</span>
+<span class="sd">        dictionary of edge attributes for that edge. The function must</span>
+<span class="sd">        return a number or None to indicate a hidden edge.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -682,26 +715,8 @@
 <span class="sd">       Ars Math. Contemp. 22, no. 1 (2022).</span>
 <span class="sd">       https://doi.org/10.26493/1855-3974.2467.497</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-
-    <span class="c1"># dictionary-of-dictionaries representation for dist and pred</span>
-    <span class="c1"># use some defaultdict magick here</span>
-    <span class="c1"># for dist the default is the floating point inf value</span>
     <span class="n">inf</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-    <span class="n">dist</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">inf</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">pred</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="c1"># initialize path distance dictionary to be the adjacency matrix</span>
-    <span class="c1"># also set the distance to self to 0 (zero diagonal)</span>
-    <span class="n">undirected</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="n">e_weight</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">])</span>
-        <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
-        <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
-            <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">])</span>
-            <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="n">pred</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="n">_init_pred_dist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
 
     <span class="c1"># dont check for those w, `from` which `no` path exists</span>
     <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">pred_w</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -763,8 +778,18 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 
-<span class="sd">    weight: string, optional (default= &#39;weight&#39;)</span>
-<span class="sd">       Edge data key corresponding to the edge weight.</span>
+<span class="sd">    weight : string or function (default= &#39;weight&#39;)</span>
+<span class="sd">       If this is a string, then edge weights will be accessed via the</span>
+<span class="sd">       edge attribute with this key (that is, the weight of the edge</span>
+<span class="sd">       joining `u` to `v` will be ``G.edges[u, v][weight]``). If no</span>
+<span class="sd">       such edge attribute exists, the weight of the edge is assumed to</span>
+<span class="sd">       be one.</span>
+
+<span class="sd">       If this is a function, the weight of an edge is the value</span>
+<span class="sd">       returned by the function. The function must accept exactly three</span>
+<span class="sd">       positional arguments: the two endpoints of an edge and the</span>
+<span class="sd">       dictionary of edge attributes for that edge. The function must</span>
+<span class="sd">       return a number or None to indicate a hidden edge.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -807,25 +832,7 @@
 <span class="sd">    all_pairs_shortest_path</span>
 <span class="sd">    all_pairs_shortest_path_length</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-
-    <span class="c1"># dictionary-of-dictionaries representation for dist and pred</span>
-    <span class="c1"># use some defaultdict magick here</span>
-    <span class="c1"># for dist the default is the floating point inf value</span>
-    <span class="n">dist</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)))</span>
-    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">pred</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="c1"># initialize path distance dictionary to be the adjacency matrix</span>
-    <span class="c1"># also set the distance to self to 0 (zero diagonal)</span>
-    <span class="n">undirected</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="n">e_weight</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-        <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">])</span>
-        <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
-        <span class="k">if</span> <span class="n">undirected</span><span class="p">:</span>
-            <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">e_weight</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">])</span>
-            <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="n">pred</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="n">_init_pred_dist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
         <span class="n">dist_w</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>  <span class="c1"># save recomputation</span>
         <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -896,8 +903,18 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 
-<span class="sd">    weight: string, optional (default= &#39;weight&#39;)</span>
-<span class="sd">       Edge data key corresponding to the edge weight.</span>
+<span class="sd">    weight : string or function (default= &#39;weight&#39;)</span>
+<span class="sd">       If this is a string, then edge weights will be accessed via the</span>
+<span class="sd">       edge attribute with this key (that is, the weight of the edge</span>
+<span class="sd">       joining `u` to `v` will be ``G.edges[u, v][weight]``). If no</span>
+<span class="sd">       such edge attribute exists, the weight of the edge is assumed to</span>
+<span class="sd">       be one.</span>
+
+<span class="sd">       If this is a function, the weight of an edge is the value</span>
+<span class="sd">       returned by the function. The function must accept exactly three</span>
+<span class="sd">       positional arguments: the two endpoints of an edge and the</span>
+<span class="sd">       dictionary of edge attributes for that edge. The function must</span>
+<span class="sd">       return a number or None to indicate a hidden edge.</span>
 
 
 <span class="sd">    Returns</span>
