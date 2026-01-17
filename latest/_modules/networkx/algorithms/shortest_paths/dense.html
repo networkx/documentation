@@ -546,6 +546,8 @@
             <span class="k">if</span> <span class="n">cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># for hidden edge, weight() returns None</span>
                 <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">cost</span>
                 <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># negative self loop</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">&quot;Negative cycle detected.&quot;</span><span class="p">)</span>
         <span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">return</span> <span class="n">pred</span><span class="p">,</span> <span class="n">dist</span>
 
@@ -605,6 +607,12 @@
 <span class="sd">    ------</span>
 <span class="sd">    NetworkXError</span>
 <span class="sd">        If nodelist is not a list of the nodes in G.</span>
+
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        If the (di)graph contains a negative (di)cycle, the</span>
+<span class="sd">        algorithm raises an exception to indicate the presence of the</span>
+<span class="sd">        negative (di)cycle.  Note: any negative weight edge in an</span>
+<span class="sd">        undirected graph is a negative cycle.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -621,10 +629,14 @@
         <span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="p">,</span> <span class="n">multigraph_weight</span><span class="o">=</span><span class="nb">min</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">nonedge</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
     <span class="p">)</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">&quot;Negative cycle detected.&quot;</span><span class="p">)</span>
     <span class="n">np</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># diagonal elements should be zero</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
         <span class="c1"># The second term has the same shape as A due to broadcasting</span>
         <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:][</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[:,</span> <span class="n">i</span><span class="p">][:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">&quot;Negative cycle detected.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">A</span></div>
 
 
@@ -668,6 +680,14 @@
 <span class="sd">        the shortest path. The distance output is a dict keyed by source</span>
 <span class="sd">        node to a dict keyed by target node to the distance value of the</span>
 <span class="sd">        shortest path between the source and target.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">        If the (di)graph contains a negative (di)cycle, the</span>
+<span class="sd">        algorithm raises an exception to indicate the presence of the</span>
+<span class="sd">        negative (di)cycle.  Note: any negative weight edge in an</span>
+<span class="sd">        undirected graph is a negative cycle.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -753,7 +773,7 @@
                 <span class="k">continue</span>
 
             <span class="c1"># note: we skip v=w as relaxation would always fail</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">dfs_dict</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">dfs_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">while</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">dist_uwv</span> <span class="o">=</span> <span class="n">dist_uw</span> <span class="o">+</span> <span class="n">dist_w</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">dist_u</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">dist_uwv</span><span class="p">:</span>
@@ -764,6 +784,8 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">v</span> <span class="o">=</span> <span class="n">skip_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">&quot;Negative cycle detected.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pred</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span></div>
 
 
@@ -796,6 +818,14 @@
 <span class="sd">    predecessor,distance : dictionaries</span>
 <span class="sd">       Dictionaries, keyed by source and target, of predecessors and distances</span>
 <span class="sd">       in the shortest path.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">       If the (di)graph contains a negative (di)cycle, the</span>
+<span class="sd">       algorithm raises an exception to indicate the presence of the</span>
+<span class="sd">       negative (di)cycle.  Note: any negative weight edge in an</span>
+<span class="sd">       undirected graph is a negative cycle.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -842,6 +872,8 @@
                 <span class="k">if</span> <span class="n">dist_u</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">d</span><span class="p">:</span>
                     <span class="n">dist_u</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
                     <span class="n">pred</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">pred</span><span class="p">[</span><span class="n">w</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">u</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">&quot;Negative cycle detected.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pred</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span></div>
 
 
@@ -922,6 +954,14 @@
 <span class="sd">    distance : dict</span>
 <span class="sd">       A dictionary,  keyed by source and target, of shortest paths distances</span>
 <span class="sd">       between nodes.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXUnbounded</span>
+<span class="sd">       If the (di)graph contains a negative (di)cycle, the</span>
+<span class="sd">       algorithm raises an exception to indicate the presence of the</span>
+<span class="sd">       negative (di)cycle.  Note: any negative weight edge in an</span>
+<span class="sd">       undirected graph is a negative cycle.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
