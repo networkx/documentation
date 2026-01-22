@@ -751,7 +751,9 @@
             <span class="n">numbered</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">}</span>
             <span class="n">clique_wanna_be</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">}</span>
             <span class="k">while</span> <span class="n">unnumbered</span><span class="p">:</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">_max_cardinality_node</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">unnumbered</span><span class="p">,</span> <span class="n">numbered</span><span class="p">)</span>
+                <span class="c1"># The node from the unnumbered set with the most connections</span>
+                <span class="c1"># to nodes in the numbered set</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">unnumbered</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">numbered</span><span class="p">))</span>
                 <span class="n">unnumbered</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
                 <span class="n">numbered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
                 <span class="n">new_clique_wanna_be</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">numbered</span>
@@ -831,19 +833,6 @@
             <span class="k">return</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">missing</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_max_cardinality_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">choices</span><span class="p">,</span> <span class="n">wanna_connect</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a the node in choices that has more connections in G</span>
-<span class="sd">    to nodes in wanna_connect.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">max_number</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">choices</span><span class="p">:</span>
-        <span class="n">number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">if</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">wanna_connect</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="n">max_number</span><span class="p">:</span>
-            <span class="n">max_number</span> <span class="o">=</span> <span class="n">number</span>
-            <span class="n">max_cardinality_node</span> <span class="o">=</span> <span class="n">x</span>
-    <span class="k">return</span> <span class="n">max_cardinality_node</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_chordality_breaker</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">treewidth_bound</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a graph G, starts a max cardinality search</span>
 <span class="sd">    (starting from s if s is given and from an arbitrary node otherwise)</span>
@@ -863,7 +852,9 @@
     <span class="n">numbered</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">}</span>
     <span class="n">current_treewidth</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
     <span class="k">while</span> <span class="n">unnumbered</span><span class="p">:</span>  <span class="c1"># and current_treewidth &lt;= treewidth_bound:</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="n">_max_cardinality_node</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">unnumbered</span><span class="p">,</span> <span class="n">numbered</span><span class="p">)</span>
+        <span class="c1"># The node from the unnumbered set with the most connections</span>
+        <span class="c1"># to nodes in the numbered set</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">unnumbered</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">numbered</span><span class="p">))</span>
         <span class="n">unnumbered</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="n">numbered</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="n">clique_wanna_be</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">numbered</span>
