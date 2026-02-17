@@ -517,8 +517,9 @@
 <span></span><span class="sd">&quot;&quot;&quot;Function for computing walks in a graph.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_implemented_for</span><span class="p">,</span> <span class="n">py_random_state</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;number_of_walks&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;number_of_walks&quot;</span><span class="p">,</span> <span class="s2">&quot;random_walk&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="number_of_walks">
@@ -593,6 +594,73 @@
         <span class="k">for</span> <span class="n">u_idx</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="random_walk">
+<a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.walks.random_walk.html#networkx.algorithms.walks.random_walk">[docs]</a>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;multigraph&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="s2">&quot;seed&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yields nodes visited by a random walk starting at `start`.</span>
+
+<span class="sd">    The generator yields nodes in walk order, including `start` as the first</span>
+<span class="sd">    yielded node, and terminates when there is no valid outgoing transition.</span>
+
+<span class="sd">    If `weight` is None, transitions are uniform over neighbors. If `weight` is</span>
+<span class="sd">    a string, transitions are proportional to that edge attribute, defaulting to</span>
+<span class="sd">    1 if missing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        The input graph.</span>
+<span class="sd">    start : node</span>
+<span class="sd">        Starting node for the random walk.</span>
+<span class="sd">    weight : string or None, optional (default=None)</span>
+<span class="sd">        Edge attribute name to interpret as the transition weight. If None, each edge has</span>
+<span class="sd">        weight 1.</span>
+<span class="sd">    seed : integer, random_state, or None (default=None)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iterator</span>
+<span class="sd">        An iterator yielding visited nodes in walk order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+
+    <span class="n">adj</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">node</span>
+        <span class="n">nbrs</span> <span class="o">=</span> <span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nbrs</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nbrs</span><span class="p">))</span>
+            <span class="k">continue</span>
+
+        <span class="n">positive_nbrs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">positive_weights</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">nbr</span><span class="p">,</span> <span class="n">edge_data</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">edge_weight</span> <span class="o">=</span> <span class="n">edge_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_weight</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Edge (</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">nbr</span><span class="si">}</span><span class="s2">) has negative weight </span><span class="si">{</span><span class="n">edge_weight</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">edge_weight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">positive_nbrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span>
+                <span class="n">positive_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge_weight</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">positive_nbrs</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">node</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">positive_nbrs</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">positive_weights</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
 </pre></div>
 
