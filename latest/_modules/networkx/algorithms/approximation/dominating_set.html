@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Feb 23, 2026"/>
+    <meta name="docbuild:last-update" content="Feb 24, 2026"/>
   </head>
   
   
@@ -516,8 +516,8 @@
   <h1>Source code for networkx.algorithms.approximation.dominating_set</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions for finding node and edge dominating sets.</span>
 
-<span class="sd">A `dominating set`_ for an undirected graph *G* with vertex set *V*</span>
-<span class="sd">and edge set *E* is a subset *D* of *V* such that every vertex not in</span>
+<span class="sd">A `dominating set`_ for an undirected graph *G* with node set *V*</span>
+<span class="sd">and edge set *E* is a subset *D* of *V* such that every node not in</span>
 <span class="sd">*D* is adjacent to at least one member of *D*. An `edge dominating set`_</span>
 <span class="sd">is a subset *F* of *E* such that every edge not in *F* is</span>
 <span class="sd">incident to an endpoint of at least one edge in *F*.</span>
@@ -566,7 +566,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.Graph([(0, 1), (0, 4), (1, 4), (1, 2), (2, 3), (3, 4), (2, 5)])</span>
 <span class="sd">    &gt;&gt;&gt; nx.approximation.min_weighted_dominating_set(G)</span>
-<span class="sd">    {1, 2, 4}</span>
+<span class="sd">    {1, 2}</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -607,26 +607,31 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">v</span><span class="p">,</span> <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">node_and_neighborhood</span>
-        <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighborhood</span> <span class="o">-</span> <span class="n">dom_set</span><span class="p">)</span>
+        <span class="c1"># Use the intersection with uncovered nodes, not just the</span>
+        <span class="c1"># difference with the dominating set.  A node&#39;s neighbors may</span>
+        <span class="c1"># already be dominated (covered by an adjacent dom_set member)</span>
+        <span class="c1"># without being in dom_set themselves.  See #8523.</span>
+        <span class="n">uncovered</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighborhood</span> <span class="o">&amp;</span> <span class="n">uncovered_nodes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">uncovered</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">uncovered</span>
 
-    <span class="c1"># This is a set of all vertices not already covered by the</span>
-    <span class="c1"># dominating set.</span>
-    <span class="n">vertices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="c1"># This is a dictionary mapping each node to the closed neighborhood</span>
-    <span class="c1"># of that node.</span>
+    <span class="c1"># A set of all nodes not yet covered by the dominating set.</span>
+    <span class="n">uncovered_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="c1"># A dict mapping each node to its closed neighborhood.</span>
     <span class="n">neighborhoods</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="p">{</span><span class="n">v</span><span class="p">}</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
 
-    <span class="c1"># Continue until all vertices are adjacent to some node in the</span>
+    <span class="c1"># Continue until all nodes are adjacent to some node in the</span>
     <span class="c1"># dominating set.</span>
-    <span class="k">while</span> <span class="n">vertices</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">uncovered_nodes</span><span class="p">:</span>
         <span class="c1"># Find the most cost-effective node to add, along with its</span>
         <span class="c1"># closed neighborhood.</span>
         <span class="n">dom_node</span><span class="p">,</span> <span class="n">min_set</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">neighborhoods</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">_cost</span><span class="p">)</span>
-        <span class="c1"># Add the node to the dominating set and reduce the remaining</span>
-        <span class="c1"># set of nodes to cover.</span>
+        <span class="c1"># Add the node to the dominating set and reduce the</span>
+        <span class="c1"># remaining set of nodes to cover.</span>
         <span class="n">dom_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dom_node</span><span class="p">)</span>
         <span class="k">del</span> <span class="n">neighborhoods</span><span class="p">[</span><span class="n">dom_node</span><span class="p">]</span>
-        <span class="n">vertices</span> <span class="o">-=</span> <span class="n">min_set</span>
+        <span class="n">uncovered_nodes</span> <span class="o">-=</span> <span class="n">min_set</span>
 
     <span class="k">return</span> <span class="n">dom_set</span></div>
 
