@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Feb 24, 2026"/>
+    <meta name="docbuild:last-update" content="Feb 26, 2026"/>
   </head>
   
   
@@ -525,7 +525,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms.community.community_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_partition</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">argmap</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;modularity&quot;</span><span class="p">,</span> <span class="s2">&quot;partition_quality&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;constant_potts_model&quot;</span><span class="p">,</span> <span class="s2">&quot;modularity&quot;</span><span class="p">,</span> <span class="s2">&quot;partition_quality&quot;</span><span class="p">]</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NotAPartition</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">):</span>
@@ -770,6 +770,164 @@
         <span class="k">return</span> <span class="n">L_c</span> <span class="o">/</span> <span class="n">m</span> <span class="o">-</span> <span class="n">resolution</span> <span class="o">*</span> <span class="n">out_degree_sum</span> <span class="o">*</span> <span class="n">in_degree_sum</span> <span class="o">*</span> <span class="n">norm</span>
 
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">community_contribution</span><span class="p">,</span> <span class="n">communities</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cpm_delta_partial_eval_remove</span><span class="p">(</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Let P = [A, B, C, D,...] be a partition, and let P&#39; = [A&#39;, B&#39;, C, D,...]</span>
+<span class="sd">    be the partition obtained by moving the node u from community A to</span>
+<span class="sd">    community B, that is where A&#39; = A\{u} and B = B \union {u}</span>
+
+<span class="sd">    The overall change in quality associated with this move is</span>
+
+<span class="sd">        q_delta = constant_potts_mode(G, P&#39;) - constant_potts_model(G, P)</span>
+
+<span class="sd">    Throughout the algorithm the quality q_delta will be computed by</span>
+<span class="sd">    calculating two intermediate values q_rem and q_add satisfying the</span>
+<span class="sd">    property that</span>
+
+<span class="sd">        q_delta = q_rem + q_add</span>
+
+<span class="sd">    The current function is one of a pair of similar functions</span>
+<span class="sd">    that compute these values with</span>
+
+<span class="sd">    q_rem = _cpm_delta_partial_eval_remove(G, u, A)</span>
+<span class="sd">    q_add = _cpm_delta_partial_eval_add(G, u, B)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A_prime</span> <span class="o">=</span> <span class="n">community</span> <span class="o">-</span> <span class="p">{</span><span class="n">node</span><span class="p">}</span>
+
+    <span class="n">n_A_prime</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">node_weight</span><span class="p">)</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A_prime</span><span class="p">)</span>
+
+    <span class="n">u_wt</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">node_weight</span><span class="p">]</span>
+
+    <span class="n">E_diff</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">({</span><span class="n">node</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">A_prime</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">resolution</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_A_prime</span> <span class="o">*</span> <span class="n">u_wt</span> <span class="o">-</span> <span class="n">E_diff</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cpm_delta_partial_eval_add</span><span class="p">(</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    One of a pair of partial evaluation functions. See</span>
+
+<span class="sd">        _cpm_delta_partial_eval_remove</span>
+
+<span class="sd">    for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_B</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">node_weight</span><span class="p">)</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+    <span class="c1"># could optimise by passing u_wt directly as a parameter rather than</span>
+    <span class="c1"># making this lookup</span>
+    <span class="n">u_wt</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">node_weight</span><span class="p">]</span>
+
+    <span class="n">E_D</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">({</span><span class="n">node</span><span class="p">},</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">E_D</span> <span class="o">-</span> <span class="n">resolution</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_B</span> <span class="o">*</span> <span class="n">u_wt</span>
+
+
+<div class="viewcode-block" id="constant_potts_model">
+<a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.quality.constant_potts_model.html#networkx.algorithms.community.quality.constant_potts_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">constant_potts_model</span><span class="p">(</span>
+    <span class="n">G</span><span class="p">,</span>
+    <span class="n">communities</span><span class="p">,</span>
+    <span class="n">weight</span><span class="p">,</span>
+    <span class="n">node_weight</span><span class="p">,</span>
+    <span class="n">resolution</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the Constant Potts Model, which is a measure of quality of a</span>
+<span class="sd">    partition. This is defined in [1]_ as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        Q = \sum_{C \in P} E(C,C) - \gamma n_C^2</span>
+
+<span class="sd">    Where</span>
+
+<span class="sd">    E(C,C) is the sum of all edge weights within the community C,</span>
+<span class="sd">    n_C is the sum of the weights of the nodes in C.</span>
+<span class="sd">    \gamma is the resolution parameter. See Notes below for more</span>
+<span class="sd">    more detail on resolution parameter.</span>
+
+<span class="sd">    The Constant Potts Model is similar to modularity, but overcomes the</span>
+<span class="sd">    so-called resolution limit problem when used in community detection</span>
+<span class="sd">    algorithms like leiden and louvain.</span>
+
+<span class="sd">    The Constant Potts Model is used by default in the leiden community</span>
+<span class="sd">    detection algorithm</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+
+<span class="sd">    communities : list or iterable of sets of nodes</span>
+<span class="sd">        These node sets must represent a partition of G&#39;s nodes.</span>
+
+<span class="sd">    weight : string or None, optional</span>
+<span class="sd">        The edge attribute that holds the numerical value used</span>
+<span class="sd">        as a weight. If None or an edge does not have that attribute,</span>
+<span class="sd">        then that edge has weight 1.</span>
+
+<span class="sd">    node_weight : string or None, optional</span>
+<span class="sd">        The node attribute that holds the numerical value used as</span>
+<span class="sd">        a weight. If None or an edge does not have tha attribute,</span>
+<span class="sd">        then the node is treated as having weight 1</span>
+
+<span class="sd">    resolution : float</span>
+<span class="sd">        For smaller resolution values, the constant_potts_model will be</span>
+<span class="sd">        maximised by a partition consisting of larger communities; for</span>
+<span class="sd">        larger resolution values constant_potts_model will be maximised</span>
+<span class="sd">        for smaller communities.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Q : float</span>
+<span class="sd">        The Constant Potts Model value of the partition.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The interpretation of the resolution parameter \gamma is explained as</span>
+<span class="sd">    follows in page 3 of [1]_:</span>
+
+<span class="sd">        [The Constant Potts Model] tries to maximize the number of</span>
+<span class="sd">        internal edges while at the same time keeping relatively small</span>
+<span class="sd">        communities.</span>
+
+<span class="sd">        [The resolution, \gamma] balances these two imperatives. In fact,</span>
+<span class="sd">        the parameter \gamma acts as the inner and outer edge density</span>
+<span class="sd">        threshold. That is, suppose there is a community [C] with [E(C, C)]</span>
+<span class="sd">        edges and [n_C] nodes. Then it is better to split it into two</span>
+<span class="sd">        communities r and s whenever</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \frac{[E(r,s)]}{2 n_r n_s} &lt; \gamma</span>
+
+<span class="sd">        where [E(r,s)] is the number [or weighted sum] of links between</span>
+<span class="sd">        community r and s. This ratio is exactly the density of links between</span>
+<span class="sd">        community r and s. So, the link density between communities should be</span>
+<span class="sd">        lower than \gamma, while the link density within communities should</span>
+<span class="sd">        be higher than \gamma.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] V.A. Traag, P. Van Dooren, Y. Nesterov &quot;Narrow scope for</span>
+<span class="sd">       resolution-limit-free community detection&quot;</span>
+<span class="sd">       &lt;https://arxiv.org/abs/1104.3083&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">community_contribution</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+        <span class="n">comm</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">community</span><span class="p">)</span>
+        <span class="n">E_c</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">comm</span><span class="p">)</span>
+
+        <span class="n">n_c</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">E_c</span> <span class="o">-</span> <span class="n">resolution</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">community_contribution</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">communities</span><span class="p">)</span></div>
 
 
 
