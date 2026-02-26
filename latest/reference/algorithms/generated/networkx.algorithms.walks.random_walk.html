@@ -648,13 +648,119 @@ See <a class="reference internal" href="../../randomness.html#randomness"><span 
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>iterator</dt><dd><p>An iterator yielding visited nodes in walk order.</p>
+<dt>node</dt><dd><p>The next node in the random walk</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>nx.NodeNotFound</dt><dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">start</span></code> is not in <code class="xref py py-obj docutils literal notranslate"><span class="pre">G</span></code></p>
+</dd>
+<dt>ValueError</dt><dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">weight</span></code> is not None and a negative weight is encountered.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<p>The <a class="reference internal" href="#networkx.algorithms.walks.random_walk" title="networkx.algorithms.walks.random_walk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_walk</span></code></a> generator is designed to be very flexible, thus there is
+no default condition for terminating a walk.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Calling <code class="docutils literal notranslate"><span class="pre">list(nx.random_walk(G,</span> <span class="pre">start=n))</span></code> will result in an infinite
+loop if <code class="xref py py-obj docutils literal notranslate"><span class="pre">G</span></code> is undirected (or strongly connected if directed).</p>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">cycle_graph</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To generate a walk with a given length:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">walk_length</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rw</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">99</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">rw</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">walk_length</span><span class="p">)]</span>
+<span class="go">[0, 9, 0, 1]</span>
+</pre></div>
+</div>
+<p>or with <a class="reference external" href="https://docs.python.org/3/library/itertools.html#itertools.islice" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">itertools.islice</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rw</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">99</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">rw</span><span class="p">,</span> <span class="n">walk_length</span><span class="p">))</span>
+<span class="go">[0, 9, 0, 1]</span>
+</pre></div>
+</div>
+<p>One may want to terminate a walk when a specific node (or set of nodes) is
+reached; for example, transitioning from one “barbell” to the other:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">barbell_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">terminal_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rwg</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">999999</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">takewhile</span><span class="p">(</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">terminal_nodes</span><span class="p">,</span> <span class="n">rwg</span><span class="p">))</span>
+<span class="go">[0, 2, 1, 2, 4]</span>
+</pre></div>
+</div>
+<p>Or perform a walk with a termination probability for each step:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">5040</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">termination_probability</span> <span class="o">=</span> <span class="mf">0.25</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">itertools</span><span class="o">.</span><span class="n">takewhile</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">termination_probability</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">999</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">[0, 2, 9, 7]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#networkx.algorithms.walks.random_walk" title="networkx.algorithms.walks.random_walk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_walk</span></code></a> can be combined with distance constraints to sample local
+regions in a graph:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">balanced_tree</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">distance</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">single_source_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">distance_limit</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">itertools</span><span class="o">.</span><span class="n">takewhile</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">distance</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">distance_limit</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">99</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">[0, 2, 5, 2, 6, 2, 0, 1, 0, 1, 3]</span>
+</pre></div>
+</div>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">weight</span></code> keyword can be used to indicate an edge attribute to use for
+weighted sampling:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">set_edge_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span> <span class="mi">10</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rw</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">rw</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">[1, 2, 1, 2, 1, 2, 1, 2, 1, 0]</span>
+</pre></div>
+</div>
+<p>When performing a weighted walk, edges with 0 weight are ignored:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">star_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">set_edge_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">))},</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rw</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">rw</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[0, 1, 0, 1]</span>
+</pre></div>
+</div>
+<p>For directed graphs, if a node with 0 outdegree is reached, the walk will
+terminate:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[3, 4]</span>
+</pre></div>
+</div>
+<p>Self-loop edges are included in the neighbor sampling:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">random_walk</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">[0, 0, 0, 0, 0]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
