@@ -519,6 +519,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_implemented_for</span>
@@ -529,7 +530,7 @@
 <div class="viewcode-block" id="closeness_centrality">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.centrality.closeness_centrality.html#networkx.algorithms.centrality.closeness_centrality">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;distance&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">closeness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wf_improved</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">closeness_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wf_improved</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute closeness centrality for nodes.</span>
 
 <span class="sd">    Closeness centrality [1]_ of a node `u` is the reciprocal of the</span>
@@ -577,6 +578,16 @@
 <span class="sd">      Wasserman and Faust improved formula. For single component graphs</span>
 <span class="sd">      it is the same as the original formula.</span>
 
+<span class="sd">    sp : dict of dicts, optional</span>
+<span class="sd">      All pairs shortest path lengths as a dictionary of dictionaries</span>
+<span class="sd">      sp[i][j] gives the shortest path length from source i to target j.</span>
+<span class="sd">      This allows you to provide precomputed shortest-path info to speed</span>
+<span class="sd">      up the calculation. If you have already computed shortest paths,</span>
+<span class="sd">      or if you will need to later, you can avoid computing it inside</span>
+<span class="sd">      this function. This function assumes `sp` is a proper dict-of-dict</span>
+<span class="sd">      for all pairs shortest paths as produced by the networkx functions</span>
+<span class="sd">      for that. If `sp` is set, the `distance` argument will be ignored.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    nodes : dictionary</span>
@@ -591,7 +602,8 @@
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    betweenness_centrality, load_centrality, eigenvector_centrality,</span>
-<span class="sd">    degree_centrality, incremental_closeness_centrality</span>
+<span class="sd">    degree_centrality, incremental_closeness_centrality,</span>
+<span class="sd">    all_pairs_shortest_path_length, all_pairs_dijkstra_path_length</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -624,6 +636,14 @@
     <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
         <span class="n">G</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>  <span class="c1"># create a reversed graph view</span>
 
+        <span class="k">if</span> <span class="n">sp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># reverse the sp</span>
+            <span class="n">rev_sp</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>  <span class="c1"># handles missing keys by defaulting to {}</span>
+            <span class="k">for</span> <span class="n">key1</span><span class="p">,</span> <span class="n">dict1</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">key2</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict1</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">rev_sp</span><span class="p">[</span><span class="n">key2</span><span class="p">][</span><span class="n">key1</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">sp</span> <span class="o">=</span> <span class="n">rev_sp</span>
+
     <span class="k">if</span> <span class="n">distance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># use Dijkstra&#39;s algorithm with specified attribute as edge weight</span>
         <span class="n">path_length</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
@@ -638,15 +658,20 @@
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="p">]</span>
     <span class="n">closeness_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-        <span class="n">sp</span> <span class="o">=</span> <span class="n">path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-        <span class="n">totsp</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">sp_node</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">sp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sp_node</span> <span class="o">=</span> <span class="n">path_length</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sp_node</span> <span class="o">=</span> <span class="n">sp</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+        <span class="n">totsp</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sp_node</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
         <span class="n">len_G</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
         <span class="n">_closeness_centrality</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">if</span> <span class="n">totsp</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">len_G</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">_closeness_centrality</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">totsp</span>
+            <span class="n">_closeness_centrality</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp_node</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">totsp</span>
             <span class="c1"># normalize to number of nodes-1 in connected part</span>
             <span class="k">if</span> <span class="n">wf_improved</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">len_G</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sp_node</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">len_G</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">_closeness_centrality</span> <span class="o">*=</span> <span class="n">s</span>
         <span class="n">closeness_dict</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">_closeness_centrality</span>
     <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
