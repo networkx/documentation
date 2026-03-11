@@ -661,14 +661,52 @@ do not form an independent set, an exception is raised.</p>
 </dl>
 </dd>
 </dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="networkx.algorithms.approximation.clique.maximum_independent_set.html#networkx.algorithms.approximation.clique.maximum_independent_set" title="networkx.algorithms.approximation.clique.maximum_independent_set"><code class="xref py py-func docutils literal notranslate"><span class="pre">maximum_independent_set()</span></code></a></dt><dd><p>Algorithm for approximating the maximum independent set, i.e. a maximal independent set of maximum cardinality.</p>
+</dd>
+</dl>
+</div>
 <p class="rubric">Notes</p>
 <p>This algorithm does not solve the maximum independent set problem.</p>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">maximal_independent_set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-<span class="go">[4, 0, 2]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">maximal_independent_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">maximal_independent_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 <span class="go">[1, 3]</span>
+</pre></div>
+</div>
+<p>Note that a graph may have many maximal independent sets; for example, the
+path graph with 4 nodes has 3 maximal independent sets: <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">2}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">3}</span></code> and <code class="docutils literal notranslate"><span class="pre">{1,</span> <span class="pre">3}</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">maximal_independent_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">[0, 2]</span>
+</pre></div>
+</div>
+<p>This function returns a single maximal independent set. Enumerating <em>all</em>
+of the maximal independent sets in a graph can be achieved by enumerating the
+cliques in the complement graph:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="nb">sorted</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">enumerate_all_cliques</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>  <span class="c1"># Ignore cliques comprising a single node</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">[[0, 2], [0, 3], [1, 3]]</span>
+</pre></div>
+</div>
+<p>Note however that enumerating all cliques is exponential in the number of
+nodes in the worst case (e.g. the complete graph).</p>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">nodes</span></code> keyword argument can be used to produce a maximal independent
+set that contains the given node(s):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">maximal_independent_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">}))</span>
+<span class="go">[1, 3]</span>
+</pre></div>
+</div>
+<p>An exception is raised if <code class="xref py py-obj docutils literal notranslate"><span class="pre">nodes</span></code> are not independent</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">maximal_independent_set</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">})</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">   </span><span class="c">...</span>
+<span class="gr">networkx.exception.NetworkXUnfeasible</span>: <span class="n">{1, 2} is not an independent set of G</span>
 </pre></div>
 </div>
 </dd></dl>
