@@ -67,7 +67,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Mar 06, 2026"/>
+    <meta name="docbuild:last-update" content="Mar 11, 2026"/>
   </head>
   
   
@@ -896,6 +896,9 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">PythonRandomInterface</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;PythonRandomInterface is included for backward compatibility</span>
 <span class="sd">    New code should use PythonRandomViaNumpyBits instead.</span>
+
+<span class="sd">    Unsupported Python `random` API methods will raise an informative</span>
+<span class="sd">    AttributeError suggesting the use of `numpy.random.Generator`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -970,6 +973,16 @@
     <span class="c1">#    pareto as paretovariate with argument,</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">paretovariate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">pareto</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;random.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not supported when using numpy.random.RandomState. &quot;</span>
+                <span class="s2">&quot;Please use numpy.random.Generator instead.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="p">)</span>
 
 
 <span class="c1">#    weibull as weibullvariate multiplied by beta,</span>
