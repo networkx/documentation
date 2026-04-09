@@ -589,6 +589,11 @@
 <span class="sd">    version: string (optional, default: &#39;1.2draft&#39;)</span>
 <span class="sd">       The version of GEXF to be used for nodes attributes checking</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an attribute has mixed typed values across nodes or edges.</span>
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
@@ -639,6 +644,11 @@
 <span class="sd">    version : string (default: 1.2draft)</span>
 <span class="sd">    Version of GEFX File Format (see http://gexf.net/schema.html)</span>
 <span class="sd">    Supported values: &quot;1.1draft&quot;, &quot;1.2draft&quot;</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an attribute has mixed typed values across nodes or edges.</span>
 
 
 <span class="sd">    Examples</span>
@@ -1073,11 +1083,22 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_attr_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">attr_type</span><span class="p">,</span> <span class="n">edge_or_node</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
         <span class="c1"># find the id of the attribute or generate a new id</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">]</span>
+            <span class="n">existing_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="n">existing_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">][</span><span class="s2">&quot;attr_type&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Check if the type of the attribute value is consistent with the type of the attribute</span>
+            <span class="k">if</span> <span class="n">existing_type</span> <span class="o">!=</span> <span class="n">attr_type</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Attribute </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> has type </span><span class="si">{</span><span class="n">existing_type</span><span class="si">}</span><span class="s2"> but value </span><span class="si">{</span><span class="n">attr_type</span><span class="si">}</span><span class="s2"> was given.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">existing_id</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="c1"># generate new id</span>
             <span class="n">new_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attr_id</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="n">edge_or_node</span><span class="p">][</span><span class="n">mode</span><span class="p">][</span><span class="n">title</span><span class="p">][</span><span class="s2">&quot;attr_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr_type</span>
             <span class="n">attr_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">new_id</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">attr_type</span><span class="p">}</span>
             <span class="n">attribute</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s2">&quot;attribute&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">attr_kwargs</span><span class="p">)</span>
             <span class="c1"># add subelement for data default value if present</span>
