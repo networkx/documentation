@@ -68,7 +68,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Apr 11, 2026"/>
+    <meta name="docbuild:last-update" content="Apr 12, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -1194,7 +1194,6 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A DegreeView class to report out_degree for a DiGraph; See DegreeView&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span>
         <span class="n">nbrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span>
@@ -1739,8 +1738,9 @@
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>  <span class="c1"># Customize msg to indicate exception origin</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The edge </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> is not in the graph.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">err</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The edge </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> is not in the graph&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
 
     <span class="c1"># EdgeDataView methods</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1971,7 +1971,11 @@
                 <span class="sa">f</span><span class="s2">&quot;try list(G.in_edges)[</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">stop</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">step</span><span class="si">}</span><span class="s2">]&quot;</span>
             <span class="p">)</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">err</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The edge </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> is not in the graph&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">OutMultiEdgeView</span><span class="p">(</span><span class="n">OutEdgeView</span><span class="p">):</span>
@@ -2013,7 +2017,11 @@
                 <span class="sa">f</span><span class="s2">&quot;try list(G.edges)[</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">stop</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">step</span><span class="si">}</span><span class="s2">]&quot;</span>
             <span class="p">)</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">e</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">err</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The edge </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> is not in the graph&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">nbunch</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">keys</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
@@ -2091,7 +2099,11 @@
                 <span class="sa">f</span><span class="s2">&quot;try list(G.in_edges)[</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">stop</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">step</span><span class="si">}</span><span class="s2">]&quot;</span>
             <span class="p">)</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">e</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjdict</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">err</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The edge </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> is not in the graph&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
 </pre></div>
 
                 </article>
