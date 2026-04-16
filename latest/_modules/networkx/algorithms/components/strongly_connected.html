@@ -581,57 +581,93 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    Uses Tarjan&#39;s algorithm[1]_ with Nuutila&#39;s modifications[2]_.</span>
-<span class="sd">    Nonrecursive version of algorithm.</span>
+<span class="sd">    Iterative version of Tarjan&#39;s algorithm using the improvements</span>
+<span class="sd">    described by Tarjan and Zwick in their survey [1]_, plus a trick</span>
+<span class="sd">    borrowed from the Rust implementation of the WebGraph framework [2]_.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Depth-first search and linear graph algorithms, R. Tarjan</span>
-<span class="sd">       SIAM Journal of Computing 1(2):146-160, (1972).</span>
+<span class="sd">    .. [1] Robert E. Tarjan and Uri Zwick, &quot;Finding strong components using</span>
+<span class="sd">       depth-first search&quot;, European Journal of Combinatorics, 119, 2024.</span>
+<span class="sd">       https://doi.org/10.1016/j.ejc.2023.103815</span>
 
-<span class="sd">    .. [2] On finding the strongly connected components in a directed graph.</span>
-<span class="sd">       E. Nuutila and E. Soisalon-Soinen</span>
-<span class="sd">       Information Processing Letters 49(1): 9-14, (1994)..</span>
-
+<span class="sd">    .. [2] Tommaso Fontana, Sebastiano Vigna, and Stefano Zacchiroli,</span>
+<span class="sd">       &quot;WebGraph: The next generation (is in Rust)&quot;, Companion Proceedings</span>
+<span class="sd">       of the ACM Web Conference 2024, pp. 686-689, 2024.</span>
+<span class="sd">       https://doi.org/10.1145/3589335.3651581</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">preorder</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">adj</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span>
+    <span class="c1"># lowlink[v] doubles as preorder timestamp and low-link: on first visit</span>
+    <span class="c1"># it is set to v&#39;s preorder number and may then only decrease, via</span>
+    <span class="c1"># back / cross arcs, toward the preorder number of some ancestor.</span>
     <span class="n">lowlink</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">scc_found</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="n">scc_queue</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Preorder counter</span>
-    <span class="n">neighbors</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">v</span><span class="p">])</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+    <span class="c1"># Parallel stacks representing the current DFS path. Each frame holds</span>
+    <span class="c1"># (node, iterator over remaining successors, lead flag). A stack</span>
+    <span class="c1"># of triples is measurably slower.</span>
+    <span class="n">dfs_v</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dfs_it</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dfs_lead</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Nodes popped from the DFS path but not yet assigned to any SCC.</span>
+    <span class="n">comp_stack</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+
     <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scc_found</span><span class="p">:</span>
-            <span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
-            <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
-                <span class="n">v</span> <span class="o">=</span> <span class="n">queue</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">preorder</span><span class="p">:</span>
-                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
-                    <span class="n">preorder</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
-                <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">preorder</span><span class="p">:</span>
-                        <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
-                        <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
-                        <span class="k">break</span>
-                <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
-                    <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">preorder</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
-                    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scc_found</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="n">preorder</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">preorder</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
-                                <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">w</span><span class="p">]])</span>
-                            <span class="k">else</span><span class="p">:</span>
-                                <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">preorder</span><span class="p">[</span><span class="n">w</span><span class="p">]])</span>
-                    <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">preorder</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
-                        <span class="n">scc</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">}</span>
-                        <span class="k">while</span> <span class="n">scc_queue</span> <span class="ow">and</span> <span class="n">preorder</span><span class="p">[</span><span class="n">scc_queue</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">&gt;</span> <span class="n">preorder</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
-                            <span class="n">k</span> <span class="o">=</span> <span class="n">scc_queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-                            <span class="n">scc</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-                        <span class="n">scc_found</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">lowlink</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">root_low</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="n">lowlink</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="n">dfs_v</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">dfs_it</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">adj</span><span class="p">[</span><span class="n">source</span><span class="p">]))</span>
+        <span class="n">dfs_lead</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">dfs_v</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">dfs_v</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">dfs_it</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lowlink</span><span class="p">:</span>
+                    <span class="c1"># Tree arc: previsit w and descend.</span>
+                    <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">lowlink</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+                    <span class="n">dfs_v</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                    <span class="n">dfs_it</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">adj</span><span class="p">[</span><span class="n">w</span><span class="p">]))</span>
+                    <span class="n">dfs_lead</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="k">break</span>
+                <span class="c1"># Back/cross arc.</span>
+                <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scc_found</span> <span class="ow">and</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">w</span><span class="p">]:</span>
+                    <span class="n">dfs_lead</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
+                    <span class="c1"># Early exit: every node has been preordered during</span>
+                    <span class="c1"># this DFS tree and v has just linked back to the</span>
+                    <span class="c1"># root, so the whole graph is a single SCC.</span>
+                    <span class="k">if</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">root_low</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                        <span class="n">scc</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">comp_stack</span><span class="p">)</span>
+                        <span class="n">scc</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dfs_v</span><span class="p">)</span>
                         <span class="k">yield</span> <span class="n">scc</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">scc_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span></div>
+                        <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># All successors of v processed: postvisit.</span>
+                <span class="n">dfs_v</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">dfs_it</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">dfs_lead</span><span class="o">.</span><span class="n">pop</span><span class="p">():</span>
+                    <span class="c1"># v is an SCC root: pull its members off comp_stack.</span>
+                    <span class="n">v_low</span> <span class="o">=</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                    <span class="n">scc</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">}</span>
+                    <span class="k">while</span> <span class="n">comp_stack</span> <span class="ow">and</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">comp_stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">&gt;=</span> <span class="n">v_low</span><span class="p">:</span>
+                        <span class="n">scc</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">comp_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+                    <span class="n">scc_found</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scc</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">scc</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># v is not a root: park it on comp_stack and propagate</span>
+                    <span class="c1"># its lowlink to the parent frame.</span>
+                    <span class="n">comp_stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="n">parent</span> <span class="o">=</span> <span class="n">dfs_v</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                        <span class="n">dfs_lead</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="n">lowlink</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="o">=</span> <span class="n">lowlink</span><span class="p">[</span><span class="n">v</span><span class="p">]</span></div>
 
 
 
