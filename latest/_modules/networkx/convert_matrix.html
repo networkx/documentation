@@ -68,7 +68,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Apr 15, 2026"/>
+    <meta name="docbuild:last-update" content="Apr 16, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -677,7 +677,7 @@
 <div class="viewcode-block" id="from_pandas_adjacency">
 <a class="viewcode-back" href="../../reference/generated/networkx.convert_matrix.from_pandas_adjacency.html#networkx.convert_matrix.from_pandas_adjacency">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">graphs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">from_pandas_adjacency</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_pandas_adjacency</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">nonedge</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a graph from Pandas DataFrame.</span>
 
 <span class="sd">    The Pandas DataFrame is interpreted as an adjacency matrix for the graph.</span>
@@ -689,6 +689,10 @@
 
 <span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
 <span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    nonedge : array_like (default = 0)</span>
+<span class="sd">        The value used to represent non-edges in the adjacency matrix.</span>
+<span class="sd">        See :func:`from_numpy_array` for details.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -737,7 +741,9 @@
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Columns must match Indices.&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
     <span class="n">A</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">G</span> <span class="o">=</span> <span class="n">from_numpy_array</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">create_using</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">from_numpy_array</span><span class="p">(</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">create_using</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">nonedge</span><span class="o">=</span><span class="n">nonedge</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">G</span></div>
 
@@ -1668,7 +1674,13 @@
 <a class="viewcode-back" href="../../reference/generated/networkx.convert_matrix.from_numpy_array.html#networkx.convert_matrix.from_numpy_array">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">graphs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_numpy_array</span><span class="p">(</span>
-    <span class="n">A</span><span class="p">,</span> <span class="n">parallel_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">A</span><span class="p">,</span>
+    <span class="n">parallel_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">edge_attr</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">nonedge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a graph from a 2D NumPy array.</span>
 
@@ -1697,6 +1709,13 @@
 <span class="sd">        A sequence of objects to use as the nodes in the graph. If provided, the</span>
 <span class="sd">        list of nodes must be the same length as the dimensions of `A`. The</span>
 <span class="sd">        default is `None`, in which case the nodes are drawn from ``range(n)``.</span>
+
+<span class="sd">    nonedge : array_like (default = 0)</span>
+<span class="sd">        The value used to represent non-edges in the adjacency matrix. Entries</span>
+<span class="sd">        in `A` equal to this value will not be added as edges. If the array has</span>
+<span class="sd">        a numeric dtype, the default non-edge value is ``0``, which means</span>
+<span class="sd">        entries with value ``0`` are not treated as edges. To create edges with</span>
+<span class="sd">        weight ``0``, use a different sentinel (e.g. ``nan``).</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -1757,6 +1776,13 @@
 <span class="sd">    &gt;&gt;&gt; G[1][1]</span>
 <span class="sd">    AtlasView({0: {&#39;weight&#39;: 1}, 1: {&#39;weight&#39;: 1}})</span>
 
+<span class="sd">    Using ``nan`` as the nonedge sentinel allows zero-weight edges:</span>
+
+<span class="sd">    &gt;&gt;&gt; A = np.array([[np.nan, 0.0], [0.0, np.nan]])</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.from_numpy_array(A, nonedge=np.nan)</span>
+<span class="sd">    &gt;&gt;&gt; sorted(G.edges(data=True))</span>
+<span class="sd">    [(0, 1, {&#39;weight&#39;: 0.0})]</span>
+
 <span class="sd">    User defined compound data type on edges:</span>
 
 <span class="sd">    &gt;&gt;&gt; dt = [(&quot;weight&quot;, float), (&quot;cost&quot;, int)]</span>
@@ -1799,10 +1825,15 @@
 
     <span class="c1"># Make sure we get even the isolated nodes of the graph.</span>
     <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)</span>
-    <span class="c1"># Get a list of all the entries in the array with nonzero entries. These</span>
-    <span class="c1"># coordinates become edges in the graph. (convert to int from np.int64)</span>
-    <span class="n">edges</span> <span class="o">=</span> <span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()))</span>
-    <span class="c1"># handle numpy constructed data type</span>
+    <span class="c1"># Get a list of all the entries in the array with nonzero entries which are not equal</span>
+    <span class="c1"># to the nonedge sentinel. These coordinates become edges in the graph. (convert to int from np.int64)</span>
+    <span class="k">if</span> <span class="n">python_type</span> <span class="o">==</span> <span class="s2">&quot;void&quot;</span><span class="p">:</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()))</span>
+    <span class="k">elif</span> <span class="n">nonedge</span> <span class="o">!=</span> <span class="n">nonedge</span><span class="p">:</span>  <span class="c1"># to check if nonedge is nan</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">A</span> <span class="o">==</span> <span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">A</span> <span class="o">!=</span> <span class="n">nonedge</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()))</span>
+    <span class="c1"># Handle numpy constructed data type</span>
     <span class="k">if</span> <span class="n">python_type</span> <span class="o">==</span> <span class="s2">&quot;void&quot;</span><span class="p">:</span>
         <span class="c1"># Sort the fields by their offset, then by dtype, then by name.</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
