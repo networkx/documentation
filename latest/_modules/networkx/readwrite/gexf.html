@@ -68,7 +68,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Apr 22, 2026"/>
+    <meta name="docbuild:last-update" content="Apr 23, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -612,6 +612,9 @@
 <span class="sd">    This implementation does not support mixed graphs (directed and undirected</span>
 <span class="sd">    edges together).</span>
 
+<span class="sd">    This implementation supports writing a single graph per GEXF file.</span>
+<span class="sd">    GEXF documents containing multiple graphs are not supported.</span>
+
 <span class="sd">    The node id attribute is set to be the string of the node label.</span>
 <span class="sd">    If you want to specify an id use set it as node data, e.g.</span>
 <span class="sd">    node[&#39;a&#39;][&#39;id&#39;]=1 to set the id of node &#39;a&#39; to 1.</span>
@@ -670,6 +673,9 @@
 <span class="sd">    This implementation does not support mixed graphs (directed and undirected</span>
 <span class="sd">    edges together).</span>
 
+<span class="sd">    This implementation supports writing a single graph per GEXF file.</span>
+<span class="sd">    GEXF documents containing multiple graphs are not supported.</span>
+
 <span class="sd">    The node id attribute is set to be the string of the node label.</span>
 <span class="sd">    If you want to specify an id use set it as node data, e.g.</span>
 <span class="sd">    node[&#39;a&#39;][&#39;id&#39;]=1 to set the id of node &#39;a&#39; to 1.</span>
@@ -718,6 +724,9 @@
 <span class="sd">    -----</span>
 <span class="sd">    This implementation does not support mixed graphs (directed and undirected</span>
 <span class="sd">    edges together).</span>
+
+<span class="sd">    This implementation supports reading a single graph per GEXF file.</span>
+<span class="sd">    GEXF documents containing multiple graphs are not supported.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -860,11 +869,11 @@
 
         <span class="c1"># Make meta element a non-graph element</span>
         <span class="c1"># Also add lastmodifieddate as attribute, not tag</span>
-        <span class="n">meta_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_element</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span>
         <span class="n">subelement_text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;NetworkX </span><span class="si">{</span><span class="n">nx</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">SubElement</span><span class="p">(</span><span class="n">meta_element</span><span class="p">,</span> <span class="s2">&quot;creator&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">subelement_text</span>
-        <span class="n">meta_element</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;lastmodifieddate&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">meta_element</span><span class="p">)</span>
+        <span class="n">SubElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_element</span><span class="p">,</span> <span class="s2">&quot;creator&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">subelement_text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_element</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;lastmodifieddate&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_element</span><span class="p">)</span>
 
         <span class="n">register_namespace</span><span class="p">(</span><span class="s2">&quot;viz&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">NS_VIZ</span><span class="p">)</span>
 
@@ -901,6 +910,14 @@
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;dynamic&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;static&quot;</span>
+        <span class="c1"># set graph description in meta element</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">SubElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_element</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+        <span class="c1"># set graph keywords in meta element</span>
+        <span class="n">keywords</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;keywords&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">keywords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">SubElement</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_element</span><span class="p">,</span> <span class="s2">&quot;keywords&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">keywords</span><span class="p">)</span>
         <span class="c1"># Add a graph element to the XML</span>
         <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
             <span class="n">default</span> <span class="o">=</span> <span class="s2">&quot;directed&quot;</span>
@@ -1273,24 +1290,35 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">xml</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GEXF</span><span class="si">}</span><span class="se">}}</span><span class="s2">meta&quot;</span><span class="p">)</span>
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GEXF</span><span class="si">}</span><span class="se">}}</span><span class="s2">graph&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_graph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">meta_xml</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
         <span class="c1"># try all the versions</span>
         <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GEXF</span><span class="si">}</span><span class="se">}}</span><span class="s2">meta&quot;</span><span class="p">)</span>
             <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GEXF</span><span class="si">}</span><span class="se">}}</span><span class="s2">graph&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_graph</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_graph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">meta_xml</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;No &lt;graph&gt; element in GEXF file.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">make_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_xml</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_xml</span><span class="p">,</span> <span class="n">meta_xml</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># start with empty DiGraph or MultiDiGraph</span>
         <span class="n">edgedefault</span> <span class="o">=</span> <span class="n">graph_xml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;defaultedgetype&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">edgedefault</span> <span class="o">==</span> <span class="s2">&quot;directed&quot;</span><span class="p">:</span>
             <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
+
+        <span class="c1"># add description and keywords from meta element</span>
+        <span class="k">if</span> <span class="n">meta_xml</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="n">meta_xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GEXF</span><span class="si">}</span><span class="se">}}</span><span class="s2">description&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">keywords</span> <span class="o">=</span> <span class="n">meta_xml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">NS_GEXF</span><span class="si">}</span><span class="se">}}</span><span class="s2">keywords&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">keywords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;keywords&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="o">.</span><span class="n">text</span>
 
         <span class="c1"># graph attributes</span>
         <span class="n">graph_name</span> <span class="o">=</span> <span class="n">graph_xml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
