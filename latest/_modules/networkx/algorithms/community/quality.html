@@ -527,13 +527,19 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms.community.community_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_partition</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">argmap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms.community.community_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_cover</span><span class="p">,</span> <span class="n">is_partition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">argmap</span><span class="p">,</span> <span class="n">not_implemented_for</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;constant_potts_model&quot;</span><span class="p">,</span> <span class="s2">&quot;modularity&quot;</span><span class="p">,</span> <span class="s2">&quot;partition_quality&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;constant_potts_model&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;modularity&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;overlapping_modularity&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;partition_quality&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NotAPartition</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">):</span>
@@ -778,6 +784,160 @@
         <span class="k">return</span> <span class="n">L_c</span> <span class="o">/</span> <span class="n">m</span> <span class="o">-</span> <span class="n">resolution</span> <span class="o">*</span> <span class="n">out_degree_sum</span> <span class="o">*</span> <span class="n">in_degree_sum</span> <span class="o">*</span> <span class="n">norm</span>
 
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">community_contribution</span><span class="p">,</span> <span class="n">communities</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="overlapping_modularity">
+<a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.quality.overlapping_modularity.html#networkx.algorithms.community.quality.overlapping_modularity">[docs]</a>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">overlapping_modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns Shen et al.&#39;s extended modularity for an overlapping cover.</span>
+
+<span class="sd">    Standard modularity assumes each node belongs to exactly one</span>
+<span class="sd">    community. Shen et al. [1]_ extend modularity to overlapping</span>
+<span class="sd">    communities by discounting each node&#39;s contribution by the number of</span>
+<span class="sd">    communities it belongs to:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        EQ = \frac{1}{2m} \sum_{i} \sum_{v \in C_i, w \in C_i}</span>
+<span class="sd">             \frac{1}{O_v O_w}\!\left[ A_{vw} - \gamma\,\frac{k_v k_w}{2m}\right]</span>
+
+<span class="sd">    where the outer sum runs over communities $C_i$ in the cover, $A_{vw}$</span>
+<span class="sd">    is the (weighted) adjacency, $k_v$ is the (weighted) degree of $v$,</span>
+<span class="sd">    $O_v$ is the number of communities to which $v$ belongs, $m$ is the</span>
+<span class="sd">    total (weighted) edge count, and $\gamma$ is the resolution parameter.</span>
+
+<span class="sd">    The factor $1 / (O_v O_w)$ discounts contributions from nodes that</span>
+<span class="sd">    belong to many communities: a node in 3 communities contributes 1/3</span>
+<span class="sd">    of its modularity share to each.</span>
+
+<span class="sd">    The resolution parameter $\gamma$ is not part of the original Shen</span>
+<span class="sd">    definition; it is added for consistency with</span>
+<span class="sd">    :func:`~networkx.algorithms.community.quality.modularity`. Setting</span>
+<span class="sd">    $\gamma = 1$ recovers Shen&#39;s EQ exactly.</span>
+
+<span class="sd">    Implementation uses the equivalent community-sum form</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        EQ = \sum_{i}\!\left[\frac{\tilde{L}_{C_i}}{m}</span>
+<span class="sd">             - \gamma\!\left(\frac{\tilde{k}_{C_i}}{2m}\right)^{\!2}\right]</span>
+
+<span class="sd">    where $\tilde{L}_{C_i} = \sum_{(v,w) \in L_{C_i}} 1/(O_v O_w)$ is the</span>
+<span class="sd">    overlap-discounted intra-community edge count and</span>
+<span class="sd">    $\tilde{k}_{C_i} = \sum_{v \in C_i} k_v / O_v$ is the</span>
+<span class="sd">    overlap-discounted degree sum. When the cover is actually a partition</span>
+<span class="sd">    ($O_v = 1$ for all $v$), $EQ$ reduces to the standard modularity $Q$.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX Graph</span>
+<span class="sd">        An undirected graph.</span>
+
+<span class="sd">    communities : iterable of sets of nodes</span>
+<span class="sd">        A cover of `G`&#39;s nodes: every node must appear in at least one</span>
+<span class="sd">        set, but sets may overlap. Accepts the output of any NetworkX</span>
+<span class="sd">        overlapping community-detection algorithm such as</span>
+<span class="sd">        :func:`~networkx.algorithms.community.kclique.k_clique_communities`.</span>
+
+<span class="sd">    weight : string or None, optional (default=&quot;weight&quot;)</span>
+<span class="sd">        Edge attribute holding the numerical edge weight. If None, or if</span>
+<span class="sd">        an edge does not have the attribute, that edge has weight 1.</span>
+
+<span class="sd">    resolution : float, optional (default=1)</span>
+<span class="sd">        Resolution parameter $\gamma$. As in standard modularity, values</span>
+<span class="sd">        smaller than 1 favor larger communities and values greater than</span>
+<span class="sd">        1 favor smaller communities. The degree of overlap in the cover</span>
+<span class="sd">        is independent of $\gamma$, since $\gamma$ rescales only the</span>
+<span class="sd">        null-model term.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    EQ : float</span>
+<span class="sd">        The extended modularity of the cover.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If `communities` is not a valid cover of the nodes of `G` (some</span>
+<span class="sd">        node in `G` does not belong to any community).</span>
+
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If `G` is directed. Shen&#39;s formulation is for undirected graphs.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    On a partition, EQ equals standard modularity (up to floating-point</span>
+<span class="sd">    summation order):</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.barbell_graph(3, 0)</span>
+<span class="sd">    &gt;&gt;&gt; partition = [{0, 1, 2}, {3, 4, 5}]</span>
+<span class="sd">    &gt;&gt;&gt; Q = nx.community.modularity(G, partition)</span>
+<span class="sd">    &gt;&gt;&gt; EQ = nx.community.overlapping_modularity(G, partition)</span>
+<span class="sd">    &gt;&gt;&gt; abs(Q - EQ) &lt; 1e-12</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Evaluate an overlapping cover produced by ``k_clique_communities``.</span>
+<span class="sd">    Two K_5 cliques sharing nodes 3 and 4 yield a 2-community cover:</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_graph(5)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from(nx.complete_graph(range(3, 8)).edges())</span>
+<span class="sd">    &gt;&gt;&gt; cover = list(nx.community.k_clique_communities(G, 4))</span>
+<span class="sd">    &gt;&gt;&gt; round(nx.community.overlapping_modularity(G, cover), 3)</span>
+<span class="sd">    0.158</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    modularity</span>
+<span class="sd">    is_cover</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Shen, H., Cheng, X., Cai, K., &amp; Hu, M. B. (2009). &quot;Detect</span>
+<span class="sd">       overlapping and hierarchical community structure in networks.&quot;</span>
+<span class="sd">       Physica A, 388(8), 1706-1712.</span>
+<span class="sd">       https://doi.org/10.1016/j.physa.2008.12.021</span>
+<span class="sd">    .. [2] Lancichinetti, A., Fortunato, S., &amp; Kertesz, J. (2009).</span>
+<span class="sd">       &quot;Detecting the overlapping and hierarchical community structure</span>
+<span class="sd">       in complex networks.&quot; New J. Phys. 11, 033015. (Cover definition.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">communities</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">communities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_cover</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;`communities` is not a valid cover of the nodes of G&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Membership count O_v for each node</span>
+    <span class="n">membership</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">community</span> <span class="ow">in</span> <span class="n">communities</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">community</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+                <span class="n">membership</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">degree</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">))</span>
+    <span class="n">deg_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degree</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>  <span class="c1"># equals 2m for undirected</span>
+
+    <span class="k">if</span> <span class="n">deg_sum</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">community_contribution</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+        <span class="n">comm</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">community</span><span class="p">)</span>
+
+        <span class="c1"># Tilde-L: overlap-discounted intra-community edge weight.</span>
+        <span class="c1"># Each edge (u, v) with both endpoints in comm contributes</span>
+        <span class="c1"># w_uv / (O_u * O_v) exactly once.</span>
+        <span class="n">L_c_tilde</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">wt</span> <span class="o">/</span> <span class="p">(</span><span class="n">membership</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="n">membership</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">comm</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Tilde-k: overlap-discounted degree sum.</span>
+        <span class="n">k_c_tilde</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">/</span> <span class="n">membership</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">comm</span><span class="p">)</span>
+
+        <span class="c1"># Per-community contribution: 2*L_tilde/(2m) - gamma*(k_tilde/(2m))^2.</span>
+        <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">L_c_tilde</span> <span class="o">/</span> <span class="n">deg_sum</span> <span class="o">-</span> <span class="n">resolution</span> <span class="o">*</span> <span class="p">(</span><span class="n">k_c_tilde</span> <span class="o">/</span> <span class="n">deg_sum</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">community_contribution</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">communities</span><span class="p">)</span></div>
 
 
 
