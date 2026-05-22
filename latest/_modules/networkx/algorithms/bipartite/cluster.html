@@ -534,13 +534,17 @@
   <h1>Source code for networkx.algorithms.bipartite.cluster</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Functions for computing clustering of pairs&quot;&quot;&quot;</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_implemented_for</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;clustering&quot;</span><span class="p">,</span>
     <span class="s2">&quot;average_clustering&quot;</span><span class="p">,</span>
     <span class="s2">&quot;latapy_clustering&quot;</span><span class="p">,</span>
     <span class="s2">&quot;robins_alexander_clustering&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;butterflies&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -761,6 +765,11 @@
 
 <span class="sd">       CC_4 = \frac{4 * C_4}{L_3}</span>
 
+<span class="sd">    The four cycles counted here are *butterflies* (also called *squares*</span>
+<span class="sd">    or *four-cycles* in other contexts)  — complete bipartite</span>
+<span class="sd">    subgraphs K_{2,2} where alternating nodes belong to different</span>
+<span class="sd">    partitions.  See :func:`butterflies` for per-node butterfly counts.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : graph</span>
@@ -780,6 +789,7 @@
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
+<span class="sd">    butterflies : per-node butterfly (four-cycle) counts</span>
 <span class="sd">    latapy_clustering</span>
 <span class="sd">    networkx.algorithms.cluster.square_clustering</span>
 
@@ -795,28 +805,172 @@
     <span class="n">L_3</span> <span class="o">=</span> <span class="n">_threepaths</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">L_3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="mi">0</span>
-    <span class="n">C_4</span> <span class="o">=</span> <span class="n">_four_cycles</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">C_4</span><span class="p">)</span> <span class="o">/</span> <span class="n">L_3</span></div>
+
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">butterflies</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="n">L_3</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_four_cycles</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-    <span class="c1"># Also see `square_clustering` which counts squares in a similar way</span>
-    <span class="n">cycles</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="n">G_adj</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span>
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-        <span class="n">v_neighbors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G_adj</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_neighbors</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="c1"># Can&#39;t form a square without at least two neighbors</span>
-            <span class="k">continue</span>
-        <span class="n">two_hop_neighbors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">G_adj</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">v_neighbors</span><span class="p">))</span>
-        <span class="n">two_hop_neighbors</span> <span class="o">-=</span> <span class="n">seen</span>
-        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">two_hop_neighbors</span><span class="p">:</span>
-            <span class="n">p2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_neighbors</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">G_adj</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
-            <span class="n">cycles</span> <span class="o">+=</span> <span class="n">p2</span> <span class="o">*</span> <span class="p">(</span><span class="n">p2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cycles</span> <span class="o">/</span> <span class="mi">4</span>
+<div class="viewcode-block" id="butterflies">
+<a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.bipartite.cluster.butterflies.html#networkx.algorithms.bipartite.cluster.butterflies">[docs]</a>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">butterflies</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Count the number of butterflies for each node in a bipartite graph.</span>
+
+<span class="sd">    A *butterfly* is a complete bipartite subgraph K_{2,2} — four nodes</span>
+<span class="sd">    (two from each partition) with all four cross-edges present.  It is</span>
+<span class="sd">    the bipartite analogue of a triangle in unipartite graphs.</span>
+
+<span class="sd">    .. code-block:: none</span>
+
+<span class="sd">        A1   A2</span>
+<span class="sd">        | \ / |</span>
+<span class="sd">        |  X  |</span>
+<span class="sd">        | / \ |</span>
+<span class="sd">        B1   B2</span>
+
+<span class="sd">    Equivalently, a butterfly is a 4-cycle (C_4) in which alternating</span>
+<span class="sd">    nodes belong to different partitions of the bipartite graph.</span>
+<span class="sd">    This structure is also called a *square* in the physics and</span>
+<span class="sd">    complex-networks literature [3]_, and a *four-cycle* in the</span>
+<span class="sd">    sociology literature [4]_.  The name *butterfly* is standard in</span>
+<span class="sd">    the data-mining and bipartite-network literature [1]_ [2]_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : NetworkX graph</span>
+<span class="sd">        An undirected bipartite graph.</span>
+<span class="sd">    nodes : iterable of nodes, optional (default: all nodes)</span>
+<span class="sd">        Return butterfly counts only for these nodes.  The computation</span>
+<span class="sd">        always uses the full graph; ``nodes`` only filters the returned</span>
+<span class="sd">        dictionary (same convention as :func:`~networkx.triangles`).</span>
+<span class="sd">        When ``None`` (default), counts for all nodes are returned.</span>
+<span class="sd">        Nodes not present in `G` are silently ignored.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    butterflies : dict</span>
+<span class="sd">        A dictionary keyed by node to the number of butterflies that</span>
+<span class="sd">        node participates in.  Each butterfly is counted once per</span>
+<span class="sd">        participating node, so::</span>
+
+<span class="sd">            sum(butterflies(G).values()) == 4 * total_butterfly_count</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    A single K_{2,2} contains exactly one butterfly, and each of its</span>
+<span class="sd">    four nodes participates in that butterfly:</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_bipartite_graph(2, 2)</span>
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.butterflies(G)</span>
+<span class="sd">    {0: 1, 1: 1, 2: 1, 3: 1}</span>
+
+<span class="sd">    The total number of butterflies is the sum divided by 4:</span>
+
+<span class="sd">    &gt;&gt;&gt; bt = nx.bipartite.butterflies(G)</span>
+<span class="sd">    &gt;&gt;&gt; sum(bt.values()) // 4</span>
+<span class="sd">    1</span>
+
+<span class="sd">    K_{3,3} contains nine butterflies; every node participates in six:</span>
+
+<span class="sd">    &gt;&gt;&gt; G2 = nx.complete_bipartite_graph(3, 3)</span>
+<span class="sd">    &gt;&gt;&gt; bt2 = nx.bipartite.butterflies(G2)</span>
+<span class="sd">    &gt;&gt;&gt; sum(bt2.values()) // 4</span>
+<span class="sd">    9</span>
+
+<span class="sd">    Nodes not in any butterfly receive count zero:</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.complete_bipartite_graph(2, 2)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge(0, 5)</span>
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.butterflies(G)</span>
+<span class="sd">    {0: 1, 1: 1, 2: 1, 3: 1, 5: 0}</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This algorithm uses wedge enumerate to count butterflies.</span>
+<span class="sd">    The wedge enumeration method uses the vertex-priority of BFC-VP [2]_ :</span>
+<span class="sd">    nodes are ranked by degree, neighbor lists are</span>
+<span class="sd">    pre-sorted by ascending rank, and for each start node ``u`` only</span>
+<span class="sd">    neighbors with lower rank are processed as middle and end nodes,</span>
+<span class="sd">    with early termination on the sorted lists.  This gives time</span>
+<span class="sd">    complexity :math:`O\!\bigl(\sum_{(u,v)\in E} \min(d(u), d(v))\bigr)</span>
+<span class="sd">    = O(\alpha m)` where :math:`\alpha` is the arboricity, i.e. the minimum</span>
+<span class="sd">    number of forests into which $E$ can be partitioned, and :math:`m`</span>
+<span class="sd">    the number of edges.</span>
+
+<span class="sd">    The per-node attribution (distributing butterfly credits to start,</span>
+<span class="sd">    middle, and end nodes) is an extension of BFC-VP not present in the</span>
+<span class="sd">    original paper, which computes only a global count.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    robins_alexander_clustering : graph-level bipartite clustering</span>
+<span class="sd">        coefficient whose numerator is ``4 * total butterfly count``.</span>
+<span class="sd">    networkx.algorithms.cluster.square_clustering : per-node square</span>
+<span class="sd">        clustering coefficient for general graphs.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Sanei-Mehri, S. V., Sariyuce, A. E., &amp; Tirthapura, S.</span>
+<span class="sd">       (2018).  Butterfly counting in bipartite networks.</span>
+<span class="sd">       *Proceedings of the 24th ACM SIGKDD*, 2150–2159.</span>
+<span class="sd">       https://doi.org/10.1145/3219819.3220097</span>
+
+<span class="sd">    .. [2] Wang, K., Lin, X., Qin, L., Zhang, W., &amp; Zhang, Y. (2023).</span>
+<span class="sd">       Accelerated butterfly counting with vertex priority on bipartite</span>
+<span class="sd">       graphs.  *The VLDB Journal*, 32, 257–281.</span>
+<span class="sd">       https://doi.org/10.1007/s00778-022-00746-0</span>
+
+<span class="sd">    .. [3] Lind, P. G., Gonzalez, M. C., &amp; Herrmann, H. J. (2005).</span>
+<span class="sd">       Cycles and clustering in bipartite networks.</span>
+<span class="sd">       *Physical Review E*, 72, 056127.</span>
+<span class="sd">       https://doi.org/10.1103/PhysRevE.72.056127</span>
+
+<span class="sd">    .. [4] Robins, G. and M. Alexander (2004). Small worlds among</span>
+<span class="sd">       interlocking directors: Network structure and distance in bipartite graphs.</span>
+<span class="sd">       *Computational &amp; Mathematical Organization Theory* 10(1), 69–94.</span>
+<span class="sd">       https://doi.org/10.1023/B:CMOT.0000032580.12184.c0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)}</span>
+
+    <span class="n">priority</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="p">(</span><span class="n">deg</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">deg</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())}</span>
+
+    <span class="n">sorted_nbrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">priority</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+
+    <span class="n">_bt</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">pu</span> <span class="o">=</span> <span class="n">priority</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+        <span class="n">wedge_count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">wedge_mid</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sorted_nbrs</span><span class="p">[</span><span class="n">u</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">priority</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">pu</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">sorted_nbrs</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">priority</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">pu</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">wedge_count</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">wedge_mid</span><span class="p">[</span><span class="n">w</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">wedge_count</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># C(k, 2) butterflies for pair (u, w)</span>
+            <span class="n">bf</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">_bt</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">+=</span> <span class="n">bf</span>
+            <span class="n">_bt</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">+=</span> <span class="n">bf</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wedge_mid</span><span class="p">[</span><span class="n">w</span><span class="p">]:</span>
+                <span class="c1"># each middle node pairs with k-1 others</span>
+                <span class="n">_bt</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+=</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_bt</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">_bt</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">)}</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_threepaths</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
