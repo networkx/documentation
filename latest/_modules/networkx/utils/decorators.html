@@ -537,6 +537,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">splitext</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -1306,10 +1307,11 @@
 <span class="sd">        [1] https://github.com/networkx/networkx/issues/4732</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">real_func</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__argmap__</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">)</span>
-        <span class="n">func</span><span class="o">.</span><span class="vm">__code__</span> <span class="o">=</span> <span class="n">real_func</span><span class="o">.</span><span class="vm">__code__</span>
-        <span class="n">func</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">real_func</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">)</span>
-        <span class="n">func</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">real_func</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">argmap</span><span class="o">.</span><span class="n">_compile_lock</span><span class="p">:</span>
+            <span class="n">real_func</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">__argmap__</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">)</span>
+            <span class="n">func</span><span class="o">.</span><span class="vm">__globals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">real_func</span><span class="o">.</span><span class="vm">__globals__</span><span class="p">)</span>
+            <span class="n">func</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">real_func</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+            <span class="n">func</span><span class="o">.</span><span class="vm">__code__</span> <span class="o">=</span> <span class="n">real_func</span><span class="o">.</span><span class="vm">__code__</span>
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
@@ -1375,6 +1377,9 @@
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="n">__count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Serializes _lazy_compile so the compound __globals__/__code__ publish and</span>
+    <span class="c1"># the __count increments it drives are safe under free-threaded Python.</span>
+    <span class="n">_compile_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_count</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
