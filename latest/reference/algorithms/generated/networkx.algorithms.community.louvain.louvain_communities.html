@@ -649,42 +649,47 @@
 <span class="sig-name descname"><span class="pre">louvain_communities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'weight'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/networkx/algorithms/community/louvain.html#louvain_communities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#networkx.algorithms.community.louvain.louvain_communities" title="Link to this definition">#</a></dt>
 <dd><p>Find the best partition of a graph using the Louvain Community Detection
 Algorithm.</p>
-<p>Louvain Community Detection Algorithm is a simple method to extract the community
-structure of a network. This is a heuristic method based on modularity optimization. <a class="reference internal" href="#rd180461fb6d3-1" id="id1">[1]</a></p>
-<p>The algorithm works in 2 steps. On the first step it assigns every node to be
-in its own community and then for each node it tries to find the maximum positive
-modularity gain by moving each node to all of its neighbor communities. If no positive
-gain is achieved the node remains in its original community.</p>
-<p>The modularity gain obtained by moving an isolated node <span class="math notranslate nohighlight">\(i\)</span> into a community <span class="math notranslate nohighlight">\(C\)</span> can
-easily be calculated by the following formula (combining <a class="reference internal" href="#rd180461fb6d3-1" id="id2">[1]</a> <a class="reference internal" href="#rd180461fb6d3-2" id="id3">[2]</a> and some algebra):</p>
+<p>Louvain Community Detection seeks to extract the community structure of a
+network. It is a heuristic algorithm based on modularity optimization. <a class="reference internal" href="#rd180461fb6d3-1" id="id1">[1]</a></p>
+<p>The algorithm starts with every node in its own community and then repeatedly
+updates by merging communities. Each update consists of two phases.
+First, each node is examined to find the maximum positive modularity gain
+obtained by moving it to a different community. If no positive gain can be
+achieved the node remains in its original community. The next node is then
+considered. Nodes continue to be examined until no improvement in
+modularity can be obtained by moving nodes. The second phase builds
+an aggregated network where each community of the original network is a
+node in the new network with edges connecting then if nodes in those
+two communities connect to each other. The edge weights and node attributes
+of the new network are the sums of edge and node attributes from the
+communities in the previous network. These two phases are repeated until
+no modularity gain is achieved (or is less than a <code class="xref py py-obj docutils literal notranslate"><span class="pre">threshold</span></code>, or until
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">max_levels</span></code> updates have occurred).</p>
+<p>The modularity gain obtained by moving an isolated node <span class="math notranslate nohighlight">\(i\)</span> into a community
+<span class="math notranslate nohighlight">\(C\)</span> can be calculated by the following formula
+(combining <a class="reference internal" href="#rd180461fb6d3-1" id="id2">[1]</a> <a class="reference internal" href="#rd180461fb6d3-2" id="id3">[2]</a> and some algebra):</p>
 <div class="math notranslate nohighlight">
 \[\Delta Q = \frac{k_{i,in}}{2m} - \gamma\frac{ \Sigma_{tot} \cdot k_i}{2m^2}\]</div>
-<p>where <span class="math notranslate nohighlight">\(m\)</span> is the size of the graph, <span class="math notranslate nohighlight">\(k_{i,in}\)</span> is the sum of the weights of the links
-from <span class="math notranslate nohighlight">\(i\)</span> to nodes in <span class="math notranslate nohighlight">\(C\)</span>, <span class="math notranslate nohighlight">\(k_i\)</span> is the sum of the weights of the links incident to node <span class="math notranslate nohighlight">\(i\)</span>,
-<span class="math notranslate nohighlight">\(\Sigma_{tot}\)</span> is the sum of the weights of the links incident to nodes in <span class="math notranslate nohighlight">\(C\)</span> and <span class="math notranslate nohighlight">\(\gamma\)</span>
-is the resolution parameter.</p>
-<p>For the directed case the modularity gain can be computed using this formula according to <a class="reference internal" href="#rd180461fb6d3-3" id="id4">[3]</a></p>
+<p>where <span class="math notranslate nohighlight">\(m\)</span> is the size of the graph; <span class="math notranslate nohighlight">\(k_{i,in}\)</span> is the sum of the edge weights
+from <span class="math notranslate nohighlight">\(i\)</span> to nodes in <span class="math notranslate nohighlight">\(C\)</span>; <span class="math notranslate nohighlight">\(k_i\)</span> is the sum of the edge weights incident to
+node <span class="math notranslate nohighlight">\(i\)</span>; <span class="math notranslate nohighlight">\(\Sigma_{tot}\)</span> is the sum of the edge weights incident to nodes in <span class="math notranslate nohighlight">\(C\)</span>;
+and <span class="math notranslate nohighlight">\(\gamma\)</span> is the resolution parameter. Higher resolution produces smaller
+communities. Low resolution produces larger communities.</p>
+<p>For the directed case the modularity gain can be computed (see <a class="reference internal" href="#rd180461fb6d3-3" id="id4">[3]</a>) using
+the formula:</p>
 <div class="math notranslate nohighlight">
 \[\Delta Q = \frac{k_{i,in}}{m}
 - \gamma\frac{k_i^{out} \cdot\Sigma_{tot}^{in} + k_i^{in} \cdot \Sigma_{tot}^{out}}{m^2}\]</div>
-<p>where <span class="math notranslate nohighlight">\(k_i^{out}\)</span>, <span class="math notranslate nohighlight">\(k_i^{in}\)</span> are the outer and inner weighted degrees of node <span class="math notranslate nohighlight">\(i\)</span> and
-<span class="math notranslate nohighlight">\(\Sigma_{tot}^{in}\)</span>, <span class="math notranslate nohighlight">\(\Sigma_{tot}^{out}\)</span> are the sum of in-going and out-going links incident
-to nodes in <span class="math notranslate nohighlight">\(C\)</span>.</p>
-<p>The first phase continues until no individual move can improve the modularity.</p>
-<p>The second phase consists in building a new network whose nodes are now the communities
-found in the first phase. To do so, the weights of the links between the new nodes are given by
-the sum of the weight of the links between nodes in the corresponding two communities. Once this
-phase is complete it is possible to reapply the first phase creating bigger communities with
-increased modularity.</p>
-<p>The above two phases are executed until no modularity gain is achieved (or is less than
-the <code class="xref py py-obj docutils literal notranslate"><span class="pre">threshold</span></code>, or until <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_levels</span></code> is reached).</p>
+<p>where <span class="math notranslate nohighlight">\(k_i^{out}\)</span>, <span class="math notranslate nohighlight">\(k_i^{in}\)</span> are the outer and inner weighted degrees of node
+<span class="math notranslate nohighlight">\(i\)</span>; <span class="math notranslate nohighlight">\(\Sigma_{tot}^{in}\)</span> and <span class="math notranslate nohighlight">\(\Sigma_{tot}^{out}\)</span> are the sum of in-going and
+out-going edge weights incident to nodes in <span class="math notranslate nohighlight">\(C\)</span>.</p>
 <p>Be careful with self-loops in the input graph. These are treated as
 previously reduced communities – as if the process had been started
 in the middle of the algorithm. Large self-loop edge weights thus
 represent strong communities and in practice may be hard to add
 other nodes to.  If your input graph edge weights for self-loops
 do not represent already reduced communities you may want to remove
-the self-loops before inputting that graph.</p>
+the self-loops before using that graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -710,8 +715,8 @@ See <a class="reference internal" href="../../randomness.html#randomness"><span 
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>A list of sets (partition of <code class="xref py py-obj docutils literal notranslate"><span class="pre">G</span></code>). Each set represents one community and contains
-all the nodes that constitute it.</p>
+<dt>list</dt><dd><p>A list of sets (partition of <code class="xref py py-obj docutils literal notranslate"><span class="pre">G</span></code>). Each set represents one community
+and contains all the nodes in that community.</p>
 </dd>
 </dl>
 </dd>
@@ -724,25 +729,29 @@ all the nodes that constitute it.</p>
 </dl>
 </div>
 <p class="rubric">Notes</p>
-<p>The order in which the nodes are considered can affect the final output. In the algorithm
-the ordering happens using a random shuffle.</p>
+<p>The order in which the nodes are considered can affect the final output.
+In the algorithm the ordering happens using a random shuffle.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rd180461fb6d3-1" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
 <span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>)</span>
-<p>Blondel, V.D. et al. Fast unfolding of communities in
-large networks. J. Stat. Mech 10008, 1-12(2008). <a class="reference external" href="https://doi.org/10.1088/1742-5468/2008/10/P10008">https://doi.org/10.1088/1742-5468/2008/10/P10008</a></p>
+<p>Blondel, V.D. et al. Fast unfolding of communities in large networks.
+J. Stat. Mech 10008, 1-12(2008).
+<a class="reference external" href="https://doi.org/10.1088/1742-5468/2008/10/P10008">https://doi.org/10.1088/1742-5468/2008/10/P10008</a></p>
 </div>
 <div class="citation" id="rd180461fb6d3-2" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
-<p>Traag, V.A., Waltman, L. &amp; van Eck, N.J. From Louvain to Leiden: guaranteeing
-well-connected communities. Sci Rep 9, 5233 (2019). <a class="reference external" href="https://doi.org/10.1038/s41598-019-41695-z">https://doi.org/10.1038/s41598-019-41695-z</a></p>
+<p>Traag, V.A., Waltman, L. &amp; van Eck, N.J.
+From Louvain to Leiden: guaranteeing well-connected communities.
+Sci Rep 9, 5233 (2019). <a class="reference external" href="https://doi.org/10.1038/s41598-019-41695-z">https://doi.org/10.1038/s41598-019-41695-z</a></p>
 </div>
 <div class="citation" id="rd180461fb6d3-3" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">3</a><span class="fn-bracket">]</span></span>
-<p>Nicolas Dugué, Anthony Perez. Directed Louvain : maximizing modularity in directed networks.
-[Research Report] Université d’Orléans. 2015. hal-01231784. <a class="reference external" href="https://hal.archives-ouvertes.fr/hal-01231784">https://hal.archives-ouvertes.fr/hal-01231784</a></p>
+<p>Nicolas Dugué, Anthony Perez.
+Directed Louvain : maximizing modularity in directed networks.
+[Research Report] Université d’Orléans. 2015.
+hal-01231784. <a class="reference external" href="https://hal.archives-ouvertes.fr/hal-01231784">https://hal.archives-ouvertes.fr/hal-01231784</a></p>
 </div>
 </div>
 <p class="rubric">Examples</p>
