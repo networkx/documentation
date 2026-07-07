@@ -716,18 +716,60 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_generate_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">cuts</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">has_nbrs_in_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">partition</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate parts of G induced by its minimum-size node cutsets.</span>
 
-    <span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">n_in_cuts</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">cuts</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cut</span><span class="p">}</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">k</span><span class="p">}</span> <span class="o">-</span> <span class="n">n_in_cuts</span>
-    <span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">set</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">H</span><span class="p">)):</span>
-        <span class="n">component</span> <span class="o">=</span> <span class="n">cc</span> <span class="o">|</span> <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">n_in_cuts</span> <span class="k">if</span> <span class="n">has_nbrs_in_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">cc</span><span class="p">)}</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">():</span>
-            <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
-    <span class="k">yield from</span> <span class="n">_consolidate</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="sd">    Following Moody and White (appendix A, step 3), cutsets are applied</span>
+<span class="sd">    one at a time: removing a cutset splits the current set of nodes into</span>
+<span class="sd">    two or more connected components, and each component plus the cutset</span>
+<span class="sd">    that induced it becomes a new candidate part. Every j-component of</span>
+<span class="sd">    ``G`` with ``j &gt; k`` is preserved intact in at least one generated</span>
+<span class="sd">    part, because removing ``k &lt; j`` nodes cannot disconnect it.</span>
+
+<span class="sd">    Applying cutsets one at a time is necessary for correctness: removing</span>
+<span class="sd">    the union of all cutsets in a single pass can drop cutset nodes whose</span>
+<span class="sd">    neighbors all belong to other cutsets, silently losing k-components.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span>
+    <span class="n">cuts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">cut</span><span class="p">)</span> <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">cuts</span><span class="p">]</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)]</span>
+    <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">cuts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cut</span> <span class="o">&lt;</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">components</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span> <span class="o">-</span> <span class="n">cut</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">components</span><span class="p">:</span>
+                    <span class="c1"># Nodes of the cutset belong to both sides of the induced</span>
+                    <span class="c1"># cut, but only if they have a neighbor in the component:</span>
+                    <span class="c1"># a cutset node from a j-component (j &gt; k) always has at</span>
+                    <span class="c1"># least two neighbors in the component, while attaching a</span>
+                    <span class="c1"># neighborless cutset node would disconnect the part.</span>
+                    <span class="n">child</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+                        <span class="n">component</span>
+                        <span class="o">|</span> <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cut</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">in</span> <span class="n">component</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">n</span><span class="p">])}</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">child</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+                        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">child</span><span class="p">))</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No cutset splits this part any further.</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">order</span><span class="p">:</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="c1"># Merging parts that share at least k+1 nodes reduces the number of</span>
+    <span class="c1"># subproblems that the loop in k_components examines. This is a</span>
+    <span class="c1"># performance heuristic, not needed for correctness: no j-component</span>
+    <span class="c1"># with j &gt; k can span two parts. If merging rebuilds the whole graph,</span>
+    <span class="c1"># fall back to the raw parts so the caller always recurses on</span>
+    <span class="c1"># strictly smaller graphs.</span>
+    <span class="n">consolidated</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="o">==</span> <span class="n">order</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">consolidated</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="n">parts</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">yield from</span> <span class="n">consolidated</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_reconstruct_k_components</span><span class="p">(</span><span class="n">k_comps</span><span class="p">):</span>
@@ -739,8 +781,15 @@
         <span class="k">elif</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k_comps</span><span class="p">:</span>
             <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">k</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">nodes_at_k</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
-            <span class="n">to_add</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_at_k</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">c</span><span class="p">)]</span>
+            <span class="c1"># Propagate a component from level k+1 down to level k unless it</span>
+            <span class="c1"># is already contained in a single component recorded at level k.</span>
+            <span class="c1"># Checking against the union of all components recorded at k is</span>
+            <span class="c1"># not enough: a (k+1)-level component can span several k-level</span>
+            <span class="c1"># candidates without being a subset of any of them, and skipping</span>
+            <span class="c1"># it would replace a genuine k-component by its fragments.</span>
+            <span class="n">to_add</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="o">&lt;=</span> <span class="n">comp</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="p">]</span>
             <span class="k">if</span> <span class="n">to_add</span><span class="p">:</span>
                 <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_consolidate</span><span class="p">(</span><span class="n">k_comps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">to_add</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
