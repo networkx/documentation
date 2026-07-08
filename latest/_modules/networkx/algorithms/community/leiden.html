@@ -532,9 +532,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for networkx.algorithms.community.leiden</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Functions for detecting communities based on Leiden Community Detection</span>
-<span class="sd">algorithm.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Detecting communities based on the Leiden Community Detection algorithm&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
@@ -645,7 +643,7 @@
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.barbell_graph(3, 4)</span>
-<span class="sd">    &gt;&gt;&gt; cpm_comm = nx.community.leiden_communities(G, resolution=0.2, seed=62537129)</span>
+<span class="sd">    &gt;&gt;&gt; cpm_comm = nx.community.leiden_communities(G, resolution=0.2, seed=62537113)</span>
 <span class="sd">    &gt;&gt;&gt; len(cpm_comm)</span>
 <span class="sd">    3</span>
 <span class="sd">    &gt;&gt;&gt; sorted(sorted(c) for c in cpm_comm)</span>
@@ -653,7 +651,7 @@
 
 <span class="sd">    Higher resolution produces smaller sub-communities:</span>
 
-<span class="sd">    &gt;&gt;&gt; cpm_comm = nx.community.leiden_communities(G, resolution=0.4, seed=62537129)</span>
+<span class="sd">    &gt;&gt;&gt; cpm_comm = nx.community.leiden_communities(G, resolution=0.4, seed=62537114)</span>
 <span class="sd">    &gt;&gt;&gt; len(cpm_comm)</span>
 <span class="sd">    4</span>
 <span class="sd">    &gt;&gt;&gt; sorted(sorted(c) for c in cpm_comm)</span>
@@ -746,7 +744,7 @@
 <span class="sd">    list of sets of nodes</span>
 <span class="sd">        A partition of `G` as a list of disjoint sets of nodes. Each set represents</span>
 <span class="sd">        one community of nodes and each node of `G` appears in exactly one set.</span>
-<span class="sd">        The quality metric of the yielded partitions increases with each iteration.</span>
+<span class="sd">        The quality metric is nondecreasing across the yielded partitions.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -762,166 +760,240 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">partition</span> <span class="o">=</span> <span class="p">[{</span><span class="n">u</span><span class="p">}</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
-    <span class="n">refinement_mapping</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_empty</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
         <span class="k">yield</span> <span class="n">partition</span>
         <span class="k">return</span>
 
-    <span class="n">is_directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
-        <span class="c1"># this is the same as how louvain handles multigraph inputs</span>
-        <span class="n">graph</span> <span class="o">=</span> <span class="n">_convert_multigraph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">is_directed</span><span class="p">)</span>
+    <span class="c1"># Initialization steps while copying G to graph</span>
+    <span class="c1"># - edge weights set as &quot;weight&quot; in graph, summed if G.is_multigraph()</span>
+    <span class="c1"># - node attributes initialized based on metric impact on node_weights aggregated</span>
+    <span class="c1"># - define the metric function based on metric</span>
+    <span class="c1"># - define the corresponding delta function</span>
+    <span class="c1"># - set node_attributes dict keyed by node attr to dict keyed by node</span>
+
+    <span class="c1"># delta function gives change in metric when merging two communities.</span>
+    <span class="c1"># The change due to splitting a set U from C is negated e.g. -delta_func(U, C-U)</span>
+    <span class="c1"># For one node, the change from moving node u from A to B is:</span>
+    <span class="c1"># q_delta = delta_func(u, B) - delta_func(u, A-{u})</span>
+
+    <span class="n">orig_G</span> <span class="o">=</span> <span class="n">G</span>  <span class="c1"># make copy of original G to allow mutations</span>
+    <span class="n">is_directed</span> <span class="o">=</span> <span class="n">orig_G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_directed</span> <span class="k">else</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">orig_G</span><span class="p">)</span>
+    <span class="c1"># Add edges (including selfloops)</span>
+    <span class="k">if</span> <span class="n">orig_G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">orig_G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">wt</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">wt</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># if the weight parameter is defined then we use this value for</span>
-        <span class="c1"># edge weights within the algorithm, defaulting to 1 where the</span>
-        <span class="c1"># attribute does not exist</span>
-        <span class="c1"># else if weight is None then all edges are given a weight of 1</span>
-        <span class="k">if</span> <span class="n">weight</span><span class="p">:</span>
-            <span class="n">graph</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">graph</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">set_edge_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">orig_G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-    <span class="c1"># The following setup stage depends on the choice of quality</span>
-    <span class="c1"># function. In particular, this stage must set three things:</span>
-    <span class="c1"># 1) set the function metric</span>
-    <span class="c1"># 2) set the corresponding quality_delta function</span>
-    <span class="c1"># 3) set the specific attributes required to compute the</span>
-    <span class="c1">#    metric and quality_delta</span>
+    <span class="c1"># Compute edge_wts as dict-of-dicts (ignoring selfloops)</span>
+    <span class="n">edge_wts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">u</span><span class="p">:</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">v</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">_adj</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
 
-    <span class="c1"># the quality_delta function computes the partial quality delta contributed by</span>
-    <span class="c1"># adding nodes_to_add to community.</span>
-    <span class="c1"># Corresponding value from removing U from C is computed by taking</span>
-    <span class="c1"># the negative  -1 * quality_delta(U, C-U)</span>
-    <span class="c1"># to compute the overall quality delta from moving node u from A to B we have</span>
-    <span class="c1"># q_delta = quality_delta({u}, B) - quality_delta({u}, A-{u})</span>
+    <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
+        <span class="c1"># in edge wts used for E in delta_func (the wt sum between specific nodes)</span>
+        <span class="c1"># we store it outside the graph for speedy lookup and not for other tasks.</span>
+        <span class="c1"># Eg computing m = sum(G edge wts) is multiplied by 2 if you use edge_wts.</span>
+        <span class="c1"># Be Careful using edge_wts in directed case.</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">_pred</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">v_wts</span> <span class="o">=</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">v_wts</span><span class="p">:</span>
+                    <span class="n">v_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">v_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;edge_wts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge_wts</span>
+
+    <span class="c1"># node attr &quot;nodes&quot; holds the original nodes represented by this current node</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">orig_G</span><span class="p">},</span> <span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;cpm&quot;</span><span class="p">:</span>
         <span class="c1"># Setup for constant potts model</span>
-        <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;node_weight&quot;</span><span class="p">]</span>
-        <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span><span class="p">)</span>
-
-        <span class="n">metric</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+        <span class="n">metric_function</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
             <span class="n">constant_potts_model</span><span class="p">,</span>
             <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
             <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span><span class="p">,</span>
             <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="n">node_weights</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;node_weight&quot;</span><span class="p">:</span> <span class="n">node_weights</span><span class="p">}</span>
+
         <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
             <span class="c1"># Setup for directed constant potts model</span>
             <span class="n">gamma</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">resolution</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">quality_delta</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
-                <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;node_weight&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-                <span class="n">nodes_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;node_weight&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-                <span class="n">E_in</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                    <span class="n">wt</span>
-                    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span>
-                <span class="p">)</span>
-                <span class="n">E_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                    <span class="n">wt</span>
-                    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">community</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes_to_add</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="n">E_in</span> <span class="o">+</span> <span class="n">E_out</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">comm_size</span> <span class="o">*</span> <span class="n">nodes_size</span>
+            <span class="c1"># Note: delta_func uses objects in defining namespace:</span>
+            <span class="c1"># - gamma</span>
+            <span class="c1"># - node_weights</span>
+            <span class="c1"># - edge_wts</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">delta_func</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">community</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                    <span class="n">nodes_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
+                    <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">community</span><span class="p">,</span> <span class="n">nodes_to_add</span>
+                    <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">nodes_to_add</span>
+                    <span class="n">nodes_size</span> <span class="o">=</span> <span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">community</span><span class="p">))</span>
+                        <span class="n">comm_size</span> <span class="o">=</span> <span class="n">node_weights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">E</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">comm_size</span> <span class="o">*</span> <span class="n">nodes_size</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Setup for undirected constant potts model</span>
             <span class="n">gamma</span> <span class="o">=</span> <span class="n">resolution</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">quality_delta</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
-                <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;node_weight&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-                <span class="n">nodes_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;node_weight&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-                <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                    <span class="n">wt</span>
-                    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span>
-                <span class="p">)</span>
+            <span class="c1"># Note: delta_func uses objects in defining namespace:</span>
+            <span class="c1"># - gamma</span>
+            <span class="c1"># - node_weights</span>
+            <span class="c1"># - edge_wts</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">delta_func</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">community</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                    <span class="n">nodes_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
+                    <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">community</span><span class="p">,</span> <span class="n">nodes_to_add</span>
+                    <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">nodes_to_add</span>
+                    <span class="n">nodes_size</span> <span class="o">=</span> <span class="n">node_weights</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">community</span><span class="p">))</span>
+                        <span class="n">comm_size</span> <span class="o">=</span> <span class="n">node_weights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
                 <span class="k">return</span> <span class="n">E</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">comm_size</span> <span class="o">*</span> <span class="n">nodes_size</span>
 
     <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;modularity&quot;</span><span class="p">:</span>
         <span class="c1"># Setup for (unipartite) modularity</span>
+        <span class="n">metric_function</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+            <span class="n">modularity</span><span class="p">,</span>
+            <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
-        <span class="c1"># the modualrity function throws an zero division error</span>
-        <span class="c1"># if the graph consists of only a single node.</span>
-        <span class="c1"># if leiden aggregates the graph to a single node then</span>
-        <span class="c1"># we just need to retun a value that ensure the algorithm</span>
-        <span class="c1"># stops</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">guarded_modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-
-        <span class="n">metric</span> <span class="o">=</span> <span class="n">guarded_modularity</span>
         <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
             <span class="c1"># Setup for directed modularity</span>
-            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;in_degree&quot;</span><span class="p">,</span> <span class="s2">&quot;out_degree&quot;</span><span class="p">]</span>
-            <span class="n">in_degrees</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-            <span class="n">out_degrees</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+            <span class="n">in_degrees</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">))</span>
+            <span class="n">out_degrees</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">))</span>
+            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;in_degree&quot;</span><span class="p">:</span> <span class="n">in_degrees</span><span class="p">,</span> <span class="s2">&quot;out_degree&quot;</span><span class="p">:</span> <span class="n">out_degrees</span><span class="p">}</span>
 
-            <span class="n">m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">in_degrees</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">out_degrees</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-                <span class="n">data</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">m</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">out_degrees</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="n">resolution</span> <span class="o">/</span> <span class="n">m</span>
 
-            <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span>
-                <span class="n">graph</span><span class="p">,</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">in_deg</span> <span class="o">/</span> <span class="n">m</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">in_deg</span> <span class="ow">in</span> <span class="n">in_degrees</span><span class="p">},</span> <span class="s2">&quot;in_degree&quot;</span>
-            <span class="p">)</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span>
-                <span class="n">graph</span><span class="p">,</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">out_deg</span> <span class="o">/</span> <span class="n">m</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">out_deg</span> <span class="ow">in</span> <span class="n">out_degrees</span><span class="p">},</span> <span class="s2">&quot;out_degree&quot;</span>
-            <span class="p">)</span>
+            <span class="c1"># Note: delta_func uses objects in defining namespace:</span>
+            <span class="c1"># - gamma</span>
+            <span class="c1"># - in_degrees</span>
+            <span class="c1"># - out_degrees</span>
+            <span class="c1"># - edge_wts</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">delta_func</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">community</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">community</span><span class="p">,</span> <span class="n">nodes_to_add</span>
 
-            <span class="n">gamma</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">resolution</span>
+                    <span class="n">A_in</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span><span class="p">)</span>
+                    <span class="n">A_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">out_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span><span class="p">)</span>
+                    <span class="n">C_in</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
+                    <span class="n">C_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">out_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">quality_delta</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
-                <span class="n">nodes_in</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;in_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-                <span class="n">nodes_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;out_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-                <span class="n">comm_in</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;in_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-                <span class="n">comm_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;out_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-                <span class="n">E_to</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                    <span class="n">wt</span>
-                    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span>
-                <span class="p">)</span>
-                <span class="n">E_from</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                    <span class="n">wt</span>
-                    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">community</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes_to_add</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="p">(</span><span class="n">E_to</span> <span class="o">+</span> <span class="n">E_from</span><span class="p">)</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span>
-                    <span class="n">nodes_in</span> <span class="o">*</span> <span class="n">comm_out</span> <span class="o">+</span> <span class="n">nodes_out</span> <span class="o">*</span> <span class="n">comm_in</span>
-                <span class="p">)</span>
+                    <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">nodes_to_add</span>
+                    <span class="n">A_in</span> <span class="o">=</span> <span class="n">in_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                    <span class="n">A_out</span> <span class="o">=</span> <span class="n">out_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">community</span><span class="p">))</span>
+                        <span class="n">C_in</span> <span class="o">=</span> <span class="n">in_degrees</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="n">C_out</span> <span class="o">=</span> <span class="n">out_degrees</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">C_in</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">in_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+                        <span class="n">C_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">out_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+                <span class="c1"># Note: this function returns (m * modularity_delta) to avoid</span>
+                <span class="c1"># extra division by m. The choice of best change is not affected.</span>
+                <span class="c1"># Usual formula would be:</span>
+                <span class="c1"># E / m - (resolution/ m**2) * (A_in * C_out + A_out * C_in)</span>
+                <span class="k">return</span> <span class="n">E</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">A_in</span> <span class="o">*</span> <span class="n">C_out</span> <span class="o">+</span> <span class="n">A_out</span> <span class="o">*</span> <span class="n">C_in</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Setup for undirected modularity</span>
-            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;degree&quot;</span><span class="p">]</span>
-            <span class="n">degrees</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+            <span class="n">degrees</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">))</span>
+            <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;degree&quot;</span><span class="p">:</span> <span class="n">degrees</span><span class="p">}</span>
 
-            <span class="n">m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">degrees</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-                <span class="n">data</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">m</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">deg</span> <span class="o">/</span> <span class="n">m</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">degrees</span><span class="p">},</span> <span class="s2">&quot;degree&quot;</span><span class="p">)</span>
-            <span class="n">gamma</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">resolution</span>
+            <span class="n">two_m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degrees</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">gamma</span> <span class="o">=</span> <span class="n">resolution</span> <span class="o">/</span> <span class="n">two_m</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">quality_delta</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
-                <span class="n">nodes_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-                <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-                <span class="n">E_D</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                    <span class="n">wt</span>
-                    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="n">E_D</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">nodes_size</span> <span class="o">*</span> <span class="n">comm_size</span>
+            <span class="c1"># Note: delta_func uses objects in defining namespace:</span>
+            <span class="c1"># - gamma</span>
+            <span class="c1"># - degrees</span>
+            <span class="c1"># - edge_wts</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">delta_func</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">community</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                    <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+                    <span class="n">nodes_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">community</span><span class="p">,</span> <span class="n">nodes_to_add</span>
+                    <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">nodes_to_add</span>
+                    <span class="n">nodes_size</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">community</span><span class="p">))</span>
+                        <span class="n">comm_size</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+                        <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+
+                <span class="c1"># Note: this function returns (m * modularity_delta) to avoid</span>
+                <span class="c1"># extra division by m. The choice of best change is not affected.</span>
+                <span class="c1"># Usual formula would be:</span>
+                <span class="c1"># E / m - (resolution * 2/ (2*m)**2) * nodes_size * comm_size</span>
+                <span class="k">return</span> <span class="n">E</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">nodes_size</span> <span class="o">*</span> <span class="n">comm_size</span>
 
     <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;barber_modularity&quot;</span><span class="p">:</span>
-        <span class="c1"># Setup for undirected bipartite barber modularity (not yet fully implemented)</span>
+        <span class="c1"># Setup for undirected bipartite barber modularity (not fully implemented)</span>
 
         <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;barber_modularity not implemented for DiGraph&quot;</span><span class="p">)</span>
@@ -935,49 +1007,45 @@
         <span class="k">def</span><span class="w"> </span><span class="nf">barber_modularity</span><span class="p">():</span>
             <span class="k">return</span>
 
-        <span class="n">metric</span> <span class="o">=</span> <span class="n">barber_modularity</span>
-
-        <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;red_degree&quot;</span><span class="p">,</span> <span class="s2">&quot;blue_degree&quot;</span><span class="p">]</span>
+        <span class="n">metric_function</span> <span class="o">=</span> <span class="n">barber_modularity</span>
+        <span class="c1"># TODO check these formulas for how m should appear. written when m=1.</span>
 
         <span class="n">red_nodes</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="p">}</span>
         <span class="n">blue_nodes</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="c1"># TODO add check for this being a bipartite graph</span>
 
-        <span class="c1"># expect the bipartite graph G to follow the NetworkX convention to have node</span>
-        <span class="c1"># a node attribe bipartite taking value 0 or 1, so should check this using</span>
-        <span class="c1"># something like the following:</span>
-        <span class="c1">#</span>
-        <span class="c1"># if len(red_nodes.union(blue_nodes)) &lt; len(G):</span>
-        <span class="c1">#    raise nx.NetworkXError(</span>
-        <span class="c1">#         &quot;expecting node attribute &#39;bipartite&#39;, with values 0 or 1&quot;</span>
-        <span class="c1">#     )</span>
+        <span class="n">degrees</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">))</span>
+        <span class="n">red_degrees</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">red_nodes</span><span class="p">}</span>
+        <span class="n">red_degrees</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">blue_nodes</span><span class="p">)</span>
+        <span class="n">blue_degrees</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">blue_nodes</span><span class="p">}</span>
+        <span class="n">blue_degrees</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">red_nodes</span><span class="p">)</span>
 
-        <span class="n">degrees</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">degrees</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red_degree&quot;</span><span class="p">:</span> <span class="n">red_degrees</span><span class="p">,</span> <span class="s2">&quot;blue_degree&quot;</span><span class="p">:</span> <span class="n">blue_degrees</span><span class="p">}</span>
 
-        <span class="n">red_degree</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="n">m</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">red_nodes</span><span class="p">}</span>
-        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">blue_nodes</span><span class="p">:</span>
-            <span class="n">red_degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Note: delta_func uses objects in defining namespace:</span>
+        <span class="c1"># - gamma</span>
+        <span class="c1"># - red_degrees</span>
+        <span class="c1"># - blue_degrees</span>
+        <span class="c1"># - edge_wts</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">delta_func</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
+            <span class="n">comm_red</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">red_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+            <span class="n">comm_blue</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">blue_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                <span class="n">nodes_red</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">red_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
+                <span class="n">nodes_blue</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">blue_degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
 
-        <span class="n">blue_degree</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="n">m</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">blue_nodes</span><span class="p">}</span>
-        <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">red_nodes</span><span class="p">:</span>
-            <span class="n">blue_degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">community</span><span class="p">):</span>
+                    <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">community</span><span class="p">,</span> <span class="n">nodes_to_add</span>
+                <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">A</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nodes_red</span> <span class="o">=</span> <span class="n">red_degrees</span><span class="p">[</span><span class="n">nodes_to_add</span><span class="p">]</span>
+                <span class="n">nodes_blue</span> <span class="o">=</span> <span class="n">blue_degrees</span><span class="p">[</span><span class="n">nodes_to_add</span><span class="p">]</span>
 
-        <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">red_degree</span><span class="p">,</span> <span class="s2">&quot;red_degree&quot;</span><span class="p">)</span>
-        <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">blue_degree</span><span class="p">,</span> <span class="s2">&quot;blue_degree&quot;</span><span class="p">)</span>
+                <span class="n">u</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span>
+                <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">edge_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">m</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">quality_delta</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">):</span>
-            <span class="n">nodes_red</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;red_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-            <span class="n">nodes_blue</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;blue_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
-            <span class="n">comm_red</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;red_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-            <span class="n">comm_blue</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;blue_degree&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
-            <span class="n">E</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-                <span class="n">wt</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">community</span>
-            <span class="p">)</span>
             <span class="k">return</span> <span class="n">E</span> <span class="o">-</span> <span class="n">resolution</span> <span class="o">*</span> <span class="p">(</span><span class="n">nodes_red</span> <span class="o">*</span> <span class="n">comm_blue</span> <span class="o">+</span> <span class="n">nodes_blue</span> <span class="o">*</span> <span class="n">comm_red</span><span class="p">)</span>
 
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;barber_modularity not implemented for leiden&quot;</span><span class="p">)</span>
@@ -987,309 +1055,240 @@
         <span class="p">)</span>
 
     <span class="c1"># The setup phase has ended, the main algorithm now begins.</span>
-    <span class="n">Q</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">partition</span><span class="p">)</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">metric_function</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">)</span>
 
     <span class="n">improvement_made</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">node2com</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">)}</span>
 
     <span class="k">while</span> <span class="n">improvement_made</span><span class="p">:</span>
-        <span class="c1"># _move_nodes_fast plays the same role as _one_level in the</span>
-        <span class="c1"># networkx implementation of the louvain algorithm</span>
-        <span class="c1"># when moving nodes to find the greatest increase in quality,</span>
+        <span class="c1"># _move_nodes_fast (name from paper) is like _one_level in nx.louvain</span>
+        <span class="c1"># Move nodes to new community with greatest increase in quality/metric</span>
+        <span class="c1"># Start with the unrefined partition from previous stage.</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">_move_nodes_fast</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node2com</span><span class="p">,</span> <span class="n">delta_func</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 
-        <span class="c1"># leiden initialises nodes into communities based on the</span>
-        <span class="c1"># unrefined partition of the previous stage. The dict</span>
-        <span class="c1"># refinement_mapping specifies how these initial communities</span>
-        <span class="c1"># are to be set</span>
-        <span class="n">P</span> <span class="o">=</span> <span class="n">_move_nodes_fast</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">refinement_mapping</span><span class="p">,</span> <span class="n">quality_delta</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="c1"># Refine the communities using _merge_node_subset (name from paper)</span>
+        <span class="n">P_refined</span> <span class="o">=</span> <span class="p">[</span><span class="n">_merge_node_subset</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">delta_func</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">P</span><span class="p">]</span>
+        <span class="n">P_refined_flat</span> <span class="o">=</span> <span class="p">[</span><span class="n">comm</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P_refined</span> <span class="k">for</span> <span class="n">comm</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]</span>
 
-        <span class="n">P_refined</span> <span class="o">=</span> <span class="n">_refine_partition</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">quality_delta</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="n">theta</span><span class="p">)</span>
-
-        <span class="n">P_refined_flat</span> <span class="o">=</span> <span class="p">[</span><span class="n">comm</span> <span class="k">for</span> <span class="n">P_ref</span> <span class="ow">in</span> <span class="n">P_refined</span> <span class="k">for</span> <span class="n">comm</span> <span class="ow">in</span> <span class="n">P_ref</span><span class="p">]</span>
-
-        <span class="c1"># Stop when overall change in quality is close to zero.</span>
-        <span class="n">Q_new</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">P_refined_flat</span><span class="p">)</span>
+        <span class="c1"># Stop when overall change is close to zero.</span>
+        <span class="n">Q_new</span> <span class="o">=</span> <span class="n">metric_function</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">P_refined_flat</span><span class="p">)</span>
         <span class="n">improvement_made</span> <span class="o">=</span> <span class="p">(</span><span class="n">Q_new</span> <span class="o">-</span> <span class="n">Q</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.0000001</span>
         <span class="n">Q</span> <span class="o">=</span> <span class="n">Q_new</span>
 
-        <span class="n">graph</span><span class="p">,</span> <span class="n">refinement_mapping</span> <span class="o">=</span> <span class="n">_create_aggregate_graph</span><span class="p">(</span>
-            <span class="n">graph</span><span class="p">,</span> <span class="n">P_refined</span><span class="p">,</span> <span class="n">node_attributes</span>
-        <span class="p">)</span>
+        <span class="c1"># Aggregate communities to make nodes for the next stage.</span>
+        <span class="c1"># Edges in next stage whenever any edges between nodes at this stage.</span>
+        <span class="c1"># Sum node and edge data to get aggregated graph data.</span>
+        <span class="n">G</span><span class="p">,</span> <span class="n">node2com</span> <span class="o">=</span> <span class="n">_create_aggregate_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">P_refined</span><span class="p">,</span> <span class="n">node_attributes</span><span class="p">)</span>
 
-        <span class="c1"># the partition of the original underlying graph is read from</span>
-        <span class="c1"># the node attribute &#39;nodes&#39;, which is set during _create_aggregate_graph(...)</span>
-        <span class="c1"># Each node in graph represents a community in the original graph</span>
-        <span class="c1"># and the node holds this information in the attribute &#39;nodes&#39;.</span>
-        <span class="k">yield</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">]</span>
+        <span class="c1"># Each node in G represents a community in the original graph</span>
+        <span class="c1"># held in G.nodes(data=&quot;nodes&quot;).</span>
+        <span class="c1"># Yield a copy to protect this data structure for later stages.</span>
+        <span class="k">yield</span> <span class="p">[</span><span class="n">nodes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;nodes&quot;</span><span class="p">)]</span>
 
+        <span class="c1"># unpack node data of new G to this namespace so delta_func() can use it</span>
+        <span class="n">edge_wts</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;edge_wts&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;cpm&quot;</span><span class="p">:</span>
+            <span class="n">node_weights</span> <span class="o">=</span> <span class="n">node_attributes</span><span class="p">[</span><span class="s2">&quot;node_weight&quot;</span><span class="p">]</span>
+            <span class="c1"># set node_Weight on graph so metric_function can find it</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_weights</span><span class="p">,</span> <span class="s2">&quot;node_weight&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;modularity&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
+                <span class="n">in_degrees</span> <span class="o">=</span> <span class="n">node_attributes</span><span class="p">[</span><span class="s2">&quot;in_degree&quot;</span><span class="p">]</span>
+                <span class="n">out_degrees</span> <span class="o">=</span> <span class="n">node_attributes</span><span class="p">[</span><span class="s2">&quot;out_degree&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">degrees</span> <span class="o">=</span> <span class="n">node_attributes</span><span class="p">[</span><span class="s2">&quot;degree&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;barber_modularity&quot;</span><span class="p">:</span>
+            <span class="n">red_degrees</span> <span class="o">=</span> <span class="n">node_attributes</span><span class="p">[</span><span class="s2">&quot;red_degree&quot;</span><span class="p">]</span>
+            <span class="n">blue_degrees</span> <span class="o">=</span> <span class="n">node_attributes</span><span class="p">[</span><span class="s2">&quot;blue_degree&quot;</span><span class="p">]</span>
     <span class="k">return</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_move_nodes_fast</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">refinement_mapping</span><span class="p">,</span> <span class="n">quality_delta_func</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_move_nodes_fast</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node2com</span><span class="p">,</span> <span class="n">delta_func</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">node2com</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">comm</span> <span class="ow">in</span> <span class="n">node2com</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">P</span><span class="p">[</span><span class="n">comm</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-    <span class="c1"># Unlike louvain, instead of beginning each iteration with the singleton</span>
-    <span class="c1"># partition, each iteration uses the (unrefined) partition from the previous</span>
-    <span class="c1"># step as the starting communities when moving nodes.</span>
-    <span class="c1"># This section of code initilises nodes into those communities.</span>
-    <span class="c1"># if no partition is passed from the previous step (i.e. during the</span>
-    <span class="c1"># first iteration) then this is skipped and the singleton partition is used.</span>
-    <span class="k">if</span> <span class="n">refinement_mapping</span><span class="p">:</span>
-        <span class="n">P</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">refinement_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">()))]</span>
-        <span class="n">node2com</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-            <span class="n">P</span><span class="p">[</span><span class="n">refinement_mapping</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">node2com</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">refinement_mapping</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">P</span> <span class="o">=</span> <span class="p">[{</span><span class="n">u</span><span class="p">}</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
-        <span class="n">node2com</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">)}</span>
-
-    <span class="n">rand_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">rand_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">node2com</span><span class="p">)</span>
     <span class="n">seed</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">rand_nodes</span><span class="p">)</span>
-    <span class="n">node_queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">rand_nodes</span><span class="p">)</span>
 
-    <span class="k">while</span> <span class="n">node_queue</span><span class="p">:</span>
-        <span class="n">u</span> <span class="o">=</span> <span class="n">node_queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-        <span class="n">neighbor_coms</span> <span class="o">=</span> <span class="p">{</span><span class="n">node2com</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">all_neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">)}</span>
+    <span class="c1"># Use dict as a partial deque (pop_left, pop and update_right with no dups).</span>
+    <span class="c1"># pop_left takes two steps using next(iter()) and pop.</span>
+    <span class="c1"># update adds to the end only if not in queue already.</span>
+    <span class="c1"># membership check is O(1) (speedup over deque).</span>
+    <span class="n">dict_deque</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">rand_nodes</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">dict_deque</span><span class="p">:</span>
+        <span class="c1"># pop first node in queue</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dict_deque</span><span class="p">))</span>
+        <span class="n">dict_deque</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
 
-        <span class="n">best_delta</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">old_com</span> <span class="o">=</span> <span class="n">node2com</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
-        <span class="n">best_com</span> <span class="o">=</span> <span class="n">old_com</span>
+        <span class="c1"># get neighbors (both in &amp; out when directed)</span>
+        <span class="n">u_nbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">all_neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">))</span>
+        <span class="n">nbr_coms</span> <span class="o">=</span> <span class="p">{</span><span class="n">node2com</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u_nbrs</span><span class="p">}</span> <span class="o">-</span> <span class="p">{</span><span class="n">old_com</span><span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nbr_coms</span><span class="p">:</span>
+            <span class="k">continue</span>
 
-        <span class="c1"># this value is the overall change in quality that occurs</span>
-        <span class="c1"># when node u is removed from its current community</span>
-        <span class="n">q_rem</span> <span class="o">=</span> <span class="n">quality_delta_func</span><span class="p">({</span><span class="n">u</span><span class="p">},</span> <span class="n">P</span><span class="p">[</span><span class="n">old_com</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="p">})</span>
+        <span class="c1"># find community to move u to with biggest increase in metric</span>
+        <span class="n">best_add</span><span class="p">,</span> <span class="n">best_com</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">delta_func</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="n">c</span><span class="p">]),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nbr_coms</span><span class="p">)</span>
 
-        <span class="c1"># for each node in the queue, we measure the change in quality</span>
-        <span class="c1"># from moving that node to each other community, keeping track of</span>
-        <span class="c1"># the community that gives the greatest improvement best_com</span>
-        <span class="k">for</span> <span class="n">new_com</span> <span class="ow">in</span> <span class="n">neighbor_coms</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">new_com</span> <span class="o">!=</span> <span class="n">old_com</span><span class="p">:</span>
-                <span class="c1"># this quantity is the overall change in quality that</span>
-                <span class="c1"># occurs when the node u is added to the new community</span>
-                <span class="n">q_add</span> <span class="o">=</span> <span class="n">quality_delta_func</span><span class="p">({</span><span class="n">u</span><span class="p">},</span> <span class="n">P</span><span class="p">[</span><span class="n">new_com</span><span class="p">])</span>
+        <span class="c1"># decrease in metric when u is removed from its old community</span>
+        <span class="n">P_old_com</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">old_com</span><span class="p">]</span>
+        <span class="n">without_u</span> <span class="o">=</span> <span class="n">P_old_com</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="p">}</span>
 
-                <span class="c1"># the overall change in quality therefore from moving</span>
-                <span class="c1"># node u from old_com to new_com is as follows</span>
-                <span class="n">Q_delta</span> <span class="o">=</span> <span class="n">q_add</span> <span class="o">-</span> <span class="n">q_rem</span>
-
-                <span class="k">if</span> <span class="n">Q_delta</span> <span class="o">&gt;</span> <span class="n">best_delta</span><span class="p">:</span>
-                    <span class="n">best_delta</span> <span class="o">=</span> <span class="n">Q_delta</span>
-                    <span class="n">best_com</span> <span class="o">=</span> <span class="n">new_com</span>
-
-        <span class="k">if</span> <span class="n">best_delta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">best_add</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">delta_func</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">without_u</span><span class="p">)</span> <span class="k">if</span> <span class="n">without_u</span> <span class="k">else</span> <span class="mi">0</span><span class="p">):</span>
             <span class="n">node2com</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_com</span>
-
-            <span class="n">P</span><span class="p">[</span><span class="n">old_com</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="n">P_old_com</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
             <span class="n">P</span><span class="p">[</span><span class="n">best_com</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
 
-            <span class="n">neighbours</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
-            <span class="n">nodes_to_visit</span> <span class="o">=</span> <span class="n">neighbours</span> <span class="o">-</span> <span class="n">P</span><span class="p">[</span><span class="n">best_com</span><span class="p">]</span>
+            <span class="c1"># Requeue nbrs from other coms if not already in queue</span>
+            <span class="c1"># Add to end of queue (revisit after currently queued nodes)</span>
+            <span class="n">nodes_to_revisit</span> <span class="o">=</span> <span class="n">u_nbrs</span> <span class="o">-</span> <span class="n">P</span><span class="p">[</span><span class="n">best_com</span><span class="p">]</span>
+            <span class="n">dict_deque</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes_to_revisit</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes_to_visit</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_queue</span><span class="p">:</span>
-                    <span class="n">node_queue</span><span class="o">.</span><span class="n">appendleft</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-
-    <span class="n">P</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">P</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="n">P</span>
+    <span class="c1"># remove empty sets from P</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">P</span> <span class="k">if</span> <span class="n">p</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_refine_partition</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span>
-    <span class="n">P</span><span class="p">,</span>
-    <span class="n">quality_delta_func</span><span class="p">,</span>
-    <span class="n">seed</span><span class="p">,</span>
-    <span class="n">theta</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_merge_node_subset</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">delta_func</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+    <span class="c1"># T[i] &gt; 0 means community i is well connected to others</span>
+    <span class="c1"># Definition of T in line 37 of pseudocode in paper (supplemental mat.)</span>
+    <span class="c1"># uses condition for &quot;cpm&quot; metric: E(C, S-C) &gt;= gamma * |C| * (|S| - |C|)</span>
+    <span class="c1"># where |X| is the node_weight of the set X of nodes.</span>
+    <span class="c1"># We generalize to any metric by using condition T(i) &gt; 0</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">delta_func</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">C</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="p">})</span> <span class="k">if</span> <span class="n">C</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="p">}</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">C</span><span class="p">)}</span>
 
-    <span class="n">P_refined</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># R contains well-connected nodes within C</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="k">if</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
 
-    <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
-        <span class="c1"># each community C in the partition P</span>
-        <span class="c1"># is split into a set of smaller communities</span>
-        <span class="c1"># resulting in a refined partition</span>
-
-        <span class="n">C_refined</span> <span class="o">=</span> <span class="n">_merge_node_subset</span><span class="p">(</span>
-            <span class="n">G</span><span class="p">,</span>
-            <span class="n">C</span><span class="p">,</span>
-            <span class="n">quality_delta_func</span><span class="p">,</span>
-            <span class="n">seed</span><span class="p">,</span>
-            <span class="n">theta</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">C_refined</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">C_refined</span><span class="p">))</span>
-        <span class="n">P_refined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C_refined</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">P_refined</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_merge_node_subset</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span>
-    <span class="n">C</span><span class="p">,</span>
-    <span class="n">quality_delta_func</span><span class="p">,</span>
-    <span class="n">seed</span><span class="p">,</span>
-    <span class="n">theta</span><span class="p">,</span>
-<span class="p">):</span>
-
-    <span class="n">node2com</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">C</span><span class="p">)}</span>
     <span class="n">C_refined</span> <span class="o">=</span> <span class="p">[{</span><span class="n">u</span><span class="p">}</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">C</span><span class="p">]</span>
-    <span class="c1"># first, the sufficiently well-connected nodes within S</span>
-    <span class="c1"># are identified and added to the set R.</span>
-    <span class="n">R</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">C</span> <span class="k">if</span> <span class="n">quality_delta_func</span><span class="p">({</span><span class="n">u</span><span class="p">},</span> <span class="n">C</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="p">})</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">}</span>
-
-    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
-        <span class="n">comm</span> <span class="o">=</span> <span class="n">node2com</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">C_refined</span><span class="p">[</span><span class="n">comm</span><span class="p">]</span> <span class="o">!=</span> <span class="p">{</span><span class="n">u</span><span class="p">}:</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">comm_i</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># Only process nodes that are still in a singleton community {u}</span>
+        <span class="c1"># - Find candidate communities for u to merge with</span>
+        <span class="c1"># - Select one randomly based on relative delta for each community</span>
+        <span class="c1">#   Note: not choosing the best one</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">C_refined</span><span class="p">[</span><span class="n">comm_i</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="c1"># if the community that u belongs to is the singleton {u}, then</span>
-        <span class="c1"># we will proceed to merge it probabilistically with another</span>
-        <span class="c1"># community within C.</span>
+        <span class="n">unbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">all_neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">))</span>
 
-        <span class="c1"># first we identify candidate communities to merge u into</span>
-        <span class="c1"># and then the final community is randomly selected from these</span>
-        <span class="c1"># according to a probability distribution which is partly</span>
-        <span class="c1"># defined by the relative quality_delta (bigger increase in</span>
-        <span class="c1"># quality makes choosing that community more likely, but</span>
-        <span class="c1"># the algorithm does not greedily choose the greatest increase)</span>
-
-        <span class="c1"># we therefore track both the communities and their respective</span>
-        <span class="c1"># probabilities in order to define the probabilty distribution</span>
-        <span class="c1"># to select the community that u will be moved into</span>
-
-        <span class="c1"># if u is not in a singleton partition then we move on to the</span>
-        <span class="c1"># next node.</span>
-        <span class="n">candidate_comm</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">candidate_comm_q_delta</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="c1"># this is the change in quality that occurs from removing node</span>
-        <span class="c1"># u from its current community</span>
-        <span class="n">q_rem</span> <span class="o">=</span> <span class="n">quality_delta_func</span><span class="p">({</span><span class="n">u</span><span class="p">},</span> <span class="n">C_refined</span><span class="p">[</span><span class="n">comm</span><span class="p">]</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="p">})</span>
+        <span class="n">cand_comms</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cand_comm_deltas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Note: delta for removing u from current comm is 0 (singleton comm)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">new_comm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">C_refined</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">comm</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
-                <span class="c1"># we only want to consider moving u to a different</span>
-                <span class="c1"># community, not its current community.</span>
+            <span class="c1"># Main conditions: unbrs in new_comm and T[i] &gt; 0. Also not old comm.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">new_comm</span> <span class="o">&amp;</span> <span class="n">unbrs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">comm_i</span> <span class="o">==</span> <span class="n">i</span> <span class="ow">or</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-            <span class="c1"># We only consider merging u into a community that</span>
-            <span class="c1"># is within S. This is what is means for the resulting</span>
-            <span class="c1"># partition to be a refinement of S.</span>
+            <span class="n">Q_delta</span> <span class="o">=</span> <span class="n">delta_func</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">new_comm</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Q_delta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cand_comms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">cand_comm_deltas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Q_delta</span><span class="p">)</span>
 
-            <span class="c1"># this application of quality_delta_func relates to the</span>
-            <span class="c1"># definition of T in line :37 from pseudocode in paper</span>
-            <span class="k">if</span> <span class="n">quality_delta_func</span><span class="p">(</span><span class="n">new_comm</span><span class="p">,</span> <span class="n">C</span> <span class="o">-</span> <span class="n">new_comm</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># the change in quality the occurs from moving node u</span>
-                <span class="c1"># into the new community</span>
-                <span class="n">q_add</span> <span class="o">=</span> <span class="n">quality_delta_func</span><span class="p">({</span><span class="n">u</span><span class="p">},</span> <span class="n">C_refined</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="c1"># select one candidate community at random</span>
+        <span class="k">if</span> <span class="n">cand_comms</span><span class="p">:</span>
+            <span class="c1"># probability of each candidate comm determined by Q_delta</span>
+            <span class="c1"># Relative frequency is proportional to</span>
+            <span class="c1">#       math.exp(Q_delta/theta)</span>
+            <span class="c1"># Large exponentials can overflow so normalize to</span>
+            <span class="c1">#       math.exp((Q_delta - max_Q_delta)/theta)</span>
+            <span class="n">max_delta</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cand_comm_deltas</span><span class="p">)</span>
+            <span class="n">cand_wts</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">max_delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">theta</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cand_comm_deltas</span><span class="p">]</span>
+            <span class="n">new_comm_i</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">cand_comms</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">cand_wts</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
-                <span class="c1"># the overall quality delta is therefore the sum</span>
-                <span class="c1"># of the change in quality from removing u from its</span>
-                <span class="c1"># starting community, and the change of quality</span>
-                <span class="c1"># from adding it to the new community</span>
+            <span class="n">C_refined</span><span class="p">[</span><span class="n">comm_i</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="n">comm_i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># comm_i is now empty (only looking at singleton comms)</span>
+            <span class="n">new_comm</span> <span class="o">=</span> <span class="n">C_refined</span><span class="p">[</span><span class="n">new_comm_i</span><span class="p">]</span>
+            <span class="n">new_comm</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="c1"># Note: delta_func here has a set as 1st arg:</span>
+            <span class="c1">#       returns delta when combining the two sets.</span>
+            <span class="n">C_removed</span> <span class="o">=</span> <span class="n">C</span> <span class="o">-</span> <span class="n">new_comm</span>
+            <span class="n">T</span><span class="p">[</span><span class="n">new_comm_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">delta_func</span><span class="p">(</span><span class="n">new_comm</span><span class="p">,</span> <span class="n">C_removed</span><span class="p">)</span> <span class="k">if</span> <span class="n">C_removed</span> <span class="k">else</span> <span class="mi">0</span>
 
-                <span class="n">Q_delta</span> <span class="o">=</span> <span class="n">q_add</span> <span class="o">-</span> <span class="n">q_rem</span>
-
-                <span class="k">if</span> <span class="n">Q_delta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">candidate_comm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-                    <span class="n">candidate_comm_q_delta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Q_delta</span><span class="p">)</span>
-
-        <span class="c1"># if there are candidate communities identified then</span>
-        <span class="c1"># one is selected at random, and u is added to that</span>
-        <span class="c1"># community</span>
-        <span class="k">if</span> <span class="n">candidate_comm</span><span class="p">:</span>
-            <span class="c1"># the probability distribution that the new community is drawn</span>
-            <span class="c1"># from is defined in terms of the quality delta associated</span>
-            <span class="c1"># with the move to each community.</span>
-
-            <span class="c1"># If moving u to community C results in a quality delta QC,</span>
-            <span class="c1"># the relative frequency with which C will be chosen is</span>
-            <span class="c1"># proportional to</span>
-            <span class="c1">#</span>
-            <span class="c1">#       math.exp(QC/theta)</span>
-            <span class="c1">#</span>
-            <span class="c1"># Since computing large exponentials can cause overflow</span>
-            <span class="c1"># errors, we use an equivalent form that computes normalised</span>
-            <span class="c1"># values with the same ratios</span>
-            <span class="n">max_delta</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">candidate_comm_q_delta</span><span class="p">)</span>
-            <span class="n">candidate_comm_prob</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">max_delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">theta</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">candidate_comm_q_delta</span>
-            <span class="p">]</span>
-
-            <span class="n">new_comm</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">candidate_comm</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">candidate_comm_prob</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
-            <span class="n">C_refined</span><span class="p">[</span><span class="n">comm</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">C_refined</span><span class="p">[</span><span class="n">new_comm</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-            <span class="n">node2com</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_comm</span>
-
-    <span class="k">return</span> <span class="n">C_refined</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C_refined</span> <span class="k">if</span> <span class="n">c</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_create_aggregate_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">refined_communities_list</span><span class="p">,</span> <span class="n">node_attributes</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate a new graph based on the partitions of a given graph</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_aggregate_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">P_refined</span><span class="p">,</span> <span class="n">node_attributes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a new graph based on P_refined. Each community becomes a node.</span>
 
-<span class="sd">    node_attributes is a list of attributes that are required for the</span>
-<span class="sd">    given choice of quality metric. When aggregating a community (set</span>
-<span class="sd">    of nodes) into a new node of the aggregated graph, the value for</span>
-<span class="sd">    each attribute is the sum of the constituent nodes.</span>
+<span class="sd">    Note: `node_attributes` is changed in place by this function!</span>
+
+<span class="sd">    P_refined is a list of lists of community sets. The outer list indicates</span>
+<span class="sd">    communities in the new graph which comes from P. Each inner list holds</span>
+<span class="sd">    the refined sets of nodes each of which becomes a new node. So P_refined</span>
+<span class="sd">    contains P as the outer list and its refinement as the inner lists which</span>
+<span class="sd">    hold the refined community sets that make up the new graph&#39;s nodes.</span>
+
+<span class="sd">    node_attributes is a dict keyed by each attribute name to be aggregated</span>
+<span class="sd">    which depends on the metric being used.</span>
+<span class="sd">    The value is a dict for that attribute keyed by node to the attribute value.</span>
+<span class="sd">    Aggregate means sum within a G community into a new node in H.</span>
+<span class="sd">    After this function the incoming dict values are replaced by aggregated dicts.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G_original_nodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;nodes&quot;</span><span class="p">)</span>
 
+    <span class="n">nodes_G2H</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
-    <span class="n">old2new</span> <span class="o">=</span> <span class="p">{}</span>
-
-    <span class="n">refinement_mapping</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">new_node_id</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">partition_index</span><span class="p">,</span> <span class="n">community</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">refined_communities_list</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">refined_community</span> <span class="ow">in</span> <span class="n">community</span><span class="p">:</span>
-            <span class="c1"># each refined_community from the refined_partiton defines</span>
-            <span class="c1"># a node in the new aggregated graph</span>
-
-            <span class="n">refinement_mapping</span><span class="p">[</span><span class="n">new_node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">partition_index</span>
-
+    <span class="n">H_node2com</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">H_node_id</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">H_node_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="n">attr_name</span><span class="p">:</span> <span class="p">{}</span> <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">node_attributes</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">H_comm_id</span><span class="p">,</span> <span class="n">refined_comms</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">P_refined</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">refined_comm</span> <span class="ow">in</span> <span class="n">refined_comms</span><span class="p">:</span>
+            <span class="c1"># each set from the refined_sets defines</span>
+            <span class="c1"># a node in the new aggregated graph. Name it new_node_id.</span>
+            <span class="n">H_node2com</span><span class="p">[</span><span class="n">H_node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">H_comm_id</span>
             <span class="n">agg_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">attribute</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">node_attributes</span><span class="p">}</span>
 
-            <span class="c1"># will contain the nodes defining a community</span>
-            <span class="c1"># in the original graph</span>
+            <span class="c1"># contains the original graph nodes defining this new community</span>
             <span class="n">original_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-            <span class="c1"># old_node is node from the previous iteration</span>
-            <span class="c1"># i.e. aggregated graph from the previous</span>
-            <span class="c1"># stage, not the original graph</span>
-            <span class="k">for</span> <span class="n">old_node</span> <span class="ow">in</span> <span class="n">refined_community</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">node_attribute</span> <span class="ow">in</span> <span class="n">node_attributes</span><span class="p">:</span>
-                    <span class="n">agg_vals</span><span class="p">[</span><span class="n">node_attribute</span><span class="p">]</span> <span class="o">+=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">old_node</span><span class="p">][</span><span class="n">node_attribute</span><span class="p">]</span>
+            <span class="c1"># G_node is node from previous stage, not original graph</span>
+            <span class="k">for</span> <span class="n">G_node</span> <span class="ow">in</span> <span class="n">refined_comm</span><span class="p">:</span>
+                <span class="n">nodes_G2H</span><span class="p">[</span><span class="n">G_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">H_node_id</span>
 
-                <span class="n">old2new</span><span class="p">[</span><span class="n">old_node</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_node_id</span>
-                <span class="n">original_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">old_node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="p">{</span><span class="n">old_node</span><span class="p">}))</span>
+                <span class="c1"># aggregate node attributes</span>
+                <span class="n">original_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">G_original_nodes</span><span class="p">[</span><span class="n">G_node</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">attr_dict</span> <span class="ow">in</span> <span class="n">node_attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">agg_vals</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span> <span class="o">+=</span> <span class="n">attr_dict</span><span class="p">[</span><span class="n">G_node</span><span class="p">]</span>
 
-            <span class="n">H</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_node_id</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">original_nodes</span><span class="p">,</span> <span class="o">**</span><span class="n">agg_vals</span><span class="p">)</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">H_node_id</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">original_nodes</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">node_attributes</span><span class="p">:</span>
+                <span class="n">H_node_attributes</span><span class="p">[</span><span class="n">attr_name</span><span class="p">][</span><span class="n">H_node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">agg_vals</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span>
+            <span class="n">H_node_id</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># load H_node_attr into node_attributes dict (overwrites G data with H data).</span>
+    <span class="c1"># The dict node_attributes is used in delta_func. When metric_function needs</span>
+    <span class="c1"># a node attr (see &quot;node_weight&quot; in &quot;cpm&quot;) add to the graph too (after this</span>
+    <span class="c1"># function returns). The node_attributes dict is a hack to update node info</span>
+    <span class="c1"># inside delta_func. Could store it on H but that is slower and fatter.</span>
+    <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">node_attributes</span><span class="p">:</span>
+        <span class="n">node_attributes</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">H_node_attributes</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span>
 
-            <span class="n">new_node_id</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">uv_weight</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
-        <span class="n">new_u</span> <span class="o">=</span> <span class="n">old2new</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
-        <span class="n">new_v</span> <span class="o">=</span> <span class="n">old2new</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">new_u</span> <span class="o">!=</span> <span class="n">new_v</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">new_u</span><span class="p">,</span> <span class="n">new_v</span><span class="p">):</span>
-                <span class="n">H</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="n">new_u</span><span class="p">,</span> <span class="n">new_v</span><span class="p">)][</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">uv_weight</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">new_u</span><span class="p">,</span> <span class="n">new_v</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">uv_weight</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">refinement_mapping</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_convert_multigraph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">is_directed</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a Multigraph to normal Graph&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
-        <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-
-    <span class="n">H</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-            <span class="n">H</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">wt</span>
+    <span class="c1"># Add edges (including selfloops)</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
+        <span class="n">H_u</span> <span class="o">=</span> <span class="n">nodes_G2H</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+        <span class="n">H_v</span> <span class="o">=</span> <span class="n">nodes_G2H</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">H_u</span><span class="p">,</span> <span class="n">H_v</span><span class="p">):</span>
+            <span class="n">H</span><span class="p">[</span><span class="n">H_u</span><span class="p">][</span><span class="n">H_v</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">wt</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">wt</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">H</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">H_u</span><span class="p">,</span> <span class="n">H_v</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">wt</span><span class="p">)</span>
+    <span class="c1"># Compute edge_wts as dict-of-dicts (ignoring selfloops)</span>
+    <span class="n">H_edge_wts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">u</span><span class="p">:</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">v</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">_adj</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">H</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">_pred</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">v_wts</span> <span class="o">=</span> <span class="n">H_edge_wts</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">v_wts</span><span class="p">:</span>
+                    <span class="n">v_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">v_wts</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;edge_wts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H_edge_wts</span>
+
+    <span class="k">return</span> <span class="n">H</span><span class="p">,</span> <span class="n">H_node2com</span>
 </pre></div>
 
                 </article>
