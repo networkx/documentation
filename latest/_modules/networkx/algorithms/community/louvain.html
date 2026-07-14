@@ -635,7 +635,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import networkx as nx</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.petersen_graph()</span>
-<span class="sd">    &gt;&gt;&gt; nx.community.louvain_communities(G, seed=123)</span>
+<span class="sd">    &gt;&gt;&gt; nx.community.louvain_communities(G, seed=111)</span>
 <span class="sd">    [{0, 4, 5, 7, 9}, {1, 2, 3, 6, 8}]</span>
 
 <span class="sd">    Notes</span>
@@ -838,18 +838,27 @@
                 <span class="n">degree</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
                 <span class="n">Stot</span><span class="p">[</span><span class="n">u_com</span><span class="p">]</span> <span class="o">-=</span> <span class="n">degree</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">Stot</span><span class="p">[</span><span class="n">u_com</span><span class="p">]</span> <span class="o">*</span> <span class="n">degree</span>
-            <span class="n">remove_cost</span> <span class="o">=</span> <span class="o">-</span><span class="n">u_deg_by_com</span><span class="p">[</span><span class="n">u_com</span><span class="p">]</span> <span class="o">/</span> <span class="n">m</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span> <span class="n">m</span><span class="o">**</span><span class="mi">2</span>
+            <span class="c1"># Formula for merging u with u_com (algebra on modularity formula)</span>
+            <span class="c1"># is sum(wts from u to u_com) / m - gamma * x / m**2.</span>
+            <span class="c1"># Remove cost is negative of merge gain. Need best_gain &gt; remove_cost.</span>
+            <span class="c1"># We multiply by m**2 to avoid floating point errors.</span>
+            <span class="c1"># Does not change best_com.  See gh-8739.</span>
+            <span class="n">remove_cost</span> <span class="o">=</span> <span class="n">u_deg_by_com</span><span class="p">[</span><span class="n">u_com</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">x</span>
 
-            <span class="n">best_mod</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">best_gain</span> <span class="o">=</span> <span class="n">remove_cost</span>  <span class="c1"># check that best_gain &gt; remove_cost</span>
             <span class="n">best_com</span> <span class="o">=</span> <span class="n">u_com</span>
             <span class="k">for</span> <span class="n">nbr_com</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">u_deg_by_com</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
                     <span class="n">x</span> <span class="o">=</span> <span class="n">out_degree</span> <span class="o">*</span> <span class="n">Stot_in</span><span class="p">[</span><span class="n">nbr_com</span><span class="p">]</span> <span class="o">+</span> <span class="n">in_degree</span> <span class="o">*</span> <span class="n">Stot_out</span><span class="p">[</span><span class="n">nbr_com</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">x</span> <span class="o">=</span> <span class="n">Stot</span><span class="p">[</span><span class="n">nbr_com</span><span class="p">]</span> <span class="o">*</span> <span class="n">degree</span>
-                <span class="n">gain</span> <span class="o">=</span> <span class="n">remove_cost</span> <span class="o">+</span> <span class="n">wt</span> <span class="o">/</span> <span class="n">m</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">x</span> <span class="o">/</span> <span class="n">m</span><span class="o">**</span><span class="mi">2</span>
-                <span class="k">if</span> <span class="n">gain</span> <span class="o">&gt;</span> <span class="n">best_mod</span><span class="p">:</span>
-                    <span class="n">best_mod</span> <span class="o">=</span> <span class="n">gain</span>
+                <span class="c1"># Formula for merging u with u_com (algebra on modularity formula)</span>
+                <span class="c1"># is sum(wts from u to nbr_com) / m - gamma * x / m**2.</span>
+                <span class="c1"># We multiply by m**2 to avoid floating point errors.</span>
+                <span class="c1"># Does not change best_com.  See gh-8739.</span>
+                <span class="n">gain</span> <span class="o">=</span> <span class="n">wt</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">x</span>
+                <span class="k">if</span> <span class="n">gain</span> <span class="o">&gt;</span> <span class="n">best_gain</span><span class="p">:</span>
+                    <span class="n">best_gain</span> <span class="o">=</span> <span class="n">gain</span>
                     <span class="n">best_com</span> <span class="o">=</span> <span class="n">nbr_com</span>
 
             <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
