@@ -691,10 +691,36 @@
 <span class="sd">    You can also use alternative algorithms for computing the</span>
 <span class="sd">    maximum flow by using the flow_func parameter.</span>
 
-<span class="sd">    &gt;&gt;&gt; from networkx.algorithms.flow import shortest_augmenting_path</span>
-<span class="sd">    &gt;&gt;&gt; flow_value == nx.maximum_flow(G, &quot;x&quot;, &quot;y&quot;, flow_func=shortest_augmenting_path)[</span>
-<span class="sd">    ...     0</span>
-<span class="sd">    ... ]</span>
+<span class="sd">    &gt;&gt;&gt; sap = nx.flow.shortest_augmenting_path</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == nx.maximum_flow(G, &quot;x&quot;, &quot;y&quot;, flow_func=sap)[0]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Floating point values can cause round-off errors which change results. For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G, (0, &quot;a&quot;, 1))</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G, (0, &quot;b&quot;, 1))</span>
+<span class="sd">    &gt;&gt;&gt; nx.add_path(G, (0, &quot;c&quot;, 1))</span>
+<span class="sd">    &gt;&gt;&gt; nx.set_edge_attributes(G, {e: 0.3 for e in G.edges}, &quot;capacity&quot;)</span>
+
+<span class="sd">    All weights are 0.3 which cannot be represented exactly in binary floating point.</span>
+<span class="sd">    So the total flow is off a little. In a more complex network the small differences</span>
+<span class="sd">    can become larger, and can lead to incorrect flow patterns and/or cut partitions.</span>
+
+<span class="sd">    &gt;&gt;&gt; flow_value, flow_dict = nx.maximum_flow(G, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; flow_value</span>
+<span class="sd">    0.8999999999999999</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == 0.9</span>
+<span class="sd">    False</span>
+
+<span class="sd">    We recommend converting floating point to integers when possible based on your</span>
+<span class="sd">    knowledge of the weight values and the precision needed. For 6 digits:</span>
+
+<span class="sd">    &gt;&gt;&gt; precision = 1e6</span>
+<span class="sd">    &gt;&gt;&gt; flow_value, _ = nx.maximum_flow(</span>
+<span class="sd">    ...     G, 0, 1, capacity=lambda u, v, d: int(precision * d[&quot;capacity&quot;])</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; flow_value / precision == 0.9</span>
 <span class="sd">    True</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
