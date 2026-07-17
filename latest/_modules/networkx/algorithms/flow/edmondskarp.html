@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Jul 14, 2026"/>
+    <meta name="docbuild:last-update" content="Jul 17, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -639,9 +639,14 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">residual</span>
 
-    <span class="c1"># Initialize/reset the residual network.</span>
-    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">R</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="c1"># Initialize/reset the residual network: zero the flow on every</span>
+    <span class="c1"># edge. Iterating the internal adjacency dicts directly instead of</span>
+    <span class="c1"># the public views is ~3x faster here, which matters on workloads</span>
+    <span class="c1"># that run many small-cutoff flow computations on one reused</span>
+    <span class="c1"># residual network (e.g. node_connectivity): for these, this reset</span>
+    <span class="c1"># costs more than the flow computation itself.</span>
+    <span class="k">for</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">_succ</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">e</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">if</span> <span class="n">cutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

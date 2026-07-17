@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Jul 14, 2026"/>
+    <meta name="docbuild:last-update" content="Jul 17, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -1013,18 +1013,23 @@
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;cutoff should not be specified.&quot;</span><span class="p">)</span>
 
     <span class="n">R</span> <span class="o">=</span> <span class="n">flow_func</span><span class="p">(</span><span class="n">flowG</span><span class="p">,</span> <span class="n">_s</span><span class="p">,</span> <span class="n">_t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span> <span class="n">value_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="c1"># Remove saturated edges from the residual network</span>
-    <span class="n">cutset</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]]</span>
-    <span class="n">R</span><span class="o">.</span><span class="n">remove_edges_from</span><span class="p">(</span><span class="n">cutset</span><span class="p">)</span>
 
-    <span class="c1"># Then, reachable and non reachable nodes from source in the</span>
-    <span class="c1"># residual network form the node partition that defines</span>
-    <span class="c1"># the minimum cut.</span>
-    <span class="n">non_reachable</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">shortest_path_length</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">_t</span><span class="p">))</span>
+    <span class="c1"># The nodes that reach _t in the residual network over edges with</span>
+    <span class="c1"># spare capacity (flow &lt; capacity) form one side of the minimum</span>
+    <span class="c1"># cut, the rest the other (see the residual network conventions in</span>
+    <span class="c1"># the Notes): a reverse breadth-first search from _t.</span>
+    <span class="n">non_reachable</span> <span class="o">=</span> <span class="p">{</span><span class="n">_t</span><span class="p">}</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">_t</span><span class="p">]</span>
+    <span class="n">R_pred</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">_pred</span>
+    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+        <span class="n">next_layer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">non_reachable</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]:</span>
+                    <span class="n">non_reachable</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                    <span class="n">next_layer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">next_layer</span>
     <span class="n">partition</span> <span class="o">=</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flowG</span><span class="p">)</span> <span class="o">-</span> <span class="n">non_reachable</span><span class="p">,</span> <span class="n">non_reachable</span><span class="p">)</span>
-    <span class="c1"># Finally add again cutset edges to the residual network to make</span>
-    <span class="c1"># sure that it is reusable.</span>
-    <span class="n">R</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">cutset</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;flow_value&quot;</span><span class="p">],</span> <span class="n">partition</span><span class="p">)</span></div>
 
 
