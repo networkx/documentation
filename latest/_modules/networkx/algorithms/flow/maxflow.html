@@ -613,7 +613,9 @@
 <span class="sd">    NetworkXError</span>
 <span class="sd">        The algorithm does not support MultiGraph and MultiDiGraph. If</span>
 <span class="sd">        the input graph is an instance of one of these two classes, a</span>
-<span class="sd">        NetworkXError is raised.</span>
+<span class="sd">        NetworkXError is raised. It is also raised if `flow_func` is not</span>
+<span class="sd">        callable, or if keyword parameters are passed via ``kwargs``</span>
+<span class="sd">        without explicitly setting `flow_func`.</span>
 
 <span class="sd">    NetworkXUnbounded</span>
 <span class="sd">        If the graph has a path of infinite capacity, the value of a</span>
@@ -657,7 +659,7 @@
 
 <span class="sd">    Specific algorithms may store extra data in :samp:`R`.</span>
 
-<span class="sd">    The function should supports an optional boolean parameter value_only. When</span>
+<span class="sd">    The function should support an optional boolean parameter value_only. When</span>
 <span class="sd">    True, it can optionally terminate the algorithm as soon as the maximum flow</span>
 <span class="sd">    value and the minimum cut can be determined.</span>
 
@@ -772,7 +774,9 @@
 <span class="sd">    NetworkXError</span>
 <span class="sd">        The algorithm does not support MultiGraph and MultiDiGraph. If</span>
 <span class="sd">        the input graph is an instance of one of these two classes, a</span>
-<span class="sd">        NetworkXError is raised.</span>
+<span class="sd">        NetworkXError is raised. It is also raised if `flow_func` is not</span>
+<span class="sd">        callable, or if keyword parameters are passed via ``kwargs``</span>
+<span class="sd">        without explicitly setting `flow_func`.</span>
 
 <span class="sd">    NetworkXUnbounded</span>
 <span class="sd">        If the graph has a path of infinite capacity, the value of a</span>
@@ -816,7 +820,7 @@
 
 <span class="sd">    Specific algorithms may store extra data in :samp:`R`.</span>
 
-<span class="sd">    The function should supports an optional boolean parameter value_only. When</span>
+<span class="sd">    The function should support an optional boolean parameter value_only. When</span>
 <span class="sd">    True, it can optionally terminate the algorithm as soon as the maximum flow</span>
 <span class="sd">    value and the minimum cut can be determined.</span>
 
@@ -849,8 +853,23 @@
 <span class="sd">    True</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">flow_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">maximum_flow</span><span class="p">(</span><span class="n">flowG</span><span class="p">,</span> <span class="n">_s</span><span class="p">,</span> <span class="n">_t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">flow_func</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">flow_value</span></div>
+    <span class="k">if</span> <span class="n">flow_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;You have to explicitly set a flow_func if&quot;</span>
+                <span class="s2">&quot; you need to pass parameters via kwargs.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">flow_func</span> <span class="o">=</span> <span class="n">default_flow_func</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">flow_func</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;flow_func has to be callable.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># All flow functions return a residual network R that follows the</span>
+    <span class="c1"># conventions described in the Notes section: in particular, they</span>
+    <span class="c1"># store the maximum flow value in R.graph[&quot;flow_value&quot;].</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">flow_func</span><span class="p">(</span><span class="n">flowG</span><span class="p">,</span> <span class="n">_s</span><span class="p">,</span> <span class="n">_t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span> <span class="n">value_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;flow_value&quot;</span><span class="p">]</span></div>
 
 
 
@@ -915,9 +934,17 @@
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support MultiGraph and MultiDiGraph. If</span>
+<span class="sd">        the input graph is an instance of one of these two classes, a</span>
+<span class="sd">        NetworkXError is raised. It is also raised if `flow_func` is not</span>
+<span class="sd">        callable, if keyword parameters are passed via ``kwargs`` without</span>
+<span class="sd">        explicitly setting `flow_func`, or if a cutoff is specified with</span>
+<span class="sd">        the :meth:`preflow_push` flow function.</span>
+
 <span class="sd">    NetworkXUnbounded</span>
 <span class="sd">        If the graph has a path of infinite capacity, all cuts have</span>
-<span class="sd">        infinite capacity and the function raises a NetworkXError.</span>
+<span class="sd">        infinite capacity and the function raises a NetworkXUnbounded.</span>
 
 <span class="sd">    See also</span>
 <span class="sd">    --------</span>
@@ -956,7 +983,7 @@
 
 <span class="sd">    Specific algorithms may store extra data in :samp:`R`.</span>
 
-<span class="sd">    The function should supports an optional boolean parameter value_only. When</span>
+<span class="sd">    The function should support an optional boolean parameter value_only. When</span>
 <span class="sd">    True, it can optionally terminate the algorithm as soon as the maximum flow</span>
 <span class="sd">    value and the minimum cut can be determined.</span>
 
@@ -1092,9 +1119,17 @@
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        The algorithm does not support MultiGraph and MultiDiGraph. If</span>
+<span class="sd">        the input graph is an instance of one of these two classes, a</span>
+<span class="sd">        NetworkXError is raised. It is also raised if `flow_func` is not</span>
+<span class="sd">        callable, if keyword parameters are passed via ``kwargs`` without</span>
+<span class="sd">        explicitly setting `flow_func`, or if a cutoff is specified with</span>
+<span class="sd">        the :meth:`preflow_push` flow function.</span>
+
 <span class="sd">    NetworkXUnbounded</span>
 <span class="sd">        If the graph has a path of infinite capacity, all cuts have</span>
-<span class="sd">        infinite capacity and the function raises a NetworkXError.</span>
+<span class="sd">        infinite capacity and the function raises a NetworkXUnbounded.</span>
 
 <span class="sd">    See also</span>
 <span class="sd">    --------</span>
@@ -1133,7 +1168,7 @@
 
 <span class="sd">    Specific algorithms may store extra data in :samp:`R`.</span>
 
-<span class="sd">    The function should supports an optional boolean parameter value_only. When</span>
+<span class="sd">    The function should support an optional boolean parameter value_only. When</span>
 <span class="sd">    True, it can optionally terminate the algorithm as soon as the maximum flow</span>
 <span class="sd">    value and the minimum cut can be determined.</span>
 
