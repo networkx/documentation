@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Jul 30, 2026"/>
+    <meta name="docbuild:last-update" content="Jul 31, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -581,24 +581,6 @@
 <span class="c1"># -------------------------------------------------------------------</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_tree_edges</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="c1"># helper function for trees</span>
-    <span class="c1"># yields edges in rooted tree at 0 with n nodes and branching ratio r</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-    <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">nodes</span><span class="p">)]</span>  <span class="c1"># stack of max length r</span>
-    <span class="k">while</span> <span class="n">parents</span><span class="p">:</span>
-        <span class="n">source</span> <span class="o">=</span> <span class="n">parents</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">target</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
-                <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
-                <span class="k">yield</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span>
-            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                <span class="k">break</span>
-
-
 <div class="viewcode-block" id="full_rary_tree">
 <a class="viewcode-back" href="../../../reference/generated/networkx.generators.classic.full_rary_tree.html#networkx.generators.classic.full_rary_tree">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">graphs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -635,7 +617,10 @@
 <span class="sd">           James Andrew Storer,  Birkhauser Boston 2001, (page 225).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
-    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">_tree_edges</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Nodes are labeled in breadth-first order from the root, so the parent</span>
+        <span class="c1"># of node `child` is simply ``(child - 1) // r``.</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(((</span><span class="n">child</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">r</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">G</span></div>
 
 
