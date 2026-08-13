@@ -1256,26 +1256,21 @@
     <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoPath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> cannot be reached from given sources&quot;</span><span class="p">)</span>
 
-    <span class="n">stack</span> <span class="o">=</span> <span class="p">[[</span><span class="n">target</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">target</span><span class="p">])]]</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">{</span><span class="n">target</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">target</span><span class="p">])}</span>
     <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="n">target</span><span class="p">]</span>
-    <span class="n">seen</span> <span class="o">=</span> <span class="p">{</span><span class="n">target</span><span class="p">}</span>
-
     <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">path</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">predecessor</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">predecessor</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">predecessor</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">predecessor</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">predecessor</span><span class="p">)</span>
+            <span class="n">stack</span><span class="p">[</span><span class="n">predecessor</span><span class="p">]</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">predecessor</span><span class="p">])</span>
             <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predecessor</span><span class="p">)</span>
-            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">predecessor</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">pred</span><span class="p">[</span><span class="n">predecessor</span><span class="p">])])</span>
             <span class="k">break</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># no preds left!</span>
-            <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
             <span class="n">path</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-            <span class="n">seen</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 </pre></div>
 
                 </article>
