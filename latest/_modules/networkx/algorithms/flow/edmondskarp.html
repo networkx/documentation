@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 14, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 18, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -532,47 +532,47 @@
                 <article class="bd-article">
                   
   <h1>Source code for networkx.algorithms.flow.edmondskarp</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Edmonds-Karp algorithm for maximum flow problems.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms.flow.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_residual_network</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;edmonds_karp&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"edmonds_karp"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">edmonds_karp_core</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of the Edmonds-Karp algorithm.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Implementation of the Edmonds-Karp algorithm."""</span>
     <span class="n">R_nodes</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">nodes</span>
     <span class="n">R_pred</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">pred</span>
     <span class="n">R_succ</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">succ</span>
 
-    <span class="n">inf</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;inf&quot;</span><span class="p">]</span>
+    <span class="n">inf</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">"inf"</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">augment</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Augment flow along a path from s to t.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Augment flow along a path from s to t."""</span>
         <span class="c1"># Determine the path residual capacity.</span>
         <span class="n">flow</span> <span class="o">=</span> <span class="n">inf</span>
         <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
             <span class="n">attr</span> <span class="o">=</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
-            <span class="n">flow</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">flow</span><span class="p">,</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">])</span>
+            <span class="n">flow</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">flow</span><span class="p">,</span> <span class="n">attr</span><span class="p">[</span><span class="s2">"capacity"</span><span class="p">]</span> <span class="o">-</span> <span class="n">attr</span><span class="p">[</span><span class="s2">"flow"</span><span class="p">])</span>
             <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
         <span class="k">if</span> <span class="n">flow</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">&gt;</span> <span class="n">inf</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">&quot;Infinite capacity path, flow unbounded above.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnbounded</span><span class="p">(</span><span class="s2">"Infinite capacity path, flow unbounded above."</span><span class="p">)</span>
         <span class="c1"># Augment flow along the path.</span>
         <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
-            <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
-            <span class="n">R_succ</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
+            <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">][</span><span class="s2">"flow"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+            <span class="n">R_succ</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">][</span><span class="s2">"flow"</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
             <span class="n">u</span> <span class="o">=</span> <span class="n">v</span>
         <span class="k">return</span> <span class="n">flow</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">bidirectional_bfs</span><span class="p">():</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bidirectional breadth-first search for an augmenting path.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Bidirectional breadth-first search for an augmenting path."""</span>
         <span class="n">pred</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
         <span class="n">q_s</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
         <span class="n">succ</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
@@ -582,7 +582,7 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_s</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_t</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">q_s</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_succ</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pred</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pred</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s2">"flow"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s2">"capacity"</span><span class="p">]:</span>
                             <span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
                             <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">succ</span><span class="p">:</span>
                                 <span class="k">return</span> <span class="n">v</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">succ</span>
@@ -593,7 +593,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">q_t</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">R_pred</span><span class="p">[</span><span class="n">u</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">succ</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;capacity&quot;</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">succ</span> <span class="ow">and</span> <span class="n">attr</span><span class="p">[</span><span class="s2">"flow"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">attr</span><span class="p">[</span><span class="s2">"capacity"</span><span class="p">]:</span>
                             <span class="n">succ</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
                             <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pred</span><span class="p">:</span>
                                 <span class="k">return</span> <span class="n">v</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">succ</span>
@@ -626,13 +626,13 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">edmonds_karp_impl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of the Edmonds-Karp algorithm.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Implementation of the Edmonds-Karp algorithm."""</span>
     <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;node </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2"> not in graph&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"node </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="si">}</span><span class="s2"> not in graph"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;node </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="si">}</span><span class="s2"> not in graph&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"node </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="si">}</span><span class="s2"> not in graph"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="n">t</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;source and sink are the same node&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">"source and sink are the same node"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">residual</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">build_residual_network</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
@@ -647,11 +647,11 @@
     <span class="c1"># costs more than the flow computation itself.</span>
     <span class="k">for</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">_succ</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">e</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">e</span><span class="p">[</span><span class="s2">"flow"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">if</span> <span class="n">cutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
-    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;flow_value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edmonds_karp_core</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">)</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">"flow_value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">edmonds_karp_core</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">R</span>
 
@@ -659,12 +659,12 @@
 <div class="viewcode-block" id="edmonds_karp">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.flow.edmonds_karp.html#networkx.algorithms.flow.edmonds_karp">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span>
-    <span class="n">edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;capacity&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)},</span> <span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="kc">True</span>
+    <span class="n">edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">"capacity"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)},</span> <span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">edmonds_karp</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s2">&quot;capacity&quot;</span><span class="p">,</span> <span class="n">residual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="o">=</span><span class="s2">"capacity"</span><span class="p">,</span> <span class="n">residual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find a maximum single-commodity flow using the Edmonds-Karp algorithm.</span>
+<span class="w">    </span><span class="sd">"""Find a maximum single-commodity flow using the Edmonds-Karp algorithm.</span>
 
 <span class="sd">    This function returns the residual network resulting after computing</span>
 <span class="sd">    the maximum flow. See below for details about the conventions</span>
@@ -678,7 +678,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 <span class="sd">        Edges of the graph are expected to have an attribute called</span>
-<span class="sd">        &#39;capacity&#39;. If this attribute is not present, the edge is</span>
+<span class="sd">        'capacity'. If this attribute is not present, the edge is</span>
 <span class="sd">        considered to have infinite capacity.</span>
 
 <span class="sd">    s : node</span>
@@ -687,7 +687,7 @@
 <span class="sd">    t : node</span>
 <span class="sd">        Sink node for the flow.</span>
 
-<span class="sd">    capacity : string or function (default= &#39;capacity&#39;)</span>
+<span class="sd">    capacity : string or function (default= 'capacity')</span>
 <span class="sd">        If this is a string, then edge capacity will be accessed via the</span>
 <span class="sd">        edge attribute with this key (that is, the capacity of the edge</span>
 <span class="sd">        joining `u` to `v` will be ``G.edges[u, v][capacity]``). If no</span>
@@ -745,19 +745,19 @@
 <span class="sd">    self-loop, and at least one of :samp:`(u, v)` and :samp:`(v, u)` exists</span>
 <span class="sd">    in :samp:`G`.</span>
 
-<span class="sd">    For each edge :samp:`(u, v)` in :samp:`R`, :samp:`R[u][v][&#39;capacity&#39;]`</span>
+<span class="sd">    For each edge :samp:`(u, v)` in :samp:`R`, :samp:`R[u][v]['capacity']`</span>
 <span class="sd">    is equal to the capacity of :samp:`(u, v)` in :samp:`G` if it exists</span>
 <span class="sd">    in :samp:`G` or zero otherwise. If the capacity is infinite,</span>
-<span class="sd">    :samp:`R[u][v][&#39;capacity&#39;]` will have a high arbitrary finite value</span>
+<span class="sd">    :samp:`R[u][v]['capacity']` will have a high arbitrary finite value</span>
 <span class="sd">    that does not affect the solution of the problem. This value is stored in</span>
-<span class="sd">    :samp:`R.graph[&#39;inf&#39;]`. For each edge :samp:`(u, v)` in :samp:`R`,</span>
-<span class="sd">    :samp:`R[u][v][&#39;flow&#39;]` represents the flow function of :samp:`(u, v)` and</span>
-<span class="sd">    satisfies :samp:`R[u][v][&#39;flow&#39;] == -R[v][u][&#39;flow&#39;]`.</span>
+<span class="sd">    :samp:`R.graph['inf']`. For each edge :samp:`(u, v)` in :samp:`R`,</span>
+<span class="sd">    :samp:`R[u][v]['flow']` represents the flow function of :samp:`(u, v)` and</span>
+<span class="sd">    satisfies :samp:`R[u][v]['flow'] == -R[v][u]['flow']`.</span>
 
 <span class="sd">    The flow value, defined as the total flow into :samp:`t`, the sink, is</span>
-<span class="sd">    stored in :samp:`R.graph[&#39;flow_value&#39;]`. If :samp:`cutoff` is not</span>
+<span class="sd">    stored in :samp:`R.graph['flow_value']`. If :samp:`cutoff` is not</span>
 <span class="sd">    specified, reachability to :samp:`t` using only edges :samp:`(u, v)` such</span>
-<span class="sd">    that :samp:`R[u][v][&#39;flow&#39;] &lt; R[u][v][&#39;capacity&#39;]` induces a minimum</span>
+<span class="sd">    that :samp:`R[u][v]['flow'] &lt; R[u][v]['capacity']` induces a minimum</span>
 <span class="sd">    :samp:`s`-:samp:`t` cut.</span>
 
 <span class="sd">    Examples</span>
@@ -769,24 +769,24 @@
 <span class="sd">    namespace, so you have to explicitly import them from the flow package.</span>
 
 <span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;x&quot;, &quot;a&quot;, capacity=3.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;x&quot;, &quot;b&quot;, capacity=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;a&quot;, &quot;c&quot;, capacity=3.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;b&quot;, &quot;c&quot;, capacity=5.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;b&quot;, &quot;d&quot;, capacity=4.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;d&quot;, &quot;e&quot;, capacity=2.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;c&quot;, &quot;y&quot;, capacity=2.0)</span>
-<span class="sd">    &gt;&gt;&gt; G.add_edge(&quot;e&quot;, &quot;y&quot;, capacity=3.0)</span>
-<span class="sd">    &gt;&gt;&gt; R = edmonds_karp(G, &quot;x&quot;, &quot;y&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; flow_value = nx.maximum_flow_value(G, &quot;x&quot;, &quot;y&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("x", "a", capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("x", "b", capacity=1.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("a", "c", capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("b", "c", capacity=5.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("b", "d", capacity=4.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("d", "e", capacity=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("c", "y", capacity=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edge("e", "y", capacity=3.0)</span>
+<span class="sd">    &gt;&gt;&gt; R = edmonds_karp(G, "x", "y")</span>
+<span class="sd">    &gt;&gt;&gt; flow_value = nx.maximum_flow_value(G, "x", "y")</span>
 <span class="sd">    &gt;&gt;&gt; flow_value</span>
 <span class="sd">    3.0</span>
-<span class="sd">    &gt;&gt;&gt; flow_value == R.graph[&quot;flow_value&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; flow_value == R.graph["flow_value"]</span>
 <span class="sd">    True</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">edmonds_karp_impl</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">)</span>
-    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;algorithm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;edmonds_karp&quot;</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">"algorithm"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"edmonds_karp"</span>
     <span class="n">nx</span><span class="o">.</span><span class="n">_clear_cache</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">R</span></div>
 

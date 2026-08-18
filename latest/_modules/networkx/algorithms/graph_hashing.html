@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 14, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 18, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -532,11 +532,11 @@
                 <article class="bd-article">
                   
   <h1>Source code for networkx.algorithms.graph_hashing</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Functions for hashing graphs to strings.</span>
 <span class="sd">Isomorphic graphs should be assigned identical hashes.</span>
 <span class="sd">For now, only Weisfeiler-Lehman hashing is implemented.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span>
@@ -544,72 +544,72 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;weisfeiler_lehman_graph_hash&quot;</span><span class="p">,</span> <span class="s2">&quot;weisfeiler_lehman_subgraph_hashes&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"weisfeiler_lehman_graph_hash"</span><span class="p">,</span> <span class="s2">"weisfeiler_lehman_subgraph_hashes"</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_hash_label</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">digest_size</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">blake2b</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">),</span> <span class="n">digest_size</span><span class="o">=</span><span class="n">digest_size</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">blake2b</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">),</span> <span class="n">digest_size</span><span class="o">=</span><span class="n">digest_size</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_init_node_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">,</span> <span class="n">node_attr</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node_attr</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="n">node_attr</span><span class="p">])</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">)}</span>
     <span class="k">elif</span> <span class="n">edge_attr</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="s2">""</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;The hashes produced for graphs without node or edge attributes &quot;</span>
-            <span class="s2">&quot;changed in v3.5 due to a bugfix (see documentation).&quot;</span><span class="p">,</span>
+            <span class="s2">"The hashes produced for graphs without node or edge attributes "</span>
+            <span class="s2">"changed in v3.5 due to a bugfix (see documentation)."</span><span class="p">,</span>
             <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">u</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">u</span><span class="p">))</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">u</span><span class="p">))</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">u</span><span class="p">))</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">deg</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">deg</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">()}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_neighborhood_aggregate_undirected</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node_labels</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compute new labels for given node in an undirected graph by aggregating</span>
-<span class="sd">    the labels of each node&#39;s neighbors.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    the labels of each node's neighbors.</span>
+<span class="sd">    """</span>
     <span class="n">label_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
         <span class="n">label_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">nbr</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">label_list</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">label_list</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_neighborhood_aggregate_directed</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">node_labels</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Compute new labels for given node in a directed graph by aggregating</span>
-<span class="sd">    the labels of each node&#39;s neighbors.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    the labels of each node's neighbors.</span>
+<span class="sd">    """</span>
     <span class="n">successor_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;s_&quot;</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"s_"</span> <span class="o">+</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
         <span class="n">successor_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">nbr</span><span class="p">])</span>
 
     <span class="n">predecessor_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;p_&quot;</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">nbr</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"p_"</span> <span class="o">+</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">nbr</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
         <span class="n">predecessor_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">nbr</span><span class="p">])</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="n">node_labels</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
-        <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">successor_labels</span><span class="p">))</span>
-        <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">predecessor_labels</span><span class="p">))</span>
+        <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">successor_labels</span><span class="p">))</span>
+        <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">predecessor_labels</span><span class="p">))</span>
     <span class="p">)</span>
 
 
 <div class="viewcode-block" id="weisfeiler_lehman_graph_hash">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.graph_hashing.weisfeiler_lehman_graph_hash.html#networkx.algorithms.graph_hashing.weisfeiler_lehman_graph_hash">[docs]</a>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;multigraph&quot;</span><span class="p">)</span>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;edge_attr&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">node_attrs</span><span class="o">=</span><span class="s2">&quot;node_attr&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">"multigraph"</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">"edge_attr"</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">node_attrs</span><span class="o">=</span><span class="s2">"node_attr"</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">weisfeiler_lehman_graph_hash</span><span class="p">(</span>
     <span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">node_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">digest_size</span><span class="o">=</span><span class="mi">16</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return Weisfeiler Lehman (WL) graph hash.</span>
+<span class="w">    </span><span class="sd">"""Return Weisfeiler Lehman (WL) graph hash.</span>
 
 <span class="sd">    .. Warning:: Hash values for directed graphs and graphs without edge or</span>
 <span class="sd">        node attributes have changed in v3.5. In previous versions,</span>
@@ -622,7 +622,7 @@
 <span class="sd">        &lt;https://github.com/networkx/networkx/issues/7806&gt;`_.</span>
 
 <span class="sd">    The function iteratively aggregates and hashes neighborhoods of each node.</span>
-<span class="sd">    After each node&#39;s neighbors are hashed to obtain updated node labels,</span>
+<span class="sd">    After each node's neighbors are hashed to obtain updated node labels,</span>
 <span class="sd">    a hashed histogram of resulting labels is returned as the final hash.</span>
 
 <span class="sd">    Hashes are identical for isomorphic graphs and strong guarantees that</span>
@@ -667,36 +667,36 @@
 <span class="sd">    &gt;&gt;&gt; G1 = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; G1.add_edges_from(</span>
 <span class="sd">    ...     [</span>
-<span class="sd">    ...         (1, 2, {&quot;label&quot;: &quot;A&quot;}),</span>
-<span class="sd">    ...         (2, 3, {&quot;label&quot;: &quot;A&quot;}),</span>
-<span class="sd">    ...         (3, 1, {&quot;label&quot;: &quot;A&quot;}),</span>
-<span class="sd">    ...         (1, 4, {&quot;label&quot;: &quot;B&quot;}),</span>
+<span class="sd">    ...         (1, 2, {"label": "A"}),</span>
+<span class="sd">    ...         (2, 3, {"label": "A"}),</span>
+<span class="sd">    ...         (3, 1, {"label": "A"}),</span>
+<span class="sd">    ...         (1, 4, {"label": "B"}),</span>
 <span class="sd">    ...     ]</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; G2 = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; G2.add_edges_from(</span>
 <span class="sd">    ...     [</span>
-<span class="sd">    ...         (5, 6, {&quot;label&quot;: &quot;B&quot;}),</span>
-<span class="sd">    ...         (6, 7, {&quot;label&quot;: &quot;A&quot;}),</span>
-<span class="sd">    ...         (7, 5, {&quot;label&quot;: &quot;A&quot;}),</span>
-<span class="sd">    ...         (7, 8, {&quot;label&quot;: &quot;A&quot;}),</span>
+<span class="sd">    ...         (5, 6, {"label": "B"}),</span>
+<span class="sd">    ...         (6, 7, {"label": "A"}),</span>
+<span class="sd">    ...         (7, 5, {"label": "A"}),</span>
+<span class="sd">    ...         (7, 8, {"label": "A"}),</span>
 <span class="sd">    ...     ]</span>
 <span class="sd">    ... )</span>
 
 <span class="sd">    Omitting the `edge_attr` option, results in identical hashes.</span>
 
 <span class="sd">    &gt;&gt;&gt; nx.weisfeiler_lehman_graph_hash(G1)</span>
-<span class="sd">    &#39;c045439172215f49e0bef8c3d26c6b61&#39;</span>
+<span class="sd">    'c045439172215f49e0bef8c3d26c6b61'</span>
 <span class="sd">    &gt;&gt;&gt; nx.weisfeiler_lehman_graph_hash(G2)</span>
-<span class="sd">    &#39;c045439172215f49e0bef8c3d26c6b61&#39;</span>
+<span class="sd">    'c045439172215f49e0bef8c3d26c6b61'</span>
 
 <span class="sd">    With edge labels, the graphs are no longer assigned</span>
 <span class="sd">    the same hash digest.</span>
 
-<span class="sd">    &gt;&gt;&gt; nx.weisfeiler_lehman_graph_hash(G1, edge_attr=&quot;label&quot;)</span>
-<span class="sd">    &#39;c653d85538bcf041d88c011f4f905f10&#39;</span>
-<span class="sd">    &gt;&gt;&gt; nx.weisfeiler_lehman_graph_hash(G2, edge_attr=&quot;label&quot;)</span>
-<span class="sd">    &#39;3dcd84af1ca855d0eff3c978d88e7ec7&#39;</span>
+<span class="sd">    &gt;&gt;&gt; nx.weisfeiler_lehman_graph_hash(G1, edge_attr="label")</span>
+<span class="sd">    'c653d85538bcf041d88c011f4f905f10'</span>
+<span class="sd">    &gt;&gt;&gt; nx.weisfeiler_lehman_graph_hash(G2, edge_attr="label")</span>
+<span class="sd">    '3dcd84af1ca855d0eff3c978d88e7ec7'</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -715,13 +715,13 @@
 <span class="sd">    See also</span>
 <span class="sd">    --------</span>
 <span class="sd">    weisfeiler_lehman_subgraph_hashes</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
         <span class="n">_neighborhood_aggregate</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate_directed</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;The hashes produced for directed graphs changed in version v3.5&quot;</span>
-            <span class="s2">&quot; due to a bugfix to track in and out edges separately (see documentation).&quot;</span><span class="p">,</span>
+            <span class="s2">"The hashes produced for directed graphs changed in version v3.5"</span>
+            <span class="s2">" due to a bugfix to track in and out edges separately (see documentation)."</span><span class="p">,</span>
             <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
@@ -729,11 +729,11 @@
         <span class="n">_neighborhood_aggregate</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate_undirected</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">weisfeiler_lehman_step</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply neighborhood aggregation to each node</span>
 <span class="sd">        in the graph.</span>
 <span class="sd">        Computes a dictionary with labels for each node.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">new_labels</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="n">label</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="n">edge_attr</span><span class="p">)</span>
@@ -741,12 +741,12 @@
         <span class="k">return</span> <span class="n">new_labels</span>
 
     <span class="k">if</span> <span class="n">iterations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The WL algorithm requires that `iterations` be positive&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The WL algorithm requires that `iterations` be positive"</span><span class="p">)</span>
 
     <span class="c1"># set initial node labels</span>
     <span class="n">node_labels</span> <span class="o">=</span> <span class="n">_init_node_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">,</span> <span class="n">node_attr</span><span class="p">)</span>
 
-    <span class="c1"># If the graph has no attributes, initial labels are the nodes&#39; degrees.</span>
+    <span class="c1"># If the graph has no attributes, initial labels are the nodes' degrees.</span>
     <span class="c1"># This is equivalent to doing the first iterations of WL.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">edge_attr</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node_attr</span><span class="p">:</span>
         <span class="n">iterations</span> <span class="o">-=</span> <span class="mi">1</span>
@@ -765,8 +765,8 @@
 
 <div class="viewcode-block" id="weisfeiler_lehman_subgraph_hashes">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.graph_hashing.weisfeiler_lehman_subgraph_hashes.html#networkx.algorithms.graph_hashing.weisfeiler_lehman_subgraph_hashes">[docs]</a>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">&quot;multigraph&quot;</span><span class="p">)</span>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;edge_attr&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">node_attrs</span><span class="o">=</span><span class="s2">&quot;node_attr&quot;</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">not_implemented_for</span><span class="p">(</span><span class="s2">"multigraph"</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">"edge_attr"</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">node_attrs</span><span class="o">=</span><span class="s2">"node_attr"</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">weisfeiler_lehman_subgraph_hashes</span><span class="p">(</span>
     <span class="n">G</span><span class="p">,</span>
     <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -775,7 +775,7 @@
     <span class="n">digest_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
     <span class="n">include_initial_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return a dictionary of subgraph hashes by node.</span>
 
 <span class="sd">    .. Warning:: Hash values for directed graphs have changed in version</span>
@@ -817,8 +817,8 @@
 <span class="sd">    we have a hash for a subgraph induced by the i-hop neighborhood of $u$.</span>
 
 <span class="sd">    The output can be used to create general Weisfeiler-Lehman graph kernels,</span>
-<span class="sd">    or generate features for graphs or nodes - for example to generate &#39;words&#39; in</span>
-<span class="sd">    a graph as seen in the &#39;graph2vec&#39; algorithm.</span>
+<span class="sd">    or generate features for graphs or nodes - for example to generate 'words' in</span>
+<span class="sd">    a graph as seen in the 'graph2vec' algorithm.</span>
 <span class="sd">    See [1]_ &amp; [2]_ respectively for details.</span>
 
 <span class="sd">    Hashes are identical for isomorphic subgraphs and there exist strong</span>
@@ -883,11 +883,11 @@
 <span class="sd">    the hash sequence of depth 3 for node 1 in G1 and node 5 in G2 are similar:</span>
 
 <span class="sd">    &gt;&gt;&gt; g1_hashes[1]</span>
-<span class="sd">    [&#39;f6fc42039fba3776&#39;, &#39;a93b64973cfc8897&#39;, &#39;db1b43ae35a1878f&#39;, &#39;57872a7d2059c1c0&#39;]</span>
+<span class="sd">    ['f6fc42039fba3776', 'a93b64973cfc8897', 'db1b43ae35a1878f', '57872a7d2059c1c0']</span>
 <span class="sd">    &gt;&gt;&gt; g2_hashes[5]</span>
-<span class="sd">    [&#39;f6fc42039fba3776&#39;, &#39;a93b64973cfc8897&#39;, &#39;db1b43ae35a1878f&#39;, &#39;1716d2a4012fa4bc&#39;]</span>
+<span class="sd">    ['f6fc42039fba3776', 'a93b64973cfc8897', 'db1b43ae35a1878f', '1716d2a4012fa4bc']</span>
 
-<span class="sd">    The first 3 WL subgraph hashes match. From this we can conclude that it&#39;s very</span>
+<span class="sd">    The first 3 WL subgraph hashes match. From this we can conclude that it's very</span>
 <span class="sd">    likely the neighborhood of 3 hops around these nodes are isomorphic.</span>
 
 <span class="sd">    However the 4-hop neighborhoods of ``G1`` and ``G2`` are not isomorphic since the</span>
@@ -917,13 +917,13 @@
 <span class="sd">    See also</span>
 <span class="sd">    --------</span>
 <span class="sd">    weisfeiler_lehman_graph_hash</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
         <span class="n">_neighborhood_aggregate</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate_directed</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;The hashes produced for directed graphs changed in v3.5&quot;</span>
-            <span class="s2">&quot; due to a bugfix (see documentation).&quot;</span><span class="p">,</span>
+            <span class="s2">"The hashes produced for directed graphs changed in v3.5"</span>
+            <span class="s2">" due to a bugfix (see documentation)."</span><span class="p">,</span>
             <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
@@ -931,13 +931,13 @@
         <span class="n">_neighborhood_aggregate</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate_undirected</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">weisfeiler_lehman_step</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">node_subgraph_hashes</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Apply neighborhood aggregation to each node</span>
 <span class="sd">        in the graph.</span>
 <span class="sd">        Computes a dictionary with labels for each node.</span>
 <span class="sd">        Appends the new hashed label to the dictionary of subgraph hashes</span>
 <span class="sd">        originating from and indexed by each node in G</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">new_labels</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="n">label</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">edge_attr</span><span class="o">=</span><span class="n">edge_attr</span><span class="p">)</span>
@@ -947,7 +947,7 @@
         <span class="k">return</span> <span class="n">new_labels</span>
 
     <span class="k">if</span> <span class="n">iterations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The WL algorithm requires that `iterations` be positive&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The WL algorithm requires that `iterations` be positive"</span><span class="p">)</span>
 
     <span class="n">node_labels</span> <span class="o">=</span> <span class="n">_init_node_labels</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">,</span> <span class="n">node_attr</span><span class="p">)</span>
 
@@ -958,7 +958,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">node_subgraph_hashes</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
-    <span class="c1"># If the graph has no attributes, initial labels are the nodes&#39; degrees.</span>
+    <span class="c1"># If the graph has no attributes, initial labels are the nodes' degrees.</span>
     <span class="c1"># This is equivalent to doing the first iterations of WL.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">edge_attr</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node_attr</span><span class="p">:</span>
         <span class="n">iterations</span> <span class="o">-=</span> <span class="mi">1</span>

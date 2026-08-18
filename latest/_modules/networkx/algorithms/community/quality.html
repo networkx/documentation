@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 14, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 18, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -532,10 +532,10 @@
                 <article class="bd-article">
                   
   <h1>Source code for networkx.algorithms.community.quality</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Functions for measuring the quality of a partition (into</span>
+<span></span><span class="sd">"""Functions for measuring the quality of a partition (into</span>
 <span class="sd">communities).</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
@@ -545,23 +545,23 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">argmap</span><span class="p">,</span> <span class="n">not_implemented_for</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;constant_potts_model&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;modularity&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;overlapping_modularity&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;partition_quality&quot;</span><span class="p">,</span>
+    <span class="s2">"constant_potts_model"</span><span class="p">,</span>
+    <span class="s2">"modularity"</span><span class="p">,</span>
+    <span class="s2">"overlapping_modularity"</span><span class="p">,</span>
+    <span class="s2">"partition_quality"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">NotAPartition</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised if a given collection is not a partition.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Raised if a given collection is not a partition."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> is not a valid partition of the graph </span><span class="si">{</span><span class="n">G</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> is not a valid partition of the graph </span><span class="si">{</span><span class="n">G</span><span class="si">}</span><span class="s2">"</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to check that a valid partition is input to a function</span>
+<span class="w">    </span><span class="sd">"""Decorator to check that a valid partition is input to a function</span>
 
 <span class="sd">    Raises :exc:`networkx.NetworkXError` if the partition is not valid.</span>
 
@@ -571,7 +571,7 @@
 
 <span class="sd">        &gt;&gt;&gt; @require_partition</span>
 <span class="sd">        ... def foo(G, partition):</span>
-<span class="sd">        ...     print(&quot;partition is valid!&quot;)</span>
+<span class="sd">        ...     print("partition is valid!")</span>
 <span class="sd">        ...</span>
 <span class="sd">        &gt;&gt;&gt; G = nx.complete_graph(5)</span>
 <span class="sd">        &gt;&gt;&gt; partition = [{0, 1}, {2, 3}, {4}]</span>
@@ -588,10 +588,10 @@
 <span class="sd">          ...</span>
 <span class="sd">        networkx.exception.NetworkXError: `partition` is not a valid partition of the nodes of G</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">is_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="n">partition</span>
-    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;`partition` is not a valid partition of the nodes of G&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">"`partition` is not a valid partition of the nodes of G"</span><span class="p">)</span>
 
 
 <span class="n">require_partition</span> <span class="o">=</span> <span class="n">argmap</span><span class="p">(</span><span class="n">_require_partition</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -599,7 +599,7 @@
 
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">intra_community_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of intra-community edges for a partition of `G`.</span>
+<span class="w">    </span><span class="sd">"""Returns the number of intra-community edges for a partition of `G`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -608,16 +608,16 @@
 <span class="sd">    partition : iterable of sets of nodes</span>
 <span class="sd">        This must be a partition of the nodes of `G`.</span>
 
-<span class="sd">    The &quot;intra-community edges&quot; are those edges joining a pair of nodes</span>
+<span class="sd">    The "intra-community edges" are those edges joining a pair of nodes</span>
 <span class="sd">    in the same block of the partition.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">block</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">partition</span><span class="p">)</span>
 
 
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">inter_community_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of inter-community edges for a partition of `G`.</span>
+<span class="w">    </span><span class="sd">"""Returns the number of inter-community edges for a partition of `G`.</span>
 <span class="sd">    according to the given</span>
 <span class="sd">    partition of the nodes of `G`.</span>
 
@@ -634,7 +634,7 @@
 <span class="sd">    Implementation note: this function creates an intermediate graph</span>
 <span class="sd">    that may require the same amount of memory as that of `G`.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Alternate implementation that does not require constructing a new</span>
     <span class="c1"># graph object (but does require constructing an affiliation</span>
     <span class="c1"># dictionary):</span>
@@ -649,7 +649,7 @@
 
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">inter_community_non_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of inter-community non-edges according to the</span>
+<span class="w">    </span><span class="sd">"""Returns the number of inter-community non-edges according to the</span>
 <span class="sd">    given partition of the nodes of `G`.</span>
 
 <span class="sd">    Parameters</span>
@@ -668,7 +668,7 @@
 <span class="sd">    which may require up to twice the amount of memory as required to</span>
 <span class="sd">    store `G`.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Alternate implementation that does not require constructing two</span>
     <span class="c1"># new graph objects (but does require constructing an affiliation</span>
     <span class="c1"># dictionary):</span>
@@ -682,9 +682,9 @@
 
 <div class="viewcode-block" id="modularity">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.quality.modularity.html#networkx.algorithms.community.quality.modularity">[docs]</a>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the modularity of the given partition of the graph.</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Returns the modularity of the given partition of the graph.</span>
 
 <span class="sd">    Modularity is defined in [1]_ as</span>
 
@@ -722,9 +722,9 @@
 <span class="sd">    G : NetworkX Graph</span>
 
 <span class="sd">    communities : list or iterable of set of nodes</span>
-<span class="sd">        These node sets must represent a partition of G&#39;s nodes.</span>
+<span class="sd">        These node sets must represent a partition of G's nodes.</span>
 
-<span class="sd">    weight : string or None, optional (default=&quot;weight&quot;)</span>
+<span class="sd">    weight : string or None, optional (default="weight")</span>
 <span class="sd">        The edge attribute that holds the numerical value used</span>
 <span class="sd">        as a weight. If None or an edge does not have that attribute,</span>
 <span class="sd">        then that edge has weight 1.</span>
@@ -753,20 +753,20 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] M. E. J. Newman &quot;Networks: An Introduction&quot;, page 224.</span>
+<span class="sd">    .. [1] M. E. J. Newman "Networks: An Introduction", page 224.</span>
 <span class="sd">       Oxford University Press, 2011.</span>
 <span class="sd">    .. [2] Clauset, Aaron, Mark EJ Newman, and Cristopher Moore.</span>
-<span class="sd">       &quot;Finding community structure in very large networks.&quot;</span>
+<span class="sd">       "Finding community structure in very large networks."</span>
 <span class="sd">       Phys. Rev. E 70.6 (2004). &lt;https://arxiv.org/abs/cond-mat/0408187&gt;</span>
-<span class="sd">    .. [3] Reichardt and Bornholdt &quot;Statistical Mechanics of Community Detection&quot;</span>
+<span class="sd">    .. [3] Reichardt and Bornholdt "Statistical Mechanics of Community Detection"</span>
 <span class="sd">       Phys. Rev. E 74, 016110, 2006. https://doi.org/10.1103/PhysRevE.74.016110</span>
-<span class="sd">    .. [4] M. E. J. Newman, &quot;Equivalence between modularity optimization and</span>
-<span class="sd">       maximum likelihood methods for community detection&quot;</span>
+<span class="sd">    .. [4] M. E. J. Newman, "Equivalence between modularity optimization and</span>
+<span class="sd">       maximum likelihood methods for community detection"</span>
 <span class="sd">       Phys. Rev. E 94, 052315, 2016. https://doi.org/10.1103/PhysRevE.94.052315</span>
-<span class="sd">    .. [5] Blondel, V.D. et al. &quot;Fast unfolding of communities in large</span>
-<span class="sd">       networks&quot; J. Stat. Mech 10008, 1-12 (2008).</span>
+<span class="sd">    .. [5] Blondel, V.D. et al. "Fast unfolding of communities in large</span>
+<span class="sd">       networks" J. Stat. Mech 10008, 1-12 (2008).</span>
 <span class="sd">       https://doi.org/10.1088/1742-5468/2008/10/P10008</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">communities</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">communities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">):</span>
@@ -803,14 +803,14 @@
 
 <div class="viewcode-block" id="overlapping_modularity">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.quality.overlapping_modularity.html#networkx.algorithms.community.quality.overlapping_modularity">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">overlapping_modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns Shen et al.&#39;s extended modularity for an overlapping cover.</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"directed"</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">overlapping_modularity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Returns Shen et al.'s extended modularity for an overlapping cover.</span>
 
 <span class="sd">    Standard modularity assumes each node belongs to exactly one</span>
 <span class="sd">    community. Shen et al. [1]_ extend modularity to overlapping</span>
-<span class="sd">    communities by discounting each node&#39;s contribution by the number of</span>
+<span class="sd">    communities by discounting each node's contribution by the number of</span>
 <span class="sd">    communities it belongs to:</span>
 
 <span class="sd">    .. math::</span>
@@ -829,7 +829,7 @@
 <span class="sd">    The resolution parameter $\gamma$ is not part of the original Shen</span>
 <span class="sd">    definition; it is added for consistency with</span>
 <span class="sd">    :func:`~networkx.algorithms.community.quality.modularity`. Setting</span>
-<span class="sd">    $\gamma = 1$ recovers Shen&#39;s EQ exactly.</span>
+<span class="sd">    $\gamma = 1$ recovers Shen's EQ exactly.</span>
 
 <span class="sd">    Implementation uses the equivalent community-sum form</span>
 
@@ -849,12 +849,12 @@
 <span class="sd">        An undirected graph.</span>
 
 <span class="sd">    communities : iterable of sets of nodes</span>
-<span class="sd">        A cover of `G`&#39;s nodes: every node must appear in at least one</span>
+<span class="sd">        A cover of `G`'s nodes: every node must appear in at least one</span>
 <span class="sd">        set, but sets may overlap. Accepts the output of any NetworkX</span>
 <span class="sd">        overlapping community-detection algorithm such as</span>
 <span class="sd">        :func:`~networkx.algorithms.community.kclique.k_clique_communities`.</span>
 
-<span class="sd">    weight : string or None, optional (default=&quot;weight&quot;)</span>
+<span class="sd">    weight : string or None, optional (default="weight")</span>
 <span class="sd">        Edge attribute holding the numerical edge weight. If None, or if</span>
 <span class="sd">        an edge does not have the attribute, that edge has weight 1.</span>
 
@@ -877,7 +877,7 @@
 <span class="sd">        node in `G` does not belong to any community).</span>
 
 <span class="sd">    NetworkXNotImplemented</span>
-<span class="sd">        If `G` is directed. Shen&#39;s formulation is for undirected graphs.</span>
+<span class="sd">        If `G` is directed. Shen's formulation is for undirected graphs.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -907,18 +907,18 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Shen, H., Cheng, X., Cai, K., &amp; Hu, M. B. (2009). &quot;Detect</span>
-<span class="sd">       overlapping and hierarchical community structure in networks.&quot;</span>
+<span class="sd">    .. [1] Shen, H., Cheng, X., Cai, K., &amp; Hu, M. B. (2009). "Detect</span>
+<span class="sd">       overlapping and hierarchical community structure in networks."</span>
 <span class="sd">       Physica A, 388(8), 1706-1712.</span>
 <span class="sd">       https://doi.org/10.1016/j.physa.2008.12.021</span>
 <span class="sd">    .. [2] Lancichinetti, A., Fortunato, S., &amp; Kertesz, J. (2009).</span>
-<span class="sd">       &quot;Detecting the overlapping and hierarchical community structure</span>
-<span class="sd">       in complex networks.&quot; New J. Phys. 11, 033015. (Cover definition.)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">       "Detecting the overlapping and hierarchical community structure</span>
+<span class="sd">       in complex networks." New J. Phys. 11, 033015. (Cover definition.)</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">communities</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">communities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_cover</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;`communities` is not a valid cover of the nodes of G&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">"`communities` is not a valid cover of the nodes of G"</span><span class="p">)</span>
 
     <span class="c1"># Membership count O_v for each node</span>
     <span class="n">membership</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -956,16 +956,16 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_cpm_delta_partial_eval_remove</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">"node_weight"</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Let P = [A, B, C, D,...] be a partition, and let P&#39; = [A&#39;, B&#39;, C, D,...]</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Let P = [A, B, C, D,...] be a partition, and let P' = [A', B', C, D,...]</span>
 <span class="sd">    be the partition obtained by moving the node u from community A to</span>
-<span class="sd">    community B, that is where A&#39; = A\{u} and B = B \union {u}</span>
+<span class="sd">    community B, that is where A' = A\{u} and B = B \union {u}</span>
 
 <span class="sd">    The overall change in quality associated with this move is</span>
 
-<span class="sd">        q_delta = constant_potts_mode(G, P&#39;) - constant_potts_model(G, P)</span>
+<span class="sd">        q_delta = constant_potts_mode(G, P') - constant_potts_model(G, P)</span>
 
 <span class="sd">    Throughout the algorithm the quality q_delta will be computed by</span>
 <span class="sd">    calculating two intermediate values q_rem and q_add satisfying the</span>
@@ -979,7 +979,7 @@
 <span class="sd">    q_rem = _cpm_delta_partial_eval_remove(G, u, A)</span>
 <span class="sd">    q_add = _cpm_delta_partial_eval_add(G, u, B)</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">dir_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="k">else</span> <span class="mi">1</span>
 
@@ -998,15 +998,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_cpm_delta_partial_eval_add</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">"node_weight"</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    One of a pair of partial evaluation functions. See</span>
 
 <span class="sd">        _cpm_delta_partial_eval_remove</span>
 
 <span class="sd">    for more details.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">dir_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="k">else</span> <span class="mi">1</span>
 
     <span class="n">n_B</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">wt</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">node_weight</span><span class="p">)</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
@@ -1023,7 +1023,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_quality_delta_cpm_directed</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">"node_weight"</span>
 <span class="p">):</span>
     <span class="n">n_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">node_weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
     <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">node_weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
@@ -1037,7 +1037,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_quality_delta_cpm_undirected</span><span class="p">(</span>
-    <span class="n">G</span><span class="p">,</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span>
+    <span class="n">G</span><span class="p">,</span> <span class="n">nodes_to_add</span><span class="p">,</span> <span class="n">community</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">node_weight</span><span class="o">=</span><span class="s2">"node_weight"</span>
 <span class="p">):</span>
     <span class="n">n_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">node_weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">nodes_to_add</span><span class="p">)</span>
     <span class="n">comm_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">node_weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">community</span><span class="p">)</span>
@@ -1050,11 +1050,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">constant_potts_model</span><span class="p">(</span>
     <span class="n">G</span><span class="p">,</span>
     <span class="n">communities</span><span class="p">,</span>
-    <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span>
-    <span class="n">node_weight</span><span class="o">=</span><span class="s2">&quot;node_weight&quot;</span><span class="p">,</span>
+    <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span>
+    <span class="n">node_weight</span><span class="o">=</span><span class="s2">"node_weight"</span><span class="p">,</span>
     <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Computes the Constant Potts Model, which is a measure of quality of a</span>
 <span class="sd">    partition. This is defined in [1]_ as</span>
 
@@ -1080,7 +1080,7 @@
 <span class="sd">    G : NetworkX Graph</span>
 
 <span class="sd">    communities : list or iterable of sets of nodes</span>
-<span class="sd">        These node sets must represent a partition of G&#39;s nodes.</span>
+<span class="sd">        These node sets must represent a partition of G's nodes.</span>
 
 <span class="sd">    weight : string or None, optional</span>
 <span class="sd">        The edge attribute that holds the numerical value used</span>
@@ -1130,10 +1130,10 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] V.A. Traag, P. Van Dooren, Y. Nesterov &quot;Narrow scope for</span>
-<span class="sd">       resolution-limit-free community detection&quot;</span>
+<span class="sd">    .. [1] V.A. Traag, P. Van Dooren, Y. Nesterov "Narrow scope for</span>
+<span class="sd">       resolution-limit-free community detection"</span>
 <span class="sd">       &lt;https://arxiv.org/abs/1104.3083&gt;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">is_directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">is_directed</span><span class="p">:</span>
 
@@ -1167,7 +1167,7 @@
 <span class="nd">@require_partition</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">partition_quality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the coverage and performance of a partition of G.</span>
+<span class="w">    </span><span class="sd">"""Returns the coverage and performance of a partition of G.</span>
 
 <span class="sd">    The *coverage* of a partition is the ratio of the number of</span>
 <span class="sd">    intra-community edges to the total number of edges in the graph.</span>
@@ -1207,10 +1207,10 @@
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Santo Fortunato.</span>
-<span class="sd">           &quot;Community Detection in Graphs&quot;.</span>
+<span class="sd">           "Community Detection in Graphs".</span>
 <span class="sd">           *Physics Reports*, Volume 486, Feb 2010, Issue 3--5 pp. 75--174</span>
 <span class="sd">           &lt;https://arxiv.org/abs/0906.0612&gt;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">node_community</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">community</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">partition</span><span class="p">):</span>

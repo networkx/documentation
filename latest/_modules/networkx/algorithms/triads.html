@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 14, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 18, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -536,7 +536,7 @@
 <span class="c1"># Copyright 2011 Reya Group &lt;http://www.reyagroup.com&gt;</span>
 <span class="c1"># Copyright 2011 Alex Levenson &lt;alex@isnotinvain.com&gt;</span>
 <span class="c1"># Copyright 2011 Diederik van Liere &lt;diederik.vanliere@rotman.utoronto.ca&gt;</span>
-<span class="sd">&quot;&quot;&quot;Functions for analyzing triads of a graph.&quot;&quot;&quot;</span>
+<span class="sd">"""Functions for analyzing triads of a graph."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">permutations</span>
@@ -545,11 +545,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_implemented_for</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;triadic_census&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;is_triad&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;all_triads&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;triads_by_type&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;triad_type&quot;</span><span class="p">,</span>
+    <span class="s2">"triadic_census"</span><span class="p">,</span>
+    <span class="s2">"is_triad"</span><span class="p">,</span>
+    <span class="s2">"all_triads"</span><span class="p">,</span>
+    <span class="s2">"triads_by_type"</span><span class="p">,</span>
+    <span class="s2">"triad_type"</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="c1">#: The integer codes representing each type of triad.</span>
@@ -625,22 +625,22 @@
 <span class="c1">#: The names of each type of triad. The order of the elements is</span>
 <span class="c1">#: important: it corresponds to the tricodes given in :data:`TRICODES`.</span>
 <span class="n">TRIAD_NAMES</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;003&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;012&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;102&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;021D&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;021U&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;021C&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;111D&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;111U&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;030T&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;030C&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;201&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;120D&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;120U&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;120C&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;210&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;300&quot;</span><span class="p">,</span>
+    <span class="s2">"003"</span><span class="p">,</span>
+    <span class="s2">"012"</span><span class="p">,</span>
+    <span class="s2">"102"</span><span class="p">,</span>
+    <span class="s2">"021D"</span><span class="p">,</span>
+    <span class="s2">"021U"</span><span class="p">,</span>
+    <span class="s2">"021C"</span><span class="p">,</span>
+    <span class="s2">"111D"</span><span class="p">,</span>
+    <span class="s2">"111U"</span><span class="p">,</span>
+    <span class="s2">"030T"</span><span class="p">,</span>
+    <span class="s2">"030C"</span><span class="p">,</span>
+    <span class="s2">"201"</span><span class="p">,</span>
+    <span class="s2">"120D"</span><span class="p">,</span>
+    <span class="s2">"120U"</span><span class="p">,</span>
+    <span class="s2">"120C"</span><span class="p">,</span>
+    <span class="s2">"210"</span><span class="p">,</span>
+    <span class="s2">"300"</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -649,23 +649,23 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_tricode</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the integer code of the given triad.</span>
+<span class="w">    </span><span class="sd">"""Returns the integer code of the given triad.</span>
 
-<span class="sd">    This is some fancy magic that comes from Batagelj and Mrvar&#39;s paper. It</span>
+<span class="sd">    This is some fancy magic that comes from Batagelj and Mrvar's paper. It</span>
 <span class="sd">    treats each edge joining a pair of `v`, `u`, and `w` as a bit in</span>
 <span class="sd">    the binary representation of an integer.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">combos</span> <span class="o">=</span> <span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">combos</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">])</span>
 
 
 <div class="viewcode-block" id="triadic_census">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.triads.triadic_census.html#networkx.algorithms.triads.triadic_census">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"undirected"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">triadic_census</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines the triadic census of a directed graph.</span>
+<span class="w">    </span><span class="sd">"""Determines the triadic census of a directed graph.</span>
 
 <span class="sd">    The triadic census is a count of how many of the 16 possible types of</span>
 <span class="sd">    triads are present in a directed graph. If a list of nodes is passed, then</span>
@@ -688,7 +688,7 @@
 <span class="sd">    &gt;&gt;&gt; G = nx.DiGraph([(1, 2), (2, 3), (3, 1), (3, 4), (4, 1), (4, 2)])</span>
 <span class="sd">    &gt;&gt;&gt; triadic_census = nx.triadic_census(G)</span>
 <span class="sd">    &gt;&gt;&gt; for key, value in triadic_census.items():</span>
-<span class="sd">    ...     print(f&quot;{key}: {value}&quot;)</span>
+<span class="sd">    ...     print(f"{key}: {value}")</span>
 <span class="sd">    003: 0</span>
 <span class="sd">    012: 0</span>
 <span class="sd">    102: 0</span>
@@ -733,10 +733,10 @@
 <span class="sd">        University of Ljubljana,</span>
 <span class="sd">        http://vlado.fmf.uni-lj.si/pub/networks/doc/triads/triads.pdf</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">nodeset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodelist</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeset</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;nodelist includes duplicate nodes or nodes not in G&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"nodelist includes duplicate nodes or nodes not in G"</span><span class="p">)</span>
 
     <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="n">Nnot</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeset</span><span class="p">)</span>  <span class="c1"># can signal special counting for subset of nodes</span>
@@ -784,9 +784,9 @@
 
             <span class="c1"># Use a formula for dyadic triads with edge incident to v</span>
             <span class="k">if</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">dbl_vnbrs</span><span class="p">:</span>
-                <span class="n">census</span><span class="p">[</span><span class="s2">&quot;102&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">N</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
+                <span class="n">census</span><span class="p">[</span><span class="s2">"102"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">N</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">census</span><span class="p">[</span><span class="s2">&quot;012&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">N</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
+                <span class="n">census</span><span class="p">[</span><span class="s2">"012"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">N</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
 
             <span class="c1"># Count edges attached to v. Subtract later to get triads with v isolated</span>
             <span class="c1"># _out are (u,unbr) for unbrs outside boundary of nodeset</span>
@@ -801,15 +801,15 @@
         <span class="c1"># if nodeset == G.nodes, skip this b/c we will find the edge later.</span>
         <span class="k">if</span> <span class="n">Nnot</span><span class="p">:</span>
             <span class="c1"># Count edges outside nodeset not connected with v (v isolated triads)</span>
-            <span class="n">census</span><span class="p">[</span><span class="s2">&quot;012&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sgl_edges_outside</span> <span class="o">-</span> <span class="p">(</span><span class="n">sgl_unbrs_out</span> <span class="o">+</span> <span class="n">sgl_unbrs_bdy</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">census</span><span class="p">[</span><span class="s2">&quot;102&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dbl_edges_outside</span> <span class="o">-</span> <span class="p">(</span><span class="n">dbl_unbrs_out</span> <span class="o">+</span> <span class="n">dbl_unbrs_bdy</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">census</span><span class="p">[</span><span class="s2">"012"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sgl_edges_outside</span> <span class="o">-</span> <span class="p">(</span><span class="n">sgl_unbrs_out</span> <span class="o">+</span> <span class="n">sgl_unbrs_bdy</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">census</span><span class="p">[</span><span class="s2">"102"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dbl_edges_outside</span> <span class="o">-</span> <span class="p">(</span><span class="n">dbl_unbrs_out</span> <span class="o">+</span> <span class="n">dbl_unbrs_bdy</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
 
-    <span class="c1"># calculate null triads: &quot;003&quot;</span>
+    <span class="c1"># calculate null triads: "003"</span>
     <span class="c1"># null triads = total number of possible triads - all found triads</span>
     <span class="n">total_triangles</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span> <span class="o">//</span> <span class="mi">6</span>
     <span class="n">triangles_without_nodeset</span> <span class="o">=</span> <span class="p">(</span><span class="n">Nnot</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nnot</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nnot</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span> <span class="o">//</span> <span class="mi">6</span>
     <span class="n">total_census</span> <span class="o">=</span> <span class="n">total_triangles</span> <span class="o">-</span> <span class="n">triangles_without_nodeset</span>
-    <span class="n">census</span><span class="p">[</span><span class="s2">&quot;003&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_census</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">census</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">census</span><span class="p">[</span><span class="s2">"003"</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_census</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">census</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
     <span class="k">return</span> <span class="n">census</span></div>
 
@@ -819,7 +819,7 @@
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.triads.is_triad.html#networkx.algorithms.triads.is_triad">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_triad</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the graph G is a triad, else False.</span>
+<span class="w">    </span><span class="sd">"""Returns True if the graph G is a triad, else False.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -839,7 +839,7 @@
 <span class="sd">    &gt;&gt;&gt; G.add_edge(0, 1)</span>
 <span class="sd">    &gt;&gt;&gt; nx.is_triad(G)</span>
 <span class="sd">    False</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">order</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
@@ -850,10 +850,10 @@
 
 <div class="viewcode-block" id="all_triads">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.triads.all_triads.html#networkx.algorithms.triads.all_triads">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"undirected"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">all_triads</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A generator of all possible triads in G.</span>
+<span class="w">    </span><span class="sd">"""A generator of all possible triads in G.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -875,7 +875,7 @@
 <span class="sd">    [(3, 1), (3, 4), (4, 1)]</span>
 <span class="sd">    [(2, 3), (3, 4), (4, 2)]</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">triplets</span> <span class="o">=</span> <span class="n">combinations</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span> <span class="mi">3</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">triplet</span> <span class="ow">in</span> <span class="n">triplets</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">triplet</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
@@ -884,10 +884,10 @@
 
 <div class="viewcode-block" id="triads_by_type">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.triads.triads_by_type.html#networkx.algorithms.triads.triads_by_type">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"undirected"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">triads_by_type</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of all triads for each triad type in a directed graph.</span>
+<span class="w">    </span><span class="sd">"""Returns a list of all triads for each triad type in a directed graph.</span>
 <span class="sd">    There are exactly 16 different types of triads possible. Suppose 1, 2, 3 are three</span>
 <span class="sd">    nodes, they will be classified as a particular triad type if their connections</span>
 <span class="sd">    are as follows:</span>
@@ -926,17 +926,17 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.DiGraph([(1, 2), (1, 3), (2, 3), (3, 1), (5, 6), (5, 4), (6, 7)])</span>
 <span class="sd">    &gt;&gt;&gt; dict = nx.triads_by_type(G)</span>
-<span class="sd">    &gt;&gt;&gt; dict[&quot;120C&quot;][0].edges()</span>
+<span class="sd">    &gt;&gt;&gt; dict["120C"][0].edges()</span>
 <span class="sd">    OutEdgeView([(1, 2), (1, 3), (2, 3), (3, 1)])</span>
-<span class="sd">    &gt;&gt;&gt; dict[&quot;012&quot;][0].edges()</span>
+<span class="sd">    &gt;&gt;&gt; dict["012"][0].edges()</span>
 <span class="sd">    OutEdgeView([(1, 2)])</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Snijders, T. (2012). &quot;Transitivity and triads.&quot; University of</span>
+<span class="sd">    .. [1] Snijders, T. (2012). "Transitivity and triads." University of</span>
 <span class="sd">        Oxford.</span>
 <span class="sd">        https://web.archive.org/web/20170830032057/http://www.stats.ox.ac.uk/~snijders/Trans_Triads_ha.pdf</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># num_triads = o * (o - 1) * (o - 2) // 6</span>
     <span class="c1"># if num_triads &gt; TRIAD_LIMIT: print(WARNING)</span>
     <span class="n">all_tri</span> <span class="o">=</span> <span class="n">all_triads</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
@@ -950,10 +950,10 @@
 
 <div class="viewcode-block" id="triad_type">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.triads.triad_type.html#networkx.algorithms.triads.triad_type">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"undirected"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">triad_type</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the sociological triad type for a triad.</span>
+<span class="w">    </span><span class="sd">"""Returns the sociological triad type for a triad.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -969,10 +969,10 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.DiGraph([(1, 2), (2, 3), (3, 1)])</span>
 <span class="sd">    &gt;&gt;&gt; nx.triad_type(G)</span>
-<span class="sd">    &#39;030C&#39;</span>
+<span class="sd">    '030C'</span>
 <span class="sd">    &gt;&gt;&gt; G.add_edge(1, 3)</span>
 <span class="sd">    &gt;&gt;&gt; nx.triad_type(G)</span>
-<span class="sd">    &#39;120C&#39;</span>
+<span class="sd">    '120C'</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -997,55 +997,55 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Snijders, T. (2012). &quot;Transitivity and triads.&quot; University of</span>
+<span class="sd">    .. [1] Snijders, T. (2012). "Transitivity and triads." University of</span>
 <span class="sd">        Oxford.</span>
 <span class="sd">        https://web.archive.org/web/20170830032057/http://www.stats.ox.ac.uk/~snijders/Trans_Triads_ha.pdf</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_triad</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXAlgorithmError</span><span class="p">(</span><span class="s2">&quot;G is not a triad (order-3 DiGraph)&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXAlgorithmError</span><span class="p">(</span><span class="s2">"G is not a triad (order-3 DiGraph)"</span><span class="p">)</span>
     <span class="n">num_edges</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;003&quot;</span>
+        <span class="k">return</span> <span class="s2">"003"</span>
     <span class="k">elif</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;012&quot;</span>
+        <span class="k">return</span> <span class="s2">"012"</span>
     <span class="k">elif</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">e1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e2</span><span class="p">):</span>
-            <span class="k">return</span> <span class="s2">&quot;102&quot;</span>
+            <span class="k">return</span> <span class="s2">"102"</span>
         <span class="k">elif</span> <span class="n">e1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">e2</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="s2">&quot;021D&quot;</span>
+            <span class="k">return</span> <span class="s2">"021D"</span>
         <span class="k">elif</span> <span class="n">e1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">e2</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="s2">&quot;021U&quot;</span>
+            <span class="k">return</span> <span class="s2">"021U"</span>
         <span class="k">elif</span> <span class="n">e1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">e2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">e2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">e1</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="s2">&quot;021C&quot;</span>
+            <span class="k">return</span> <span class="s2">"021C"</span>
     <span class="k">elif</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span> <span class="ow">in</span> <span class="n">permutations</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(),</span> <span class="mi">3</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">e1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e2</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">e3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">e1</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="s2">&quot;111U&quot;</span>
+                    <span class="k">return</span> <span class="s2">"111U"</span>
                 <span class="c1"># e3[1] in e1:</span>
-                <span class="k">return</span> <span class="s2">&quot;111D&quot;</span>
+                <span class="k">return</span> <span class="s2">"111D"</span>
             <span class="k">elif</span> <span class="nb">set</span><span class="p">(</span><span class="n">e1</span><span class="p">)</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">e2</span><span class="p">))</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e3</span><span class="p">):</span>
                 <span class="k">if</span> <span class="p">{</span><span class="n">e1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e3</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="o">==</span> <span class="p">{</span><span class="n">e1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e3</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
-                    <span class="k">return</span> <span class="s2">&quot;030C&quot;</span>
+                    <span class="k">return</span> <span class="s2">"030C"</span>
                 <span class="c1"># e3 == (e1[0], e2[1]) and e2 == (e1[1], e3[1]):</span>
-                <span class="k">return</span> <span class="s2">&quot;030T&quot;</span>
+                <span class="k">return</span> <span class="s2">"030T"</span>
     <span class="k">elif</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span><span class="p">,</span> <span class="n">e4</span> <span class="ow">in</span> <span class="n">permutations</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(),</span> <span class="mi">4</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">e1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e2</span><span class="p">):</span>
                 <span class="c1"># identify pair of symmetric edges (which necessarily exists)</span>
                 <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">e3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e4</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="s2">&quot;201&quot;</span>
+                    <span class="k">return</span> <span class="s2">"201"</span>
                 <span class="k">if</span> <span class="p">{</span><span class="n">e3</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="o">==</span> <span class="p">{</span><span class="n">e4</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e3</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">e4</span><span class="p">)):</span>
-                    <span class="k">return</span> <span class="s2">&quot;120D&quot;</span>
+                    <span class="k">return</span> <span class="s2">"120D"</span>
                 <span class="k">if</span> <span class="p">{</span><span class="n">e3</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span> <span class="o">==</span> <span class="p">{</span><span class="n">e4</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">e3</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">e4</span><span class="p">)):</span>
-                    <span class="k">return</span> <span class="s2">&quot;120U&quot;</span>
+                    <span class="k">return</span> <span class="s2">"120U"</span>
                 <span class="k">if</span> <span class="n">e3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">e4</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                    <span class="k">return</span> <span class="s2">&quot;120C&quot;</span>
+                    <span class="k">return</span> <span class="s2">"120C"</span>
     <span class="k">elif</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;210&quot;</span>
+        <span class="k">return</span> <span class="s2">"210"</span>
     <span class="k">elif</span> <span class="n">num_edges</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;300&quot;</span></div>
+        <span class="k">return</span> <span class="s2">"300"</span></div>
 
 </pre></div>
 

@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 14, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 18, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -532,7 +532,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for networkx.algorithms.clique</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Functions for finding and manipulating cliques.</span>
+<span></span><span class="sd">"""Functions for finding and manipulating cliques.</span>
 
 <span class="sd">Finding the largest clique in a graph is NP-complete problem, so most of</span>
 <span class="sd">these algorithms have an exponential running time; for more information,</span>
@@ -540,7 +540,7 @@
 
 <span class="sd">.. _clique_wiki: https://en.wikipedia.org/wiki/Clique_problem</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">islice</span>
@@ -549,23 +549,23 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_implemented_for</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;find_cliques&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;find_cliques_recursive&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;make_max_clique_graph&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;make_clique_bipartite&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;node_clique_number&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;number_of_cliques&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;enumerate_all_cliques&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;max_weight_clique&quot;</span><span class="p">,</span>
+    <span class="s2">"find_cliques"</span><span class="p">,</span>
+    <span class="s2">"find_cliques_recursive"</span><span class="p">,</span>
+    <span class="s2">"make_max_clique_graph"</span><span class="p">,</span>
+    <span class="s2">"make_clique_bipartite"</span><span class="p">,</span>
+    <span class="s2">"node_clique_number"</span><span class="p">,</span>
+    <span class="s2">"number_of_cliques"</span><span class="p">,</span>
+    <span class="s2">"enumerate_all_cliques"</span><span class="p">,</span>
+    <span class="s2">"max_weight_clique"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
 <div class="viewcode-block" id="enumerate_all_cliques">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.enumerate_all_cliques.html#networkx.algorithms.clique.enumerate_all_cliques">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"directed"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">enumerate_all_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns all cliques in an undirected graph.</span>
+<span class="w">    </span><span class="sd">"""Returns all cliques in an undirected graph.</span>
 
 <span class="sd">    This function returns an iterator over cliques, each of which is a</span>
 <span class="sd">    list of nodes. The iteration is ordered by cardinality of the</span>
@@ -602,13 +602,13 @@
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Yun Zhang, Abu-Khzam, F.N., Baldwin, N.E., Chesler, E.J.,</span>
 <span class="sd">           Langston, M.A., Samatova, N.F.,</span>
-<span class="sd">           &quot;Genome-Scale Computational Approaches to Memory-Intensive</span>
-<span class="sd">           Applications in Systems Biology&quot;.</span>
+<span class="sd">           "Genome-Scale Computational Approaches to Memory-Intensive</span>
+<span class="sd">           Applications in Systems Biology".</span>
 <span class="sd">           *Supercomputing*, 2005. Proceedings of the ACM/IEEE SC 2005</span>
 <span class="sd">           Conference, pp. 12, 12--18 Nov. 2005.</span>
 <span class="sd">           &lt;https://doi.org/10.1109/SC.2005.29&gt;.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">index</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">nbrs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -637,10 +637,10 @@
 
 <div class="viewcode-block" id="find_cliques">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.find_cliques.html#networkx.algorithms.clique.find_cliques">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"directed"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns all maximal cliques in an undirected graph.</span>
+<span class="w">    </span><span class="sd">"""Returns all maximal cliques in an undirected graph.</span>
 
 <span class="sd">    For each node *n*, a *maximal clique for n* is a largest complete</span>
 <span class="sd">    subgraph containing *n*. The largest maximal clique is sometimes</span>
@@ -661,7 +661,7 @@
 
 <span class="sd">    nodes : list, optional (default=None)</span>
 <span class="sd">        If provided, only yield *maximal cliques* containing all nodes in `nodes`.</span>
-<span class="sd">        If `nodes` isn&#39;t a clique itself, a ValueError is raised.</span>
+<span class="sd">        If `nodes` isn't a clique itself, a ValueError is raised.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -766,13 +766,13 @@
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Bron, C. and Kerbosch, J.</span>
-<span class="sd">       &quot;Algorithm 457: finding all cliques of an undirected graph&quot;.</span>
+<span class="sd">       "Algorithm 457: finding all cliques of an undirected graph".</span>
 <span class="sd">       *Communications of the ACM* 16, 9 (Sep. 1973), 575--577.</span>
 <span class="sd">       &lt;http://portal.acm.org/citation.cfm?doid=362342.362367&gt;</span>
 
 <span class="sd">    .. [2] Etsuji Tomita, Akira Tanaka, Haruhisa Takahashi,</span>
-<span class="sd">       &quot;The worst-case time complexity for generating all maximal</span>
-<span class="sd">       cliques and computational experiments&quot;,</span>
+<span class="sd">       "The worst-case time complexity for generating all maximal</span>
+<span class="sd">       cliques and computational experiments",</span>
 <span class="sd">       *Theoretical Computer Science*, Volume 363, Issue 1,</span>
 <span class="sd">       Computing and Combinatorics,</span>
 <span class="sd">       10th Annual International Conference on</span>
@@ -780,12 +780,12 @@
 <span class="sd">       &lt;https://doi.org/10.1016/j.tcs.2006.06.015&gt;</span>
 
 <span class="sd">    .. [3] F. Cazals, C. Karande,</span>
-<span class="sd">       &quot;A note on the problem of reporting maximal cliques&quot;,</span>
+<span class="sd">       "A note on the problem of reporting maximal cliques",</span>
 <span class="sd">       *Theoretical Computer Science*,</span>
 <span class="sd">       Volume 407, Issues 1--3, 6 November 2008, Pages 564--568,</span>
 <span class="sd">       &lt;https://doi.org/10.1016/j.tcs.2008.05.010&gt;</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -796,7 +796,7 @@
     <span class="n">cand</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">Q</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cand</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The given `nodes` </span><span class="si">{</span><span class="n">nodes</span><span class="si">}</span><span class="s2"> do not form a clique&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The given `nodes` </span><span class="si">{</span><span class="n">nodes</span><span class="si">}</span><span class="s2"> do not form a clique"</span><span class="p">)</span>
         <span class="n">cand</span> <span class="o">&amp;=</span> <span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">cand</span><span class="p">:</span>
@@ -839,10 +839,10 @@
 
 <div class="viewcode-block" id="find_cliques_recursive">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.find_cliques_recursive.html#networkx.algorithms.clique.find_cliques_recursive">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"directed"</span><span class="p">)</span>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_cliques_recursive</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns all maximal cliques in a graph.</span>
+<span class="w">    </span><span class="sd">"""Returns all maximal cliques in a graph.</span>
 
 <span class="sd">    For each node *v*, a *maximal clique for v* is a largest complete</span>
 <span class="sd">    subgraph containing *v*. The largest maximal clique is sometimes</span>
@@ -864,7 +864,7 @@
 
 <span class="sd">    nodes : list, optional (default=None)</span>
 <span class="sd">        If provided, only yield *maximal cliques* containing all nodes in `nodes`.</span>
-<span class="sd">        If `nodes` isn&#39;t a clique itself, a ValueError is raised.</span>
+<span class="sd">        If `nodes` isn't a clique itself, a ValueError is raised.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -906,13 +906,13 @@
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Bron, C. and Kerbosch, J.</span>
-<span class="sd">       &quot;Algorithm 457: finding all cliques of an undirected graph&quot;.</span>
+<span class="sd">       "Algorithm 457: finding all cliques of an undirected graph".</span>
 <span class="sd">       *Communications of the ACM* 16, 9 (Sep. 1973), 575--577.</span>
 <span class="sd">       &lt;http://portal.acm.org/citation.cfm?doid=362342.362367&gt;</span>
 
 <span class="sd">    .. [2] Etsuji Tomita, Akira Tanaka, Haruhisa Takahashi,</span>
-<span class="sd">       &quot;The worst-case time complexity for generating all maximal</span>
-<span class="sd">       cliques and computational experiments&quot;,</span>
+<span class="sd">       "The worst-case time complexity for generating all maximal</span>
+<span class="sd">       cliques and computational experiments",</span>
 <span class="sd">       *Theoretical Computer Science*, Volume 363, Issue 1,</span>
 <span class="sd">       Computing and Combinatorics,</span>
 <span class="sd">       10th Annual International Conference on</span>
@@ -920,12 +920,12 @@
 <span class="sd">       &lt;https://doi.org/10.1016/j.tcs.2006.06.015&gt;</span>
 
 <span class="sd">    .. [3] F. Cazals, C. Karande,</span>
-<span class="sd">       &quot;A note on the problem of reporting maximal cliques&quot;,</span>
+<span class="sd">       "A note on the problem of reporting maximal cliques",</span>
 <span class="sd">       *Theoretical Computer Science*,</span>
 <span class="sd">       Volume 407, Issues 1--3, 6 November 2008, Pages 564--568,</span>
 <span class="sd">       &lt;https://doi.org/10.1016/j.tcs.2008.05.010&gt;</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">iter</span><span class="p">([])</span>
 
@@ -936,7 +936,7 @@
     <span class="n">cand_init</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">Q</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cand_init</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The given `nodes` </span><span class="si">{</span><span class="n">nodes</span><span class="si">}</span><span class="s2"> do not form a clique&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The given `nodes` </span><span class="si">{</span><span class="n">nodes</span><span class="si">}</span><span class="s2"> do not form a clique"</span><span class="p">)</span>
         <span class="n">cand_init</span> <span class="o">&amp;=</span> <span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">cand_init</span><span class="p">:</span>
@@ -967,7 +967,7 @@
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.make_max_clique_graph.html#networkx.algorithms.clique.make_max_clique_graph">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_max_clique_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the maximal clique graph of the given graph.</span>
+<span class="w">    </span><span class="sd">"""Returns the maximal clique graph of the given graph.</span>
 
 <span class="sd">    The nodes of the maximal clique graph of `G` are the cliques of</span>
 <span class="sd">    `G` and an edge joins two cliques if the cliques are not disjoint.</span>
@@ -992,14 +992,14 @@
 <span class="sd">        import networkx as nx</span>
 
 <span class="sd">        G = nx.make_clique_bipartite(G)</span>
-<span class="sd">        cliques = [v for v in G.nodes() if G.nodes[v][&quot;bipartite&quot;] == 0]</span>
+<span class="sd">        cliques = [v for v in G.nodes() if G.nodes[v]["bipartite"] == 0]</span>
 <span class="sd">        G = nx.bipartite.projected_graph(G, cliques)</span>
 <span class="sd">        G = nx.relabel_nodes(G, {-v: v - 1 for v in G})</span>
 
 <span class="sd">    It should be faster, though, since it skips all the intermediate</span>
 <span class="sd">    steps.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">B</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="vm">__class__</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1018,10 +1018,10 @@
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.make_clique_bipartite.html#networkx.algorithms.clique.make_clique_bipartite">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">returns_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_clique_bipartite</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the bipartite clique graph corresponding to `G`.</span>
+<span class="w">    </span><span class="sd">"""Returns the bipartite clique graph corresponding to `G`.</span>
 
-<span class="sd">    In the returned bipartite graph, the &quot;bottom&quot; nodes are the nodes of</span>
-<span class="sd">    `G` and the &quot;top&quot; nodes represent the maximal cliques of `G`.</span>
+<span class="sd">    In the returned bipartite graph, the "bottom" nodes are the nodes of</span>
+<span class="sd">    `G` and the "top" nodes represent the maximal cliques of `G`.</span>
 <span class="sd">    There is an edge from node *v* to clique *C* in the returned graph</span>
 <span class="sd">    if and only if *v* is an element of *C*.</span>
 
@@ -1041,23 +1041,23 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    NetworkX graph</span>
-<span class="sd">        A bipartite graph whose &quot;bottom&quot; set is the nodes of the graph</span>
-<span class="sd">        `G`, whose &quot;top&quot; set is the cliques of `G`, and whose edges</span>
+<span class="sd">        A bipartite graph whose "bottom" set is the nodes of the graph</span>
+<span class="sd">        `G`, whose "top" set is the cliques of `G`, and whose edges</span>
 <span class="sd">        join nodes of `G` to the cliques that contain them.</span>
 
 <span class="sd">        The nodes of the graph `G` have the node attribute</span>
-<span class="sd">        &#39;bipartite&#39; set to 1 and the nodes representing cliques</span>
-<span class="sd">        have the node attribute &#39;bipartite&#39; set to 0, as is the</span>
+<span class="sd">        'bipartite' set to 1 and the nodes representing cliques</span>
+<span class="sd">        have the node attribute 'bipartite' set to 0, as is the</span>
 <span class="sd">        convention for bipartite graphs in NetworkX.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">B</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
     <span class="n">B</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-    <span class="c1"># The &quot;bottom&quot; nodes in the bipartite graph are the nodes of the</span>
+    <span class="c1"># The "bottom" nodes in the bipartite graph are the nodes of the</span>
     <span class="c1"># original graph, G.</span>
     <span class="n">B</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">)):</span>
-        <span class="c1"># The &quot;top&quot; nodes in the bipartite graph are the cliques. These</span>
+        <span class="c1"># The "top" nodes in the bipartite graph are the cliques. These</span>
         <span class="c1"># nodes get negative numbers as labels.</span>
         <span class="n">name</span> <span class="o">=</span> <span class="o">-</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -1070,7 +1070,7 @@
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.node_clique_number.html#networkx.algorithms.clique.node_clique_number">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">node_clique_number</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cliques</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">separate_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the size of the largest maximal clique containing each given node.</span>
+<span class="w">    </span><span class="sd">"""Returns the size of the largest maximal clique containing each given node.</span>
 
 <span class="sd">    Returns a single or list depending on input nodes.</span>
 <span class="sd">    An optional list of cliques can be input if already computed.</span>
@@ -1101,7 +1101,7 @@
 <span class="sd">        maximal cliques containing all the given `nodes`.</span>
 <span class="sd">        The search for the cliques is optimized for `nodes`.</span>
 <span class="sd">    number_of_cliques</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Use ego_graph to decrease size of graph</span>
@@ -1137,7 +1137,7 @@
 <div class="viewcode-block" id="number_of_cliques">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.number_of_cliques.html#networkx.algorithms.clique.number_of_cliques">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">number_of_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cliques</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the number of maximal cliques each node is part of.</span>
+<span class="w">    </span><span class="sd">"""Return the number of maximal cliques each node is part of.</span>
 
 <span class="sd">    Output is a single value or dict depending on `nodes`.</span>
 <span class="sd">    Optional list of cliques can be input if already computed.</span>
@@ -1197,7 +1197,7 @@
 <span class="sd">    &gt;&gt;&gt; cl = list(nx.find_cliques(G))</span>
 <span class="sd">    &gt;&gt;&gt; nx.number_of_cliques(G, cliques=cl)</span>
 <span class="sd">    {0: 2, 1: 1, 2: 1, 3: 1, 4: 1}</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">cliques</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">cliques</span> <span class="o">=</span> <span class="n">find_cliques</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
@@ -1216,7 +1216,7 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MaxWeightClique</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for the maximum weight clique algorithm.</span>
+<span class="w">    </span><span class="sd">"""A class for the maximum weight clique algorithm.</span>
 
 <span class="sd">    This class is a helper for the `max_weight_clique` function.  The class</span>
 <span class="sd">    should not normally be used directly.</span>
@@ -1225,7 +1225,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 <span class="sd">        The undirected graph for which a maximum weight clique is sought</span>
-<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">    weight : string or None, optional (default='weight')</span>
 <span class="sd">        The node attribute that holds the integer value used as a weight.</span>
 <span class="sd">        If None, then each node has weight 1.</span>
 
@@ -1239,7 +1239,7 @@
 <span class="sd">        The nodes of the incumbent clique (the best clique found so far)</span>
 <span class="sd">    incumbent_weight: int</span>
 <span class="sd">        The weight of the incumbent clique</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">G</span>
@@ -1251,25 +1251,25 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">weight</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
-                    <span class="n">errmsg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2"> does not have the requested weight field.&quot;</span>
+                    <span class="n">errmsg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2"> does not have the requested weight field."</span>
                     <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">errmsg</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">weight</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
-                    <span class="n">errmsg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">weight</span><span class="si">!r}</span><span class="s2"> field of node </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2"> is not an integer.&quot;</span>
+                    <span class="n">errmsg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">weight</span><span class="si">!r}</span><span class="s2"> field of node </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2"> is not an integer."</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">errmsg</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">node_weights</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_incumbent_if_improved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">C_weight</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the incumbent if the node set C has greater weight.</span>
+<span class="w">        </span><span class="sd">"""Update the incumbent if the node set C has greater weight.</span>
 
 <span class="sd">        C is assumed to be a clique.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">C_weight</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">incumbent_weight</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">incumbent_nodes</span> <span class="o">=</span> <span class="n">C</span><span class="p">[:]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">incumbent_weight</span> <span class="o">=</span> <span class="n">C_weight</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">greedily_find_independent_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Greedily find an independent set of nodes from a set of</span>
-<span class="sd">        nodes P.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Greedily find an independent set of nodes from a set of</span>
+<span class="sd">        nodes P."""</span>
         <span class="n">independent_set</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="p">[:]</span>
         <span class="k">while</span> <span class="n">P</span><span class="p">:</span>
@@ -1279,7 +1279,7 @@
         <span class="k">return</span> <span class="n">independent_set</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">find_branching_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find a set of nodes to branch on.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Find a set of nodes to branch on."""</span>
         <span class="n">residual_wt</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_weights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">P</span><span class="p">}</span>
         <span class="n">total_wt</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="p">[:]</span>
@@ -1295,10 +1295,10 @@
         <span class="k">return</span> <span class="n">P</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">C_weight</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Look for the best clique that contains all the nodes in C and zero or</span>
+<span class="w">        </span><span class="sd">"""Look for the best clique that contains all the nodes in C and zero or</span>
 <span class="sd">        more of the nodes in P, backtracking if it can be shown that no such</span>
 <span class="sd">        clique has greater weight than the incumbent.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_incumbent_if_improved</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">C_weight</span><span class="p">)</span>
         <span class="n">branching_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_branching_nodes</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">incumbent_weight</span> <span class="o">-</span> <span class="n">C_weight</span><span class="p">)</span>
         <span class="k">while</span> <span class="n">branching_nodes</span><span class="p">:</span>
@@ -1310,7 +1310,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">new_C</span><span class="p">,</span> <span class="n">new_C_weight</span><span class="p">,</span> <span class="n">new_P</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">find_max_weight_clique</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find a maximum weight clique.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Find a maximum weight clique."""</span>
         <span class="c1"># Sort nodes in reverse order of degree for speed</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_weights</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
@@ -1319,10 +1319,10 @@
 
 <div class="viewcode-block" id="max_weight_clique">
 <a class="viewcode-back" href="../../../reference/algorithms/generated/networkx.algorithms.clique.max_weight_clique.html#networkx.algorithms.clique.max_weight_clique">[docs]</a>
-<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
-<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">node_attrs</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">max_weight_clique</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find a maximum weight clique in G.</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"directed"</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">node_attrs</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">max_weight_clique</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Find a maximum weight clique in G.</span>
 
 <span class="sd">    A *clique* in a graph is a set of nodes such that every two distinct nodes</span>
 <span class="sd">    are adjacent.  The *weight* of a clique is the sum of the weights of its</span>
@@ -1333,7 +1333,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    G : NetworkX graph</span>
 <span class="sd">        Undirected graph</span>
-<span class="sd">    weight : string or None, optional (default=&#39;weight&#39;)</span>
+<span class="sd">    weight : string or None, optional (default='weight')</span>
 <span class="sd">        The node attribute that holds the integer value used as a weight.</span>
 <span class="sd">        If None, then each node has weight 1.</span>
 
@@ -1368,7 +1368,7 @@
 <span class="sd">    .. [2] Warren, Jeffrey S, Hicks, Illya V.: Combinatorial Branch-and-Bound</span>
 <span class="sd">           for the Maximum Weight Independent Set Problem.  Technical Report,</span>
 <span class="sd">           Texas A&amp;M University (2016).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">mwc</span> <span class="o">=</span> <span class="n">MaxWeightClique</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
     <span class="n">mwc</span><span class="o">.</span><span class="n">find_max_weight_clique</span><span class="p">()</span>
