@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 18, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 20, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -550,6 +550,7 @@
     <span class="s2">"normalized_laplacian_matrix"</span><span class="p">,</span>
     <span class="s2">"directed_laplacian_matrix"</span><span class="p">,</span>
     <span class="s2">"directed_combinatorial_laplacian_matrix"</span><span class="p">,</span>
+    <span class="s2">"magnetic_laplacian_matrix"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -780,6 +781,166 @@
     <span class="n">diags_sqrt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">DH</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">dia_array</span><span class="p">((</span><span class="n">diags_sqrt</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">DH</span> <span class="o">@</span> <span class="p">(</span><span class="n">L</span> <span class="o">@</span> <span class="n">DH</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="magnetic_laplacian_matrix">
+<a class="viewcode-back" href="../../../reference/generated/networkx.linalg.laplacianmatrix.magnetic_laplacian_matrix.html#networkx.linalg.laplacianmatrix.magnetic_laplacian_matrix">[docs]</a>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"multigraph"</span><span class="p">)</span>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">"undirected"</span><span class="p">)</span>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">magnetic_laplacian_matrix</span><span class="p">(</span>
+    <span class="n">G</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Returns the magnetic Laplacian matrix of DiGraph G.</span>
+
+<span class="sd">    The magnetic Laplacian matrix (also called the q-magnetic Laplacian) is a</span>
+<span class="sd">    Hermitian matrix for directed graphs that encodes edge directionality</span>
+<span class="sd">    via complex phases [1]_.</span>
+
+<span class="sd">    Given a weighted directed graph, :math:`G = (V, E, W)`, with :math:`W`</span>
+<span class="sd">    the weighted adjacency matrix, the symmetrized weighted adjacency</span>
+<span class="sd">    matrix is defined as :math:`W' = 0.5 (W + W^{T})`. A skew-symmetric term</span>
+<span class="sd">    :math:`\delta` is introduced to encode directionality, where</span>
+
+<span class="sd">    ..math::</span>
+<span class="sd">        \delta_{jk} = \begin{cases}</span>
+<span class="sd">            +1 &amp; \text{if} j \to k \text{ is an edge and } k \to j \text{ is not}, \\</span>
+<span class="sd">            -1 &amp; \text{if} k \to j \text{ is an edge and } j \to k \text{ is not}, \\</span>
+<span class="sd">            0 &amp; \text{if both or neither edge is present.}</span>
+<span class="sd">            \end{cases}</span>
+
+<span class="sd">    Then, the magnetic Laplacian matrix is defined as:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        L^{(q)} := D - H^{(q)}</span>
+
+<span class="sd">    where :math:`H^{(q)}` is the Hermitian adjacency matrix with entries</span>
+<span class="sd">    :math:`H^{(q)}_{jk} = W'_{jk} e^{2\pi i q \delta_{jk}}`, and :math:`D` is the</span>
+<span class="sd">    degree matrix associated with the symmetrized weight adjacency matrix :math:`W'`.</span>
+
+<span class="sd">    If `normalized` is True, compute the normalized version using the Moore-Penrose</span>
+<span class="sd">    inverse :math:`D^{+}}` of the degree matrix :math:`D`. The normalized formula</span>
+<span class="sd">    is then:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        L^{(q)}_{norm} = (D^{+})^{0.5} L^{(q)} (D^{+})^{0.5}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : DiGraph</span>
+<span class="sd">        A directed graph</span>
+
+<span class="sd">    nodelist : list, optional (default=list(G))</span>
+<span class="sd">        Node ordering for row/columns.</span>
+
+<span class="sd">    normalized : bool, optional (default=False)</span>
+<span class="sd">        Bool that encodes if return the magnetic Laplacian or the normalized magnetic</span>
+<span class="sd">        Laplacian. If True returns the normalized version.</span>
+
+<span class="sd">    q : float, optional (default=0.25)</span>
+<span class="sd">        The phase of the magnetic potential is the charge parameter 0 &lt;= q &lt;= 0.5.</span>
+<span class="sd">        At q=0 returns the standard Laplacian.</span>
+
+<span class="sd">    weight : string or None, optional (default='weight')</span>
+<span class="sd">        Edge attribute key for weights. If None, all edges have weight 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    L : SciPy sparse array (complex dtype)</span>
+<span class="sd">        The magnetic Laplacian matrix of `G` if not `normalized`</span>
+<span class="sd">        and the normalized version if `normalized`</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If q is not between 0 and 0.5</span>
+
+<span class="sd">    NetworkXNotImplemented</span>
+<span class="sd">        If `G` is undirected or a multigraph</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Fanuel, M., Alaíz, C. M., Fernández, Á., &amp; Suykens, J. A. (2018).</span>
+<span class="sd">       Magnetic eigenmaps for the visualization of directed graphs.</span>
+<span class="sd">       Applied and Computational Harmonic Analysis, 44(1), 189–199.</span>
+<span class="sd">       &lt;https://doi.org/10.1016/j.acha.2017.01.004&gt;</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+
+    <span class="k">if</span> <span class="n">nodelist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="c1"># Build Hermitian adjacency H</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)</span>
+    <span class="n">node_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">q</span> <span class="o">&lt;=</span> <span class="mf">0.5</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Parameter q must be a value between 0 and 0.5"</span><span class="p">)</span>
+
+    <span class="n">phase</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">q</span>
+
+    <span class="c1"># Find "phase" matrix</span>
+    <span class="c1"># Dict to encode where have been added symetries</span>
+    <span class="n">delta_phase_edge</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">matrix_weights</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">phases</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phase</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phase</span><span class="p">),</span> <span class="mi">0</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_index</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_index</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">ui</span><span class="p">,</span> <span class="n">vi</span> <span class="o">=</span> <span class="n">node_index</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">node_index</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="n">delta_phase_edge</span><span class="p">[(</span><span class="n">ui</span><span class="p">,</span> <span class="n">vi</span><span class="p">)]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">delta_phase_edge</span><span class="p">[(</span><span class="n">vi</span><span class="p">,</span> <span class="n">ui</span><span class="p">)]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">matrix_weights</span><span class="p">[(</span><span class="n">ui</span><span class="p">,</span> <span class="n">vi</span><span class="p">)]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">wt</span>
+        <span class="n">matrix_weights</span><span class="p">[(</span><span class="n">vi</span><span class="p">,</span> <span class="n">ui</span><span class="p">)]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">wt</span>
+
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_index</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_index</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">ui</span><span class="p">,</span> <span class="n">vi</span> <span class="o">=</span> <span class="n">node_index</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">node_index</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ui</span> <span class="o">!=</span> <span class="n">vi</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">delta_phase_edge</span><span class="p">[(</span><span class="n">ui</span><span class="p">,</span> <span class="n">vi</span><span class="p">)]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix_weights</span><span class="p">[(</span><span class="n">ui</span><span class="p">,</span> <span class="n">vi</span><span class="p">)])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">matrix_weights</span><span class="p">[(</span><span class="n">ui</span><span class="p">,</span> <span class="n">vi</span><span class="p">)]</span> <span class="o">*</span> <span class="n">phases</span><span class="p">[</span><span class="n">delta_phase_edge</span><span class="p">[(</span><span class="n">ui</span><span class="p">,</span> <span class="n">vi</span><span class="p">)]]</span>
+                <span class="p">)</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span>
+                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">matrix_weights</span><span class="p">[(</span><span class="n">vi</span><span class="p">,</span> <span class="n">ui</span><span class="p">)]</span> <span class="o">*</span> <span class="n">phases</span><span class="p">[</span><span class="n">delta_phase_edge</span><span class="p">[(</span><span class="n">vi</span><span class="p">,</span> <span class="n">ui</span><span class="p">)]]</span>
+                <span class="p">)</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+    <span class="c1"># Build degree matrix D</span>
+    <span class="n">diags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">H</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="n">diags_sqrt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diags</span><span class="p">)</span>
+        <span class="n">diags_sqrt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">diags_sqrt</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">DH</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">dia_array</span><span class="p">((</span><span class="n">diags_sqrt</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">DH</span> <span class="o">@</span> <span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="n">DH</span><span class="p">)</span>
+        <span class="n">diags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="n">n</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">dia_array</span><span class="p">((</span><span class="n">diags</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">D</span> <span class="o">-</span> <span class="n">H</span></div>
 
 
 
