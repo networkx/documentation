@@ -819,6 +819,9 @@
 <span class="sd">    :meth:`local_node_connectivity`. This implementation is based</span>
 <span class="sd">    on algorithm 11 in [1]_.</span>
 
+<span class="sd">    The local node connectivity of an ordered pair of nodes of a digraph</span>
+<span class="sd">    is not symmetric, so both orders of each pair are considered [2]_.</span>
+
 <span class="sd">    See also</span>
 <span class="sd">    --------</span>
 <span class="sd">    :meth:`local_node_connectivity`</span>
@@ -832,6 +835,11 @@
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Abdol-Hossein Esfahanian. Connectivity Algorithms.</span>
 <span class="sd">        http://www.cse.msu.edu/~cse835/Papers/Graph_connectivity_revised.pdf</span>
+
+<span class="sd">    .. [2] Shimon Even and R. Endre Tarjan. Network Flow and Testing Graph</span>
+<span class="sd">        Connectivity. SIAM Journal on Computing, Volume 4, Issue 4,</span>
+<span class="sd">        pp. 507-518, 1975.</span>
+<span class="sd">        https://doi.org/10.1137/0204043</span>
 
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">t</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
@@ -856,26 +864,51 @@
         <span class="k">def</span><span class="w"> </span><span class="nf">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">G</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">G</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">v</span><span class="p">)])</span>
 
+        <span class="c1"># Isolating a node only requires removing all its predecessors or all</span>
+        <span class="c1"># its successors, so the bound is the smaller of the two.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">degree</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">pred</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">}),</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">succ</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">}))</span>
+
+        <span class="c1"># In a digraph the local node connectivity of an ordered pair is not</span>
+        <span class="c1"># symmetric, and v has to lie on the source side of a minimum node cut</span>
+        <span class="c1"># for its value to be the right one, so both orders are needed. Page</span>
+        <span class="c1"># 513 of [2] states that for a digraph both N(v, w) and N(w, v) have to</span>
+        <span class="c1"># be computed.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">ordered_pairs</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">),</span> <span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
             <span class="k">return</span> <span class="mi">0</span>
         <span class="n">iter_func</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span>
         <span class="n">neighbors</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span>
 
+        <span class="k">def</span><span class="w"> </span><span class="nf">degree</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">})</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">ordered_pairs</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">),)</span>
+
     <span class="c1"># Reuse the auxiliary digraph and the residual network</span>
     <span class="n">H</span> <span class="o">=</span> <span class="n">build_auxiliary_node_connectivity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">build_residual_network</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="s2">"capacity"</span><span class="p">)</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"flow_func"</span><span class="p">:</span> <span class="n">flow_func</span><span class="p">,</span> <span class="s2">"auxiliary"</span><span class="p">:</span> <span class="n">H</span><span class="p">,</span> <span class="s2">"residual"</span><span class="p">:</span> <span class="n">R</span><span class="p">}</span>
 
-    <span class="c1"># Pick a node with minimum degree</span>
-    <span class="c1"># Node connectivity is bounded by degree.</span>
-    <span class="n">v</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># Pick a node with minimum degree. Node connectivity is bounded by the</span>
+    <span class="c1"># number of distinct neighbors. `G.degree` cannot be used here because</span>
+    <span class="c1"># parallel edges do not add connectivity and self-loops are irrelevant</span>
+    <span class="c1"># for it.</span>
+    <span class="n">v</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(((</span><span class="n">n</span><span class="p">,</span> <span class="n">degree</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># Neighbors of v, excluding v itself if it has a self-loop. For digraphs</span>
+    <span class="c1"># this deduplicates the nodes that are both predecessors and successors.</span>
+    <span class="n">v_nbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">}</span>
     <span class="c1"># compute local node connectivity with all its non-neighbors nodes</span>
-    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">}:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"cutoff"</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span>
-        <span class="n">K</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">local_node_connectivity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">v_nbrs</span> <span class="o">-</span> <span class="p">{</span><span class="n">v</span><span class="p">}:</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">ordered_pairs</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"cutoff"</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">local_node_connectivity</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
     <span class="c1"># Also for non adjacent pairs of neighbors of v</span>
-    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">iter_func</span><span class="p">(</span><span class="n">neighbors</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">iter_func</span><span class="p">(</span><span class="n">v_nbrs</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">x</span><span class="p">]:</span>
             <span class="k">continue</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">"cutoff"</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span>
