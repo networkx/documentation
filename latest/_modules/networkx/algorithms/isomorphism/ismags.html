@@ -1242,35 +1242,41 @@
 <div class="viewcode-block" id="ISMAGS.find_isomorphisms">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.find_isomorphisms.html#networkx.algorithms.isomorphism.ISMAGS.find_isomorphisms">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">find_isomorphisms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""left for backward compatibility. Use isomorphisms_iter"""</span>
+<span class="w">        </span><span class="sd">"""left for backward compatibility. Use subgraph_isomorphisms_iter"""</span>
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_morphisms</span><span class="p">(</span><span class="n">symmetry</span><span class="p">,</span> <span class="n">problem_type</span><span class="o">=</span><span class="s2">"SUB"</span><span class="p">)</span>
         <span class="k">return</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_all_morphisms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="p">,</span> <span class="n">problem_type</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Find all subgraph isomorphisms between subgraph and graph</span>
+<span class="w">        </span><span class="sd">"""Find all morphisms between :attr:`graph` and :attr:`subgraph`</span>
 
-<span class="sd">        Finds isomorphisms where :attr:`subgraph` &lt;= :attr:`graph`.</span>
+<span class="sd">        Yield isomorphisms or monomorphisms depending on `problem_type`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        symmetry: bool</span>
-<span class="sd">            Whether symmetry should be taken into account. If False, found</span>
-<span class="sd">            isomorphisms may be symmetrically equivalent.</span>
+<span class="sd">        symmetry : bool</span>
+<span class="sd">            Whether symmetry should be taken into account.</span>
+<span class="sd">            If False, morphisms may be symmetrically equivalent.</span>
 <span class="sd">        problem_type : string</span>
 <span class="sd">            The problem type to be used:</span>
 <span class="sd">            - "ISO" for graph isomorphism,</span>
+<span class="sd">            - "SUB" for subgraph isomorphism,</span>
 <span class="sd">            - "MONO" for monomorphism.</span>
-<span class="sd">            - "SUB" or any other string produces subgraph isomorphism</span>
-<span class="sd">            Not checked for correctness.</span>
 
 <span class="sd">        Yields</span>
 <span class="sd">        ------</span>
 <span class="sd">        dict</span>
-<span class="sd">            The found isomorphism mappings of {graph_node: subgraph_node}.</span>
+<span class="sd">            The isomorphism mappings in form: {graph_node: subgraph_node}.</span>
 <span class="sd">        """</span>
-        <span class="n">SG_fits</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span> <span class="k">if</span> <span class="n">problem_type</span> <span class="o">==</span> <span class="s2">"ISO"</span> <span class="k">else</span> <span class="n">operator</span><span class="o">.</span><span class="n">le</span>
-        <span class="n">MONO_fits</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span> <span class="k">if</span> <span class="n">problem_type</span> <span class="o">!=</span> <span class="s2">"MONO"</span> <span class="k">else</span> <span class="n">operator</span><span class="o">.</span><span class="n">le</span>
+        <span class="k">if</span> <span class="n">problem_type</span> <span class="o">==</span> <span class="s2">"ISO"</span><span class="p">:</span>
+            <span class="n">SG_fits</span> <span class="o">=</span> <span class="n">MONO_fits</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span>
+        <span class="k">elif</span> <span class="n">problem_type</span> <span class="o">==</span> <span class="s2">"SUB"</span><span class="p">:</span>
+            <span class="n">SG_fits</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">le</span>
+            <span class="n">MONO_fits</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span>
+        <span class="k">elif</span> <span class="n">problem_type</span> <span class="o">==</span> <span class="s2">"MONO"</span><span class="p">:</span>
+            <span class="n">SG_fits</span> <span class="o">=</span> <span class="n">MONO_fits</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">le</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Invalid </span><span class="si">{</span><span class="n">problem_type</span><span class="si">=}</span><span class="s1">. Must be "ISO", "SUB" or "MONO"'</span><span class="p">)</span>
         <span class="c1"># The networkx VF2 algorithm is slightly funny in when it yields an</span>
         <span class="c1"># empty dict and when not.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgraph</span><span class="p">:</span>
@@ -1351,7 +1357,7 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        symmetry: bool</span>
+<span class="sd">        symmetry : bool</span>
 <span class="sd">            Whether symmetry should be taken into account. If False, found</span>
 <span class="sd">            largest common subgraphs may be symmetrically equivalent.</span>
 
@@ -1429,9 +1435,12 @@
 <div class="viewcode-block" id="ISMAGS.is_isomorphic">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.is_isomorphic.html#networkx.algorithms.isomorphism.ISMAGS.is_isomorphic">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_isomorphic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Returns True if :attr:`graph` is isomorphic to :attr:`subgraph` and</span>
-<span class="sd">        False otherwise.</span>
+<span class="w">        </span><span class="sd">"""Returns True if the class input graphs are isomorphic, False otherwise.</span>
+
+<span class="sd">        Isomorphic means there is a mapping of nodes from ``graph`` to ``subgraph``</span>
+<span class="sd">        that maintains connectivity and node/edge matchings.</span>
+<span class="sd">        Note: `symmetry` is only used for testing. We only find 1 isomorphism</span>
+<span class="sd">        so there is no gain from looking for symmetries.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1444,17 +1453,19 @@
 <div class="viewcode-block" id="ISMAGS.subgraph_is_isomorphic">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.subgraph_is_isomorphic.html#networkx.algorithms.isomorphism.ISMAGS.subgraph_is_isomorphic">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">subgraph_is_isomorphic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Returns True if a subgraph of :attr:`graph` is isomorphic to</span>
-<span class="sd">        :attr:`subgraph` and False otherwise.</span>
+<span class="w">        </span><span class="sd">"""Returns True if the class input graphs are subgraph isomorphic, False otherwise.</span>
+
+<span class="sd">        Subgraph isomorphic means there is a mapping of nodes from an induced</span>
+<span class="sd">        subgraph of ``graph`` to ``subgraph`` that maintains connectivity and</span>
+<span class="sd">        node/edge matching.</span>
+
+<span class="sd">        Note: `symmetry` is only used for testing. We only find 1 isomorphism</span>
+<span class="sd">        so there is no gain from looking for symmetries.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        bool</span>
 <span class="sd">        """</span>
-        <span class="c1"># symmetry=False, since we only need to know whether there is any</span>
-        <span class="c1"># example; figuring out all symmetry elements probably costs more time</span>
-        <span class="c1"># than it gains.</span>
         <span class="n">isom</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgraph_isomorphisms_iter</span><span class="p">(</span><span class="n">symmetry</span><span class="o">=</span><span class="n">symmetry</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">isom</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
@@ -1462,6 +1473,20 @@
 <div class="viewcode-block" id="ISMAGS.is_monomorphic">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.is_monomorphic.html#networkx.algorithms.isomorphism.ISMAGS.is_monomorphic">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_monomorphic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Returns True if the class input graphs are monomorphic, False otherwise.</span>
+
+<span class="sd">        Monomorphic means there is a mapping of some nodes in ``graph`` to all</span>
+<span class="sd">        nodes in ``subgraph`` that covers all nodes/edges in ``subgraph``.</span>
+<span class="sd">        No induced subgraph structure is needed. For example, an edge between</span>
+<span class="sd">        two nodes is monomorphic to any subgraph with two nodes.</span>
+
+<span class="sd">        Note: `symmetry` is only used for testing. We only find 1 monomorphism</span>
+<span class="sd">        so there is no gain from looking for symmetries.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">        """</span>
         <span class="n">mom</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">monomorphisms_iter</span><span class="p">(</span><span class="n">symmetry</span><span class="o">=</span><span class="n">symmetry</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mom</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
@@ -1469,9 +1494,23 @@
 <div class="viewcode-block" id="ISMAGS.isomorphisms_iter">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.isomorphisms_iter.html#networkx.algorithms.isomorphism.ISMAGS.isomorphisms_iter">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">isomorphisms_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Does the same as :meth:`_all_morphisms` if :attr:`graph` and</span>
-<span class="sd">        :attr:`subgraph` have the same number of nodes.</span>
+<span class="w">        </span><span class="sd">"""Yields all isomorphisms from :attr:`graph` to :attr:`subgraph`</span>
+
+<span class="sd">        An isomorphism is an all-to-all mapping of the nodes that maintains</span>
+<span class="sd">        connectivity and node/edge matchings.</span>
+
+<span class="sd">        Symmetric isomorphisms can be ignored for the symmetries of :attr:`subgraph`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        symmetry : bool, optional (default: True)</span>
+<span class="sd">            Whether symmetries of :attr:`subgraph` should be taken into account.</span>
+<span class="sd">            If False, yielded isomorphisms may be symmetrically equivalent.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        dict</span>
+<span class="sd">            The isomorphism mappings in form: ``{graph_node: subgraph_node}``.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subgraph</span><span class="p">):</span>
             <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_morphisms</span><span class="p">(</span><span class="n">symmetry</span><span class="p">,</span> <span class="n">problem_type</span><span class="o">=</span><span class="s2">"ISO"</span><span class="p">)</span></div>
@@ -1480,14 +1519,52 @@
 <div class="viewcode-block" id="ISMAGS.subgraph_isomorphisms_iter">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.subgraph_isomorphisms_iter.html#networkx.algorithms.isomorphism.ISMAGS.subgraph_isomorphisms_iter">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">subgraph_isomorphisms_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Alternative name for :meth:`_all_morphisms`."""</span>
+<span class="w">        </span><span class="sd">"""Yields all subgraph isomorphisms from :attr:`graph` to :attr:`subgraph`</span>
+
+<span class="sd">        An isomorphism is a mapping of nodes that maintains connectivity and</span>
+<span class="sd">        node/edge matchings. Subgraph isomorphism means an isomorphism from an</span>
+<span class="sd">        induced subgraph of ``graph`` to ``subgraph``.</span>
+
+<span class="sd">        Symmetric isomorphisms can be ignored for the symmetries of ``subgraph``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        symmetry : bool, optional (default: True)</span>
+<span class="sd">            Whether symmetries of ``subgraph`` should be taken into account.</span>
+<span class="sd">            If False, isomorphisms may be symmetrically equivalent.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        dict</span>
+<span class="sd">            The isomorphism mappings in form: {graph_node: subgraph_node}.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_morphisms</span><span class="p">(</span><span class="n">symmetry</span><span class="p">,</span> <span class="n">problem_type</span><span class="o">=</span><span class="s2">"SUB"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ISMAGS.monomorphisms_iter">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.monomorphisms_iter.html#networkx.algorithms.isomorphism.ISMAGS.monomorphisms_iter">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">monomorphisms_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Iterate over monomorphism."""</span>
+<span class="w">        </span><span class="sd">"""Yields all monomorphisms from :attr:`graph` to :attr:`subgraph`</span>
+
+<span class="sd">        A monomorphism is a mapping of nodes that only maintains connectivity</span>
+<span class="sd">        and node/edge matchings in ``subgraph``. Edges in ``graph`` need not</span>
+<span class="sd">        map to ``subgraph``. In other words, the mapping covers all edges in</span>
+<span class="sd">        ``subgraph``, but is not a bijection (some nodes and edges are not mapped).</span>
+<span class="sd">        Some people call this kind of subgraph a non-induced subgraph.</span>
+
+<span class="sd">        Symmetric monomorphisms can be ignored for the symmetries of ``subgraph``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        symmetry : bool, optional (default: True)</span>
+<span class="sd">            Whether symmetries of ``subgraph`` should be taken into account.</span>
+<span class="sd">            If False, monomorphisms may be symmetrically equivalent.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        dict</span>
+<span class="sd">            The monomorphism mappings in form: {graph_node: subgraph_node}.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_morphisms</span><span class="p">(</span><span class="n">symmetry</span><span class="p">,</span> <span class="n">problem_type</span><span class="o">=</span><span class="s2">"MONO"</span><span class="p">)</span></div>
 
 
@@ -1581,7 +1658,7 @@
         <span class="c1"># Membership: any candidate must be an element of each of the frozensets.</span>
         <span class="c1"># Length: length of the intersection set. Use heuristic min(len of frozensets).</span>
         <span class="c1"># This intersection improves future length heuristics which can only occur</span>
-        <span class="c1"># after this element of the queu is popped. But it means future additional</span>
+        <span class="c1"># after this element of the queue is popped. But it means future additional</span>
         <span class="c1"># restriction frozensets that duplicate previous ones are not ignored.</span>
         <span class="n">sgn_candidates</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">candidate_sets</span><span class="p">[</span><span class="n">sgn</span><span class="p">])</span>
         <span class="n">candidate_sets</span><span class="p">[</span><span class="n">sgn</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">sgn_candidates</span><span class="p">}</span>
@@ -1790,7 +1867,7 @@
                 <span class="c1"># symmetry constraints. We know that for every constraint we</span>
                 <span class="c1"># have those subgraph nodes are equal. So whenever we would</span>
                 <span class="c1"># remove the lower part of a constraint, remove the higher</span>
-                <span class="c1"># instead. This is all dealth with by _remove_node. And because</span>
+                <span class="c1"># instead. This is all dealt with by _remove_node. And because</span>
                 <span class="c1"># left_to_be_mapped is a set, we don't do double work.</span>
 
                 <span class="c1"># And finally, make the subgraph one node smaller.</span>
