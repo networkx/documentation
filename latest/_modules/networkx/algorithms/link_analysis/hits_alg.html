@@ -542,7 +542,15 @@
 <div class="viewcode-block" id="hits">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.link_analysis.hits_alg.hits.html#networkx.algorithms.link_analysis.hits_alg.hits">[docs]</a>
 <span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">preserve_edge_attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">"G"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"weight"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}})</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">hits</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hits</span><span class="p">(</span>
+    <span class="n">G</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span>
+    <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"power_iteration"</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Returns HITS hubs and authorities values for nodes.</span>
 
 <span class="sd">    The HITS algorithm computes two numbers for a node.</span>
@@ -566,6 +574,12 @@
 <span class="sd">    normalized : bool (default=True)</span>
 <span class="sd">       Normalize results by the sum of all of the values.</span>
 
+<span class="sd">    method : string (default="power_iteration")</span>
+<span class="sd">       The implementation to use, one of "power_iteration" or "svd".</span>
+<span class="sd">       The "svd" method computes the values from the largest singular</span>
+<span class="sd">       value/vectors of the adjacency matrix using</span>
+<span class="sd">       ``scipy.sparse.linalg.svds``.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    (hubs,authorities) : two-tuple of dictionaries</span>
@@ -579,6 +593,9 @@
 <span class="sd">        within the specified number of iterations of the power iteration</span>
 <span class="sd">        method.</span>
 
+<span class="sd">    ValueError</span>
+<span class="sd">        If `method` is not one of "power_iteration" or "svd".</span>
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
@@ -586,10 +603,12 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    The eigenvector calculation is done by the power iteration method</span>
-<span class="sd">    and has no guarantee of convergence.  The iteration will stop</span>
-<span class="sd">    after max_iter iterations or an error tolerance of</span>
-<span class="sd">    number_of_nodes(G)*tol has been reached.</span>
+<span class="sd">    With ``method="power_iteration"``, the eigenvector calculation is done</span>
+<span class="sd">    by the power iteration method and has no guarantee of convergence. The</span>
+<span class="sd">    iteration will stop after `max_iter` iterations or when the change in</span>
+<span class="sd">    the hub values between two successive iterations is smaller than `tol`.</span>
+<span class="sd">    With ``method="svd"``, `max_iter` and `tol` are passed to</span>
+<span class="sd">    ``scipy.sparse.linalg.svds``.</span>
 
 <span class="sd">    The HITS algorithm was designed for directed graphs but this</span>
 <span class="sd">    algorithm does not check if the input graph is directed and will</span>
@@ -606,6 +625,61 @@
 <span class="sd">       https://www.cs.cornell.edu/home/kleinber/auth.pdf</span>
 <span class="sd">       doi:10.1145/324133.324140.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"power_iteration"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_hits_power_iteration</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">nstart</span><span class="p">,</span> <span class="n">normalized</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"svd"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_hits_svd</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">nstart</span><span class="p">,</span> <span class="n">normalized</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"method not supported: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hits_power_iteration</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="n">nodelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">adjacency_matrix</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="n">nodelist</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nstart</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span> <span class="o">-</span> <span class="n">nstart</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"nstart must have a value for every node; missing: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">nstart</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodelist</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">"nstart values must not sum to zero"</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span> <span class="o">/</span> <span class="n">s</span>
+
+    <span class="k">if</span> <span class="n">max_iter</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">PowerIterationFailedConvergence</span><span class="p">(</span><span class="n">max_iter</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="n">hlast</span> <span class="o">=</span> <span class="n">h</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">h</span> <span class="o">@</span> <span class="n">A</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="n">a</span>
+        <span class="n">h</span> <span class="o">/=</span> <span class="n">h</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">h</span> <span class="o">-</span> <span class="n">hlast</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">PowerIterationFailedConvergence</span><span class="p">(</span><span class="n">max_iter</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">/=</span> <span class="n">h</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">a</span> <span class="o">/=</span> <span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">/=</span> <span class="n">a</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">hubs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodelist</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">h</span><span class="p">)))</span>
+    <span class="n">authorities</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodelist</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">hubs</span><span class="p">,</span> <span class="n">authorities</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hits_svd</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
 
@@ -629,8 +703,7 @@
         <span class="n">a</span> <span class="o">/=</span> <span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="n">hubs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">h</span><span class="p">)))</span>
     <span class="n">authorities</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">a</span><span class="p">)))</span>
-    <span class="k">return</span> <span class="n">hubs</span><span class="p">,</span> <span class="n">authorities</span></div>
-
+    <span class="k">return</span> <span class="n">hubs</span><span class="p">,</span> <span class="n">authorities</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_hits_python</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span> <span class="n">nstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
