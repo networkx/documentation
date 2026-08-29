@@ -962,13 +962,82 @@ options are applied to a TikZ “scope” which contains a path for each edge.</
 </section>
 <section id="id12">
 <h3>Examples<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"just_my_figure.tex"</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"my_figure.tex"</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">"A path graph"</span><span class="p">,</span> <span class="n">latex_label</span><span class="o">=</span><span class="s2">"fig1"</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">latex_code</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>  <span class="c1"># a string rather than a file</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>You can change many features of the nodes and edges.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The TeX-formatted graph can be written to a file as a standalone document:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"just_my_figure.tex"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="go">\documentclass{report}</span>
+<span class="go">\usepackage{tikz}</span>
+<span class="go">\usepackage{subcaption}</span>
+
+<span class="go">\begin{document}</span>
+<span class="go">\begin{figure}</span>
+<span class="go">  \begin{tikzpicture}</span>
+<span class="go">      \draw</span>
+<span class="go">        (0.0:2) node (0){0}</span>
+<span class="go">        (120.0:2) node (1){1}</span>
+<span class="go">        (240.0:2) node (2){2};</span>
+<span class="go">      \begin{scope}[-]</span>
+<span class="go">        \draw (0) to (1);</span>
+<span class="go">        \draw (1) to (2);</span>
+<span class="go">      \end{scope}</span>
+<span class="go">    \end{tikzpicture}</span>
+<span class="go">\end{figure}</span>
+<span class="go">\end{document}</span>
+</pre></div>
+</div>
+<p>Or as a figure to be incorporated in another TeX document:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"my_figure.tex"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">"P3"</span><span class="p">,</span> <span class="n">latex_label</span><span class="o">=</span><span class="s2">"fig1"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="go">\begin{figure}</span>
+<span class="go">  \begin{tikzpicture}</span>
+<span class="go">      \draw</span>
+<span class="go">        (0.0:2) node (0){0}</span>
+<span class="go">        (120.0:2) node (1){1}</span>
+<span class="go">        (240.0:2) node (2){2};</span>
+<span class="go">      \begin{scope}[-]</span>
+<span class="go">        \draw (0) to (1);</span>
+<span class="go">        \draw (1) to (2);</span>
+<span class="go">      \end{scope}</span>
+<span class="go">    \end{tikzpicture}</span>
+<span class="go">  \caption{P3}\label{fig1}</span>
+<span class="go">\end{figure}</span>
+</pre></div>
+</div>
+<p>The TeX code can be generated programmatically without writing to disk with <a class="reference internal" href="generated/networkx.drawing.nx_latex.to_latex.html#networkx.drawing.nx_latex.to_latex" title="networkx.drawing.nx_latex.to_latex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_latex</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">latex_code</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">latex_code</span><span class="p">)</span>
+<span class="go">\begin{figure}</span>
+<span class="go">  \begin{tikzpicture}</span>
+<span class="go">      \draw</span>
+<span class="go">        (0.0:2) node (0){0}</span>
+<span class="go">        (120.0:2) node (1){1}</span>
+<span class="go">        (240.0:2) node (2){2};</span>
+<span class="go">      \begin{scope}[-]</span>
+<span class="go">        \draw (0) to (1);</span>
+<span class="go">        \draw (1) to (2);</span>
+<span class="go">      \end{scope}</span>
+<span class="go">    \end{tikzpicture}</span>
+<span class="go">\end{figure}</span>
+</pre></div>
+</div>
+<p>Visualization properties such as colors, line widths, etc. can be changed either
+by looking up values stored as node/edge attributes by name:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>  <span class="c1"># nodes set on a line</span>
 </pre></div>
@@ -985,7 +1054,62 @@ options are applied to a TikZ “scope” which contains a path for each edge.</
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)][</span><span class="s2">"label_opts"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"near end"</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"latex_graph.tex"</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"latex_graph.tex"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opts</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># Name of node/edge attributes that hold visualization options</span>
+<span class="gp">... </span>    <span class="s2">"node_label"</span><span class="p">:</span> <span class="s2">"label"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"edge_label"</span><span class="p">:</span> <span class="s2">"label"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"node_options"</span><span class="p">:</span> <span class="s2">"style"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"edge_options"</span><span class="p">:</span> <span class="s2">"style"</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">"edge_label_options"</span><span class="p">:</span> <span class="s2">"label_opts"</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="go">\begin{figure}</span>
+<span class="go">  \begin{tikzpicture}</span>
+<span class="go">      \draw</span>
+<span class="go">        (0, 0) node[blue] (0){0}</span>
+<span class="go">        (1, 1) node (1){1}</span>
+<span class="go">        (2, 2) node[line width=3,draw] (2){2}</span>
+<span class="go">        (3, 3) node (3){Stop};</span>
+<span class="go">      \begin{scope}[-&gt;]</span>
+<span class="go">        \draw (0) to node[near start] {1st Step} (1);</span>
+<span class="go">        \draw[line width=3] (1) to node[] {2nd Step} (2);</span>
+<span class="go">        \draw[green] (2) to node[near end] {3rd Step} (3);</span>
+<span class="go">      \end{scope}</span>
+<span class="go">    \end{tikzpicture}</span>
+<span class="go">\end{figure}</span>
+</pre></div>
+</div>
+<p>Or by specifying them manually:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">node_color</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">"red"</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">"orange"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"blue"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"gray!90"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">edge_width</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="s2">"line width=1.5"</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">circular_layout</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">node_options</span><span class="o">=</span><span class="n">node_color</span><span class="p">,</span> <span class="n">edge_options</span><span class="o">=</span><span class="n">edge_width</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="go">\documentclass{report}</span>
+<span class="go">\usepackage{tikz}</span>
+<span class="go">\usepackage{subcaption}</span>
+
+<span class="go">\begin{document}</span>
+<span class="go">\begin{figure}</span>
+<span class="go">  \begin{tikzpicture}</span>
+<span class="go">      \draw</span>
+<span class="go">        (1.0, 0.0) node[red] (0){0}</span>
+<span class="go">        (-0.0, 1.0) node[orange] (1){1}</span>
+<span class="go">        (-1.0, -0.0) node[blue] (2){2}</span>
+<span class="go">        (0.0, -1.0) node[gray!90] (3){3};</span>
+<span class="go">      \begin{scope}[-&gt;]</span>
+<span class="go">        \draw[line width=1.5] (0) to (1);</span>
+<span class="go">        \draw[line width=1.5] (1) to (2);</span>
+<span class="go">        \draw[line width=1.5] (2) to (3);</span>
+<span class="go">      \end{scope}</span>
+<span class="go">    \end{tikzpicture}</span>
+<span class="go">\end{figure}</span>
+<span class="go">\end{document}</span>
 </pre></div>
 </div>
 <p>Then compile the LaTeX using something like <code class="docutils literal notranslate"><span class="pre">pdflatex</span> <span class="pre">latex_graph.tex</span></code>
@@ -998,43 +1122,51 @@ and view the pdf file created: <code class="docutils literal notranslate"><span 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">graphs</span> <span class="o">=</span> <span class="p">[</span><span class="n">H1</span><span class="p">,</span> <span class="n">H2</span><span class="p">,</span> <span class="n">H3</span><span class="p">,</span> <span class="n">H4</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">caps</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Path 4"</span><span class="p">,</span> <span class="s2">"Complete graph 4"</span><span class="p">,</span> <span class="s2">"Path 8"</span><span class="p">,</span> <span class="s2">"Complete graph 8"</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lbls</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"fig2a"</span><span class="p">,</span> <span class="s2">"fig2b"</span><span class="p">,</span> <span class="s2">"fig2c"</span><span class="p">,</span> <span class="s2">"fig2d"</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span><span class="n">graphs</span><span class="p">,</span> <span class="s2">"subfigs.tex"</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sub_captions</span><span class="o">=</span><span class="n">caps</span><span class="p">,</span> <span class="n">sub_labels</span><span class="o">=</span><span class="n">lbls</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">latex_code</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">graphs</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sub_captions</span><span class="o">=</span><span class="n">caps</span><span class="p">,</span> <span class="n">sub_labels</span><span class="o">=</span><span class="n">lbls</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">node_color</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">"red"</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">"orange"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"blue"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"gray!90"</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">edge_width</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">:</span> <span class="s2">"line width=1.5"</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">H3</span><span class="o">.</span><span class="n">edges</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">circular_layout</span><span class="p">(</span><span class="n">H3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">latex_code</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">H3</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">node_options</span><span class="o">=</span><span class="n">node_color</span><span class="p">,</span> <span class="n">edge_options</span><span class="o">=</span><span class="n">edge_width</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">latex_code</span><span class="p">)</span>
-<span class="go">\documentclass{report}</span>
-<span class="go">\usepackage{tikz}</span>
-<span class="go">\usepackage{subcaption}</span>
-
-<span class="go">\begin{document}</span>
-<span class="go">\begin{figure}</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"subfigs.tex"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_latex</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">graphs</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sub_captions</span><span class="o">=</span><span class="n">caps</span><span class="p">,</span> <span class="n">sub_labels</span><span class="o">=</span><span class="n">lbls</span><span class="p">,</span> <span class="n">as_document</span><span class="o">=</span><span class="kc">False</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The lines in the output file corresponding to the first two sub figures:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">lines_from_file</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines_from_file</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">34</span><span class="p">]))</span>
+<span class="go">  \begin{subfigure}{0.5\textwidth}</span>
 <span class="go">  \begin{tikzpicture}</span>
 <span class="go">      \draw</span>
-<span class="go">        (1.0, 0.0) node[red] (0){0}</span>
-<span class="go">        (0.707, 0.707) node[orange] (1){1}</span>
-<span class="go">        (-0.0, 1.0) node[blue] (2){2}</span>
-<span class="go">        (-0.707, 0.707) node[gray!90] (3){3}</span>
-<span class="go">        (-1.0, -0.0) node (4){4}</span>
-<span class="go">        (-0.707, -0.707) node (5){5}</span>
-<span class="go">        (0.0, -1.0) node (6){6}</span>
-<span class="go">        (0.707, -0.707) node (7){7};</span>
+<span class="go">        (0.0:2) node (0){0}</span>
+<span class="go">        (90.0:2) node (1){1}</span>
+<span class="go">        (180.0:2) node (2){2}</span>
+<span class="go">        (270.0:2) node (3){3};</span>
 <span class="go">      \begin{scope}[-]</span>
-<span class="go">        \draw[line width=1.5] (0) to (1);</span>
-<span class="go">        \draw[line width=1.5] (1) to (2);</span>
-<span class="go">        \draw[line width=1.5] (2) to (3);</span>
-<span class="go">        \draw[line width=1.5] (3) to (4);</span>
-<span class="go">        \draw[line width=1.5] (4) to (5);</span>
-<span class="go">        \draw[line width=1.5] (5) to (6);</span>
-<span class="go">        \draw[line width=1.5] (6) to (7);</span>
+<span class="go">        \draw (0) to (1);</span>
+<span class="go">        \draw (1) to (2);</span>
+<span class="go">        \draw (2) to (3);</span>
 <span class="go">      \end{scope}</span>
 <span class="go">    \end{tikzpicture}</span>
-<span class="go">\end{figure}</span>
-<span class="go">\end{document}</span>
+<span class="go">    \caption{Path 4}\label{fig2a}</span>
+<span class="go">  \end{subfigure}</span>
+<span class="go">  \begin{subfigure}{0.5\textwidth}</span>
+<span class="go">  \begin{tikzpicture}</span>
+<span class="go">      \draw</span>
+<span class="go">        (0.0:2) node (0){0}</span>
+<span class="go">        (90.0:2) node (1){1}</span>
+<span class="go">        (180.0:2) node (2){2}</span>
+<span class="go">        (270.0:2) node (3){3};</span>
+<span class="go">      \begin{scope}[-]</span>
+<span class="go">        \draw (0) to (1);</span>
+<span class="go">        \draw (0) to (2);</span>
+<span class="go">        \draw (0) to (3);</span>
+<span class="go">        \draw (1) to (2);</span>
+<span class="go">        \draw (1) to (3);</span>
+<span class="go">        \draw (2) to (3);</span>
+<span class="go">      \end{scope}</span>
+<span class="go">    \end{tikzpicture}</span>
+<span class="go">    \caption{Complete graph 4}\label{fig2b}</span>
+<span class="go">  \end{subfigure}</span>
 </pre></div>
 </div>
 <section id="notes">
