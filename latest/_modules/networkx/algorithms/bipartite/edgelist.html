@@ -590,20 +590,64 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile, gzip</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
+
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
 <span class="sd">    &gt;&gt;&gt; G.add_nodes_from([0, 2], bipartite=0)</span>
 <span class="sd">    &gt;&gt;&gt; G.add_nodes_from([1, 3], bipartite=1)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist")</span>
-<span class="sd">    &gt;&gt;&gt; fh = open("test.edgelist_open", "wb")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fh)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist.gz")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_nodata.gz", data=False)</span>
+
+<span class="sd">    Write out the bipartite edgelist to file</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.edgelist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.write_edgelist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    0 1 {}</span>
+<span class="sd">    2 1 {}</span>
+<span class="sd">    2 3 {}</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    A filename ending with ".gz" or ".bz2" will be automatically compressed</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test_edgelist.gz"</span>
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.write_edgelist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; with gzip.open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read().decode())</span>
+<span class="sd">    0 1 {}</span>
+<span class="sd">    2 1 {}</span>
+<span class="sd">    2 3 {}</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    The `data` keyword argument is used to toggle whether edge attribute data</span>
+<span class="sd">    are included:</span>
 
 <span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(1, bipartite=0)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_node(2, bipartite=1)</span>
 <span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2, weight=7, color="red")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_bigger_nodata", data=False)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_color", data=["color"])</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_color_weight", data=["color", "weight"])</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.edgelist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.write_edgelist(G, fpath, data=False)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    Or to specify which edge attribute data to include:</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.write_edgelist(G, fpath, data=["color"])</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2 red</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.bipartite.write_edgelist(G, fpath, data=["color", "weight"])</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2 red 7</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
