@@ -644,14 +644,65 @@ node[‘a’][‘id’]=1 to set the id of node ‘a’ to 1.</p>
 </div>
 </div>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_gexf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"test.gexf"</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
 </pre></div>
 </div>
-<p># visualization data
-&gt;&gt;&gt; G.nodes[0][“viz”] = {“size”: 54}
-&gt;&gt;&gt; G.nodes[0][“viz”][“position”] = {“x”: 0, “y”: 1}
-&gt;&gt;&gt; G.nodes[0][“viz”][“color”] = {“r”: 0, “g”: 0, “b”: 256}</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"test.gexf"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_gexf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>View the GEXF graph data, ignoring the header/metadata:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">lines_from_file</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines_from_file</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="go">  &lt;graph defaultedgetype="undirected" mode="static" name=""&gt;</span>
+<span class="go">    &lt;nodes&gt;</span>
+<span class="go">      &lt;node id="0" label="0" /&gt;</span>
+<span class="go">      &lt;node id="1" label="1" /&gt;</span>
+<span class="go">      &lt;node id="2" label="2" /&gt;</span>
+<span class="go">      &lt;node id="3" label="3" /&gt;</span>
+<span class="go">    &lt;/nodes&gt;</span>
+<span class="go">    &lt;edges&gt;</span>
+<span class="go">      &lt;edge source="0" target="1" id="0" /&gt;</span>
+<span class="go">      &lt;edge source="1" target="2" id="1" /&gt;</span>
+<span class="go">      &lt;edge source="2" target="3" id="2" /&gt;</span>
+<span class="go">    &lt;/edges&gt;</span>
+<span class="go">  &lt;/graph&gt;</span>
+</pre></div>
+</div>
+<p>Visualization data in GEXF format is supported and is read from the <code class="docutils literal notranslate"><span class="pre">&quot;viz&quot;</span></code>
+node attribute:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"viz"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"size"</span><span class="p">:</span> <span class="mi">54</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"viz"</span><span class="p">][</span><span class="s2">"position"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"viz"</span><span class="p">][</span><span class="s2">"color"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"r"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"g"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">:</span> <span class="mi">256</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_gexf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">lines_from_file</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines_from_file</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>  <span class="c1"># Ignore header and metadata tags</span>
+<span class="go">  &lt;graph defaultedgetype="undirected" mode="static" name=""&gt;</span>
+<span class="go">    &lt;nodes&gt;</span>
+<span class="go">      &lt;node id="0" label="0"&gt;</span>
+<span class="go">        &lt;viz:color r="0" g="0" b="256" a="1.0" /&gt;</span>
+<span class="go">        &lt;viz:size value="54" /&gt;</span>
+<span class="go">        &lt;viz:position x="0" y="1" z="None" /&gt;</span>
+<span class="go">      &lt;/node&gt;</span>
+<span class="go">      &lt;node id="1" label="1" /&gt;</span>
+<span class="go">      &lt;node id="2" label="2" /&gt;</span>
+<span class="go">      &lt;node id="3" label="3" /&gt;</span>
+<span class="go">    &lt;/nodes&gt;</span>
+<span class="go">    &lt;edges&gt;</span>
+<span class="go">      &lt;edge source="0" target="1" id="0" /&gt;</span>
+<span class="go">      &lt;edge source="1" target="2" id="1" /&gt;</span>
+<span class="go">      &lt;edge source="2" target="3" id="2" /&gt;</span>
+<span class="go">    &lt;/edges&gt;</span>
+<span class="go">  &lt;/graph&gt;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

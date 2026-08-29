@@ -609,14 +609,63 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_gexf(G, "test.gexf")</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
 
-<span class="sd">    # visualization data</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.gexf"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_gexf(G, fpath)</span>
+
+<span class="sd">    View the GEXF graph data, ignoring the header/metadata:</span>
+
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     lines_from_file = fh.readlines()</span>
+<span class="sd">    &gt;&gt;&gt; print("".join(lines_from_file[5:-1]))</span>
+<span class="sd">      &lt;graph defaultedgetype="undirected" mode="static" name=""&gt;</span>
+<span class="sd">        &lt;nodes&gt;</span>
+<span class="sd">          &lt;node id="0" label="0" /&gt;</span>
+<span class="sd">          &lt;node id="1" label="1" /&gt;</span>
+<span class="sd">          &lt;node id="2" label="2" /&gt;</span>
+<span class="sd">          &lt;node id="3" label="3" /&gt;</span>
+<span class="sd">        &lt;/nodes&gt;</span>
+<span class="sd">        &lt;edges&gt;</span>
+<span class="sd">          &lt;edge source="0" target="1" id="0" /&gt;</span>
+<span class="sd">          &lt;edge source="1" target="2" id="1" /&gt;</span>
+<span class="sd">          &lt;edge source="2" target="3" id="2" /&gt;</span>
+<span class="sd">        &lt;/edges&gt;</span>
+<span class="sd">      &lt;/graph&gt;</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    Visualization data in GEXF format is supported and is read from the ``"viz"``</span>
+<span class="sd">    node attribute:</span>
+
 <span class="sd">    &gt;&gt;&gt; G.nodes[0]["viz"] = {"size": 54}</span>
 <span class="sd">    &gt;&gt;&gt; G.nodes[0]["viz"]["position"] = {"x": 0, "y": 1}</span>
 <span class="sd">    &gt;&gt;&gt; G.nodes[0]["viz"]["color"] = {"r": 0, "g": 0, "b": 256}</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_gexf(G, fpath)</span>
 
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     lines_from_file = fh.readlines()</span>
+<span class="sd">    &gt;&gt;&gt; print("".join(lines_from_file[5:-1]))  # Ignore header and metadata tags</span>
+<span class="sd">      &lt;graph defaultedgetype="undirected" mode="static" name=""&gt;</span>
+<span class="sd">        &lt;nodes&gt;</span>
+<span class="sd">          &lt;node id="0" label="0"&gt;</span>
+<span class="sd">            &lt;viz:color r="0" g="0" b="256" a="1.0" /&gt;</span>
+<span class="sd">            &lt;viz:size value="54" /&gt;</span>
+<span class="sd">            &lt;viz:position x="0" y="1" z="None" /&gt;</span>
+<span class="sd">          &lt;/node&gt;</span>
+<span class="sd">          &lt;node id="1" label="1" /&gt;</span>
+<span class="sd">          &lt;node id="2" label="2" /&gt;</span>
+<span class="sd">          &lt;node id="3" label="3" /&gt;</span>
+<span class="sd">        &lt;/nodes&gt;</span>
+<span class="sd">        &lt;edges&gt;</span>
+<span class="sd">          &lt;edge source="0" target="1" id="0" /&gt;</span>
+<span class="sd">          &lt;edge source="1" target="2" id="1" /&gt;</span>
+<span class="sd">          &lt;edge source="2" target="3" id="2" /&gt;</span>
+<span class="sd">        &lt;/edges&gt;</span>
+<span class="sd">      &lt;/graph&gt;</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -644,7 +693,7 @@
 <div class="viewcode-block" id="generate_gexf">
 <a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.gexf.generate_gexf.html#networkx.readwrite.gexf.generate_gexf">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_gexf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">prettyprint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.2draft"</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Generate lines of GEXF format representation of G.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Generate lines of GEXF format representation of G.</span>
 
 <span class="sd">    "GEXF (Graph Exchange XML Format) is a language for describing</span>
 <span class="sd">    complex networks structures, their associated data and dynamics" [1]_.</span>
@@ -673,11 +722,30 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import itertools</span>
+
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
-<span class="sd">    &gt;&gt;&gt; linefeed = chr(10)  # linefeed=\n</span>
-<span class="sd">    &gt;&gt;&gt; s = linefeed.join(nx.generate_gexf(G))</span>
-<span class="sd">    &gt;&gt;&gt; for line in nx.generate_gexf(G):  # doctest: +SKIP</span>
-<span class="sd">    ...     print(line)</span>
+<span class="sd">    &gt;&gt;&gt; gexf_gen = nx.generate_gexf(G)</span>
+
+<span class="sd">    The first several lines are the header containing only metadata - skip them</span>
+<span class="sd">    in this example for the purposes of viewing only the GEXF-formatted graph data:</span>
+
+<span class="sd">    &gt;&gt;&gt; gexf_headerless = itertools.islice(gexf_gen, 4, None)</span>
+<span class="sd">    &gt;&gt;&gt; print("\n".join(gexf_headerless))</span>
+<span class="sd">      &lt;graph defaultedgetype="undirected" mode="static" name=""&gt;</span>
+<span class="sd">        &lt;nodes&gt;</span>
+<span class="sd">          &lt;node id="0" label="0" /&gt;</span>
+<span class="sd">          &lt;node id="1" label="1" /&gt;</span>
+<span class="sd">          &lt;node id="2" label="2" /&gt;</span>
+<span class="sd">          &lt;node id="3" label="3" /&gt;</span>
+<span class="sd">        &lt;/nodes&gt;</span>
+<span class="sd">        &lt;edges&gt;</span>
+<span class="sd">          &lt;edge source="0" target="1" id="0" /&gt;</span>
+<span class="sd">          &lt;edge source="1" target="2" id="1" /&gt;</span>
+<span class="sd">          &lt;edge source="2" target="3" id="2" /&gt;</span>
+<span class="sd">        &lt;/edges&gt;</span>
+<span class="sd">      &lt;/graph&gt;</span>
+<span class="sd">    &lt;/gexf&gt;</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
