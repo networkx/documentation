@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 28, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 29, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -687,19 +687,60 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile, gzip</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
+
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist")</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
-<span class="sd">    &gt;&gt;&gt; fh = open("test.edgelist", "wb")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fh)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist.gz")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_nodata.gz", data=False)</span>
+
+<span class="sd">    Write out the edgelist to file:</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.edgelist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    0 1 {}</span>
+<span class="sd">    1 2 {}</span>
+<span class="sd">    2 3 {}</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    A filename ending with ".gz" or ".bz2" will be automatically compressed:</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test_edgelist.gz"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; with gzip.open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read().decode())</span>
+<span class="sd">    0 1 {}</span>
+<span class="sd">    1 2 {}</span>
+<span class="sd">    2 3 {}</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    The `data` parameter is used to toggle whether edge attribute data are</span>
+<span class="sd">    included:</span>
 
 <span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2, weight=7, color="red")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_bigger_nodata", data=False)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_color", data=["color"])</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, "test.edgelist_color_weight", data=["color", "weight"])</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.edgelist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fpath, data=False)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    Or to specify which edge attribute data to include:</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fpath, data=["color"])</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2 red</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(G, fpath, data=["color", "weight"])</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2 red 7</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -885,29 +926,57 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(nx.path_graph(4), "test.edgelist_P4")</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist("test.edgelist_P4")</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
 
-<span class="sd">    &gt;&gt;&gt; fh = open("test.edgelist_P4", "rb")</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(fh)</span>
-<span class="sd">    &gt;&gt;&gt; fh.close()</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "P4.edgelist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_edgelist(nx.path_graph(4), fpath)</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(fpath)</span>
+<span class="sd">    &gt;&gt;&gt; G.edges</span>
+<span class="sd">    EdgeView([('0', '1'), ('1', '2'), ('2', '3')])</span>
 
-<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist("test.edgelist_P4", nodetype=int)</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist("test.edgelist_P4", create_using=nx.DiGraph)</span>
+<span class="sd">    Nodes read from the file are interpreted as strings by default. The `nodetype`</span>
+<span class="sd">    parameter can be used to convert the nodes to another type:</span>
 
-<span class="sd">    Edgelist with data in a list:</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(fpath, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; G.edges</span>
+<span class="sd">    EdgeView([(0, 1), (1, 2), (2, 3)])</span>
 
-<span class="sd">    &gt;&gt;&gt; textline = "1 2 3"</span>
-<span class="sd">    &gt;&gt;&gt; fh = open("test.textline", "w")</span>
-<span class="sd">    &gt;&gt;&gt; d = fh.write(textline)</span>
-<span class="sd">    &gt;&gt;&gt; fh.close()</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist("test.textline", nodetype=int, data=(("weight", float),))</span>
-<span class="sd">    &gt;&gt;&gt; list(G)</span>
-<span class="sd">    [1, 2]</span>
-<span class="sd">    &gt;&gt;&gt; list(G.edges(data=True))</span>
-<span class="sd">    [(1, 2, {'weight': 3.0})]</span>
+<span class="sd">    The optional `create_using` parameter indicates the type of NetworkX</span>
+<span class="sd">    graph created. By default an undirected ``nx.Graph`` is returned. To read</span>
+<span class="sd">    the data as a directed graph use:</span>
 
-<span class="sd">    See parse_edgelist() for more examples of formatting.</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(fpath, create_using=nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; G.is_directed()</span>
+<span class="sd">    True</span>
+
+<span class="sd">    By default, edge data is expected to be stored in a serialized dict-like</span>
+<span class="sd">    format keyed by the attribute name:</span>
+
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.text"</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath, "w") as fh:  # Create a file with data in default format</span>
+<span class="sd">    ...     _ = fh.write("1 2 {'weight': 3}")</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(fpath, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; G.edges(data=True)</span>
+<span class="sd">    EdgeDataView([(1, 2, {'weight': 3})])</span>
+
+<span class="sd">    Alternatively, edge data stored as a flat list without keys can be parsed</span>
+<span class="sd">    by passing in the attribute name and data type via `data`:</span>
+
+<span class="sd">    &gt;&gt;&gt; textline = "1 2 red 10"</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.textline"</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath, "w") as fh:  # Create a file with flattened edge data</span>
+<span class="sd">    ...     _ = fh.write(textline)</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.read_edgelist(</span>
+<span class="sd">    ...     fpath, nodetype=int, data=[("color", str), ("weight", float)]</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; G.edges(data=True)</span>
+<span class="sd">    EdgeDataView([(1, 2, {'color': 'red', 'weight': 10.0})])</span>
+
+<span class="sd">    See `parse_edgelist` for more examples of formatting.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -934,7 +1003,7 @@
 <div class="viewcode-block" id="write_weighted_edgelist">
 <a class="viewcode-back" href="../../../reference/readwrite/generated/networkx.readwrite.edgelist.write_weighted_edgelist.html#networkx.readwrite.edgelist.write_weighted_edgelist">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_weighted_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s2">"#"</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">" "</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Write graph G as a list of edges with numeric weights.</span>
+<span class="w">    </span><span class="sd">"""Write graph `G` as a list of edges with numeric weights.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -953,9 +1022,18 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
+
 <span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
 <span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2, weight=7)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_weighted_edgelist(G, "test.weighted.edgelist")</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.weighted.edgelist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_weighted_edgelist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    1 2 7</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -1014,16 +1092,29 @@
 <span class="sd">    Since nodes must be hashable, the function nodetype must return hashable</span>
 <span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.)</span>
 
-<span class="sd">    Example edgelist file format.</span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile, gzip</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
 
-<span class="sd">    With numeric edge data::</span>
+<span class="sd">    read_weighted_edgelist expected data of the form ``u v w``, as is generated</span>
+<span class="sd">    by `write_weighted_edgelist`:</span>
 
-<span class="sd">     # read with</span>
-<span class="sd">     # &gt;&gt;&gt; G=nx.read_weighted_edgelist(fh)</span>
-<span class="sd">     # source target data</span>
-<span class="sd">     a b 1</span>
-<span class="sd">     a c 3.14159</span>
-<span class="sd">     d e 42</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.add_weighted_edges_from([(0, 1, 1), (1, 2, 2.718), (2, 0, 10)])</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "C3_weighted.list"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_weighted_edgelist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     print(fh.read())</span>
+<span class="sd">    0 1 1</span>
+<span class="sd">    0 2 10</span>
+<span class="sd">    1 2 2.718</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+
+<span class="sd">    &gt;&gt;&gt; H = nx.read_weighted_edgelist(fpath, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; H.edges(data="weight")</span>
+<span class="sd">    EdgeDataView([(0, 1, 1.0), (0, 2, 10.0), (1, 2, 2.718)])</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>

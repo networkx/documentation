@@ -72,7 +72,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 28, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 29, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -623,14 +623,28 @@ Filenames ending in .gz or .bz2 will be decompressed.</p>
 <p class="rubric">Notes</p>
 <p>Since nodes must be hashable, the function nodetype must return hashable
 types (e.g. int, float, str, frozenset - or tuples of those, etc.)</p>
-<p>Example edgelist file format.</p>
-<p>With numeric edge data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># read with</span>
-<span class="c1"># &gt;&gt;&gt; G=nx.read_weighted_edgelist(fh)</span>
-<span class="c1"># source target data</span>
-<span class="n">a</span> <span class="n">b</span> <span class="mi">1</span>
-<span class="n">a</span> <span class="n">c</span> <span class="mf">3.14159</span>
-<span class="n">d</span> <span class="n">e</span> <span class="mi">42</span>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="o">,</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>read_weighted_edgelist expected data of the form <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">v</span> <span class="pre">w</span></code>, as is generated
+by <a class="reference internal" href="networkx.readwrite.edgelist.write_weighted_edgelist.html#networkx.readwrite.edgelist.write_weighted_edgelist" title="networkx.readwrite.edgelist.write_weighted_edgelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_weighted_edgelist</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">2.718</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"C3_weighted.list"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_weighted_edgelist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="go">0 1 1</span>
+<span class="go">0 2 10</span>
+<span class="go">1 2 2.718</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_weighted_edgelist</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">)</span>
+<span class="go">EdgeDataView([(0, 1, 1.0), (0, 2, 10.0), (1, 2, 2.718)])</span>
 </pre></div>
 </div>
 </dd></dl>
