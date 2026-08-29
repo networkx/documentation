@@ -620,34 +620,55 @@ Filenames ending in .gz or .bz2 will be decompressed.</p>
 <p class="rubric">Notes</p>
 <p>This format does not store graph or node data.</p>
 <p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
+</pre></div>
+</div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"test.adjlist"</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="s2">"test.adjlist"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"test.adjlist"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Data read from the file are interpreted as strings by default, regardless of
+the node type of the original graph.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">edges</span>
+<span class="go">EdgeView([(0, 1), (1, 2), (2, 3)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">edges</span>
+<span class="go">EdgeView([('0', '1'), ('1', '2'), ('2', '3')])</span>
+</pre></div>
+</div>
+<p>The node data can be converted to a specific type with the <code class="xref py py-obj docutils literal notranslate"><span class="pre">nodetype</span></code>
+parameter.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">edges</span>
+<span class="go">EdgeView([(0, 1), (1, 2), (2, 3)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">edges_equal</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Since nodes must be hashable, the function <code class="xref py py-obj docutils literal notranslate"><span class="pre">nodetype</span></code> must return hashable
+types (e.g. int, float, str, frozenset - or tuples of those, etc.)</p>
+<p>The optional <code class="xref py py-obj docutils literal notranslate"><span class="pre">create_using</span></code> parameter indicates the type of NetworkX graph
+created. The default is <code class="xref py py-obj docutils literal notranslate"><span class="pre">nx.Graph</span></code>, an undirected graph. To read the data
+as a directed graph use</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 <p>The path can be a filehandle or a string with the name of the file. If a
 filehandle is provided, it has to be opened in ‘rb’ mode.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"test.adjlist"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="n">fh</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">edges</span>
+<span class="go">EdgeView([(0, 1), (1, 2), (2, 3)])</span>
 </pre></div>
 </div>
-<p>Filenames ending in .gz or .bz2 will be compressed.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"test.adjlist.gz"</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="s2">"test.adjlist.gz"</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The optional nodetype is a function to convert node strings to nodetype.</p>
-<p>For example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="s2">"test.adjlist"</span><span class="p">,</span> <span class="n">nodetype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>will attempt to convert all nodes to integer type.</p>
-<p>Since nodes must be hashable, the function nodetype must return hashable
-types (e.g. int, float, str, frozenset - or tuples of those, etc.)</p>
-<p>The optional create_using parameter indicates the type of NetworkX graph
-created.  The default is <code class="xref py py-obj docutils literal notranslate"><span class="pre">nx.Graph</span></code>, an undirected graph.
-To read the data as a directed graph use</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">read_adjlist</span><span class="p">(</span><span class="s2">"test.adjlist"</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+<p>Filenames ending in .gz or .bz2 will be compressed automatically.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"test_adjlist.gz"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

@@ -669,18 +669,43 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
+
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, "path4.adjlist")</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "path4.adjlist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, fpath)</span>
+
+<span class="sd">    View the data as stored in file, ignoring header lines which start with the</span>
+<span class="sd">    comment character ("#" by default):</span>
+
+<span class="sd">    &gt;&gt;&gt; with open(fpath) as fh:</span>
+<span class="sd">    ...     lines_from_file = fh.readlines()</span>
+<span class="sd">    &gt;&gt;&gt; print("".join(l for l in lines_from_file if not l.startswith("#")))</span>
+<span class="sd">    0 1</span>
+<span class="sd">    1 2</span>
+<span class="sd">    2 3</span>
+<span class="sd">    3</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
 
 <span class="sd">    The path can be a filehandle or a string with the name of the file. If a</span>
 <span class="sd">    filehandle is provided, it has to be opened in 'wb' mode.</span>
 
-<span class="sd">    &gt;&gt;&gt; fh = open("path4.adjlist2", "wb")</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, fh)</span>
+<span class="sd">    &gt;&gt;&gt; with open(tmp_path / "path4.adjlist2", "wb") as fh:</span>
+<span class="sd">    ...     nx.write_adjlist(G, fh)</span>
+<span class="sd">    &gt;&gt;&gt; with open(tmp_path / "path4.adjlist2") as fh:</span>
+<span class="sd">    ...     lines_from_file = fh.readlines()</span>
+<span class="sd">    &gt;&gt;&gt; print("".join(l for l in lines_from_file if not l.startswith("#")))</span>
+<span class="sd">    0 1</span>
+<span class="sd">    1 2</span>
+<span class="sd">    2 3</span>
+<span class="sd">    3</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    The default `delimiter=" "` will result in unexpected results if node names contain</span>
+<span class="sd">    The default ``delimiter=" "`` will result in unexpected results if node names contain</span>
 <span class="sd">    whitespace characters. To avoid this problem, specify an alternate delimiter when spaces are</span>
 <span class="sd">    valid in node names.</span>
 <span class="sd">    NB: This option is not available for data that isn't user-generated.</span>
@@ -825,37 +850,55 @@
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; tmp_path = Path(tempfile.gettempdir())</span>
+
 <span class="sd">    &gt;&gt;&gt; G = nx.path_graph(4)</span>
-<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, "test.adjlist")</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_adjlist("test.adjlist")</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test.adjlist"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, fpath)</span>
+<span class="sd">    &gt;&gt;&gt; H = nx.read_adjlist(fpath)</span>
+
+<span class="sd">    Data read from the file are interpreted as strings by default, regardless of</span>
+<span class="sd">    the node type of the original graph.</span>
+
+<span class="sd">    &gt;&gt;&gt; G.edges</span>
+<span class="sd">    EdgeView([(0, 1), (1, 2), (2, 3)])</span>
+<span class="sd">    &gt;&gt;&gt; H.edges</span>
+<span class="sd">    EdgeView([('0', '1'), ('1', '2'), ('2', '3')])</span>
+
+<span class="sd">    The node data can be converted to a specific type with the `nodetype`</span>
+<span class="sd">    parameter.</span>
+
+<span class="sd">    &gt;&gt;&gt; H = nx.read_adjlist(fpath, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; H.edges</span>
+<span class="sd">    EdgeView([(0, 1), (1, 2), (2, 3)])</span>
+<span class="sd">    &gt;&gt;&gt; nx.utils.edges_equal(G.edges, H.edges)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Since nodes must be hashable, the function `nodetype` must return hashable</span>
+<span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.)</span>
+
+<span class="sd">    The optional `create_using` parameter indicates the type of NetworkX graph</span>
+<span class="sd">    created. The default is `nx.Graph`, an undirected graph. To read the data</span>
+<span class="sd">    as a directed graph use</span>
+
+<span class="sd">    &gt;&gt;&gt; H = nx.read_adjlist(fpath, create_using=nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; H.is_directed()</span>
+<span class="sd">    True</span>
 
 <span class="sd">    The path can be a filehandle or a string with the name of the file. If a</span>
 <span class="sd">    filehandle is provided, it has to be opened in 'rb' mode.</span>
 
-<span class="sd">    &gt;&gt;&gt; fh = open("test.adjlist", "rb")</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_adjlist(fh)</span>
+<span class="sd">    &gt;&gt;&gt; with open(fpath, "rb") as fh:</span>
+<span class="sd">    ...     H = nx.read_adjlist(fh, nodetype=int)</span>
+<span class="sd">    &gt;&gt;&gt; H.edges</span>
+<span class="sd">    EdgeView([(0, 1), (1, 2), (2, 3)])</span>
 
-<span class="sd">    Filenames ending in .gz or .bz2 will be compressed.</span>
+<span class="sd">    Filenames ending in .gz or .bz2 will be compressed automatically.</span>
 
-<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, "test.adjlist.gz")</span>
-<span class="sd">    &gt;&gt;&gt; G = nx.read_adjlist("test.adjlist.gz")</span>
-
-<span class="sd">    The optional nodetype is a function to convert node strings to nodetype.</span>
-
-<span class="sd">    For example</span>
-
-<span class="sd">    &gt;&gt;&gt; G = nx.read_adjlist("test.adjlist", nodetype=int)</span>
-
-<span class="sd">    will attempt to convert all nodes to integer type.</span>
-
-<span class="sd">    Since nodes must be hashable, the function nodetype must return hashable</span>
-<span class="sd">    types (e.g. int, float, str, frozenset - or tuples of those, etc.)</span>
-
-<span class="sd">    The optional create_using parameter indicates the type of NetworkX graph</span>
-<span class="sd">    created.  The default is `nx.Graph`, an undirected graph.</span>
-<span class="sd">    To read the data as a directed graph use</span>
-
-<span class="sd">    &gt;&gt;&gt; G = nx.read_adjlist("test.adjlist", create_using=nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; fpath = tmp_path / "test_adjlist.gz"</span>
+<span class="sd">    &gt;&gt;&gt; nx.write_adjlist(G, fpath)</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>

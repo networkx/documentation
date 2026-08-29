@@ -611,20 +611,44 @@ Filenames ending in .gz or .bz2 will be compressed.</p>
 </dl>
 </div>
 <p class="rubric">Notes</p>
-<p>The default <code class="xref py py-obj docutils literal notranslate"><span class="pre">delimiter=&quot;</span> <span class="pre">&quot;</span></code> will result in unexpected results if node names contain
+<p>The default <code class="docutils literal notranslate"><span class="pre">delimiter=&quot;</span> <span class="pre">&quot;</span></code> will result in unexpected results if node names contain
 whitespace characters. To avoid this problem, specify an alternate delimiter when spaces are
 valid in node names.
 NB: This option is not available for data that isn’t user-generated.</p>
 <p>This format does not store graph, node, or edge data.</p>
 <p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">())</span>
+</pre></div>
+</div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="s2">"path4.adjlist"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fpath</span> <span class="o">=</span> <span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"path4.adjlist"</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fpath</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>View the data as stored in file, ignoring header lines which start with the
+comment character (“#” by default):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">lines_from_file</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines_from_file</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)))</span>
+<span class="go">0 1</span>
+<span class="go">1 2</span>
+<span class="go">2 3</span>
+<span class="go">3</span>
 </pre></div>
 </div>
 <p>The path can be a filehandle or a string with the name of the file. If a
 filehandle is provided, it has to be opened in ‘wb’ mode.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"path4.adjlist2"</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fh</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"path4.adjlist2"</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">nx</span><span class="o">.</span><span class="n">write_adjlist</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">fh</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"path4.adjlist2"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">lines_from_file</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines_from_file</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">)))</span>
+<span class="go">0 1</span>
+<span class="go">1 2</span>
+<span class="go">2 3</span>
+<span class="go">3</span>
 </pre></div>
 </div>
 </dd></dl>
