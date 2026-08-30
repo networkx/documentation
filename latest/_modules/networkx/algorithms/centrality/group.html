@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Aug 29, 2026"/>
+    <meta name="docbuild:last-update" content="Aug 30, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -698,30 +698,32 @@
             <span class="n">PB_m</span><span class="p">,</span> <span class="n">PB_m_v</span> <span class="o">=</span> <span class="n">PB_m_v</span><span class="p">,</span> <span class="n">PB_m</span>
 
         <span class="c1"># endpoints</span>
-        <span class="n">v</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoints</span><span class="p">:</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="c1"># if the graph is connected then subtract the endpoints from</span>
             <span class="c1"># the count for all the nodes in the graph. else count how many</span>
             <span class="c1"># nodes are connected to the group's nodes and subtract that.</span>
             <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-                    <span class="n">scale</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">extra</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># count paths for group to or from anything</span>
+                    <span class="n">reachables</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">u</span><span class="p">)</span>
+                    <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reachables</span> <span class="k">if</span> <span class="p">(</span><span class="n">u</span> <span class="ow">in</span> <span class="n">group</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span><span class="p">))</span>
             <span class="k">elif</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-                <span class="n">scale</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">group_node1</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">group_node1</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="n">group_node1</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-                                <span class="n">scale</span> <span class="o">+=</span> <span class="mi">1</span>
-                            <span class="k">else</span><span class="p">:</span>
-                                <span class="n">scale</span> <span class="o">+=</span> <span class="mi">2</span>
-            <span class="n">GBC_group</span> <span class="o">-=</span> <span class="n">scale</span>
+                <span class="n">extra</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># count paths for group to anything</span>
+                <span class="c1"># (use 2 if v not in group to shorten reachables)</span>
+                <span class="n">reachables</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">u</span><span class="p">)</span>
+                <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span> <span class="k">else</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reachables</span><span class="p">)</span>
+
+            <span class="n">GBC_group</span> <span class="o">-=</span> <span class="n">extra</span>
 
         <span class="c1"># normalized</span>
         <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="n">v</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">N_out</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="n">c</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">N_out</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_out</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
             <span class="n">GBC_group</span> <span class="o">*=</span> <span class="n">scale</span>
 
         <span class="c1"># If undirected than count only the undirected edges</span>
