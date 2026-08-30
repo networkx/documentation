@@ -652,7 +652,7 @@
 <span class="sd">    """</span>
     <span class="n">GBC</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># initialize betweenness</span>
     <span class="n">list_of_groups</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="c1">#  check weather C contains one or many groups</span>
+    <span class="c1"># check whether C contains one or many groups</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">el</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">C</span><span class="p">):</span>
         <span class="n">C</span> <span class="o">=</span> <span class="p">[</span><span class="n">C</span><span class="p">]</span>
         <span class="n">list_of_groups</span> <span class="o">=</span> <span class="kc">False</span>
@@ -660,51 +660,55 @@
     <span class="k">if</span> <span class="n">set_v</span> <span class="o">-</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>  <span class="c1"># element(s) of C not in G</span>
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The node(s) </span><span class="si">{</span><span class="n">set_v</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="si">}</span><span class="s2"> are in C but not in G."</span><span class="p">)</span>
 
-    <span class="c1"># pre-processing</span>
+    <span class="c1"># pre-process dict-of-dicts: path btwn(PB), short path counts(sigma), distances(D)</span>
     <span class="n">PB</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">_group_preprocessing</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">set_v</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
 
-    <span class="c1"># the algorithm for each group</span>
+    <span class="c1"># Run the algorithm for each group</span>
     <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
         <span class="n">group</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>  <span class="c1"># set of nodes in group</span>
-        <span class="c1"># initialize the matrices of the sigma and the PB</span>
+        <span class="c1"># initialize the matrices sigma_m and PB_m (path betweenness)</span>
         <span class="n">GBC_group</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">sigma_m</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
         <span class="n">PB_m</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">PB</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
-            <span class="c1"># store lookups and set</span>
+            <span class="c1"># main point of this whole loop!</span>
+            <span class="n">GBC_group</span> <span class="o">+=</span> <span class="n">PB_m</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+
+            <span class="c1"># store lookups</span>
             <span class="n">Dv</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
             <span class="n">PB_v</span> <span class="o">=</span> <span class="n">PB_m</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
             <span class="n">sig_v</span> <span class="o">=</span> <span class="n">sigma_m</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
-            <span class="n">group_in_Dv</span> <span class="o">=</span> <span class="n">group</span> <span class="o">&amp;</span> <span class="n">Dv</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 
-            <span class="n">GBC_group</span> <span class="o">+=</span> <span class="n">PB_m</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">group_in_Dv</span><span class="p">:</span>
-                <span class="c1"># store lookups</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                <span class="c1"># store lookups and set</span>
                 <span class="n">Dx</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
                 <span class="n">PB_x</span> <span class="o">=</span> <span class="n">PB_m</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
                 <span class="n">sig_x</span> <span class="o">=</span> <span class="n">sigma_m</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
                 <span class="n">sig_xv</span> <span class="o">=</span> <span class="n">sig_x</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
                 <span class="n">sig_vx</span> <span class="o">=</span> <span class="n">sig_v</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+                <span class="n">x_in_Dv</span> <span class="o">=</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Dv</span>
+                <span class="n">v_in_Dx</span> <span class="o">=</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Dx</span>
 
-                <span class="c1"># ensure y is in Dx otherwise v is not in path with x and y</span>
-                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">group_in_Dv</span> <span class="o">&amp;</span> <span class="n">Dx</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># ensure y is in Dx otherwise all 3 Orders will not occur</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">group</span> <span class="o">&amp;</span> <span class="n">Dx</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="c1"># store lookups</span>
                     <span class="n">Dy</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
-                    <span class="n">sig_y</span> <span class="o">=</span> <span class="n">sigma_m</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
                     <span class="n">sig_xy</span> <span class="o">=</span> <span class="n">sig_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
                     <span class="n">sig_vy</span> <span class="o">=</span> <span class="n">sig_v</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+                    <span class="n">v_in_Dy</span> <span class="o">=</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Dy</span>
+                    <span class="n">y_in_Dv</span> <span class="o">=</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Dv</span>
 
-                    <span class="c1"># Order x-y-v</span>
-                    <span class="k">if</span> <span class="n">Dx</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dy</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_xv</span><span class="p">:</span>
+                    <span class="c1"># Order x-y-v  If v_in_Dy then v_in_Dx for sure.</span>
+                    <span class="k">if</span> <span class="n">v_in_Dy</span> <span class="ow">and</span> <span class="n">Dx</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dy</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_xv</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">y</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
-                            <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">PB_x</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig_xy</span> <span class="o">*</span> <span class="n">sig_y</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">/</span> <span class="n">sig_xv</span>
-                    <span class="c1"># Order v-x-y</span>
-                    <span class="k">if</span> <span class="n">Dv</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dv</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_vy</span><span class="p">:</span>
+                            <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">PB_x</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig_xy</span> <span class="o">*</span> <span class="n">sigma_m</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">/</span> <span class="n">sig_xv</span>
+                    <span class="c1"># Order v-x-y  If x_in_Dv then y_in_Dv for sure.</span>
+                    <span class="k">if</span> <span class="n">x_in_Dv</span> <span class="ow">and</span> <span class="n">Dv</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dv</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_vy</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
                             <span class="c1"># fraction of v-&gt;y paths that pass through x</span>
                             <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">PB_v</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig_vx</span> <span class="o">*</span> <span class="n">sig_xy</span> <span class="o">/</span> <span class="n">sig_vy</span>
                     <span class="c1"># order x-v-y</span>
-                    <span class="k">if</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dx</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dv</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_xy</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v_in_Dx</span> <span class="ow">and</span> <span class="n">y_in_Dv</span> <span class="ow">and</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dx</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dv</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_xy</span><span class="p">:</span>
                         <span class="n">sig_xvy</span> <span class="o">=</span> <span class="n">sig_xv</span> <span class="o">*</span> <span class="n">sig_vy</span>
                         <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">sig_xvy</span> <span class="o">/</span> <span class="n">sig_xy</span>
                         <span class="n">sig_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">sig_xvy</span>
