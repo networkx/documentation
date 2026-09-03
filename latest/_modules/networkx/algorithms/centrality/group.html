@@ -579,12 +579,16 @@
 <span class="sd">      A NetworkX graph.</span>
 
 <span class="sd">    C : list or set or list of lists or list of sets</span>
-<span class="sd">      A group or a list of groups containing nodes which belong to G, for which group betweenness</span>
-<span class="sd">      centrality is to be calculated.</span>
+<span class="sd">      A group or a list of groups containing nodes which belong to G,</span>
+<span class="sd">      for which group betweenness centrality is to be calculated.</span>
 
 <span class="sd">    normalized : bool, optional (default=True)</span>
-<span class="sd">      If True, group betweenness is normalized by `1/((|V|-|C|)(|V|-|C|-1))`</span>
-<span class="sd">      where `|V|` is the number of nodes in G and `|C|` is the number of nodes in C.</span>
+<span class="sd">      If True, group betweenness is normalized by $1/(N_{out}(N_{out}-1))$</span>
+<span class="sd">      where $N_{out}$ is the number of nodes in `G` that are not in `C`.</span>
+<span class="sd">      This ensures the reported value is between 0 and 1.</span>
+<span class="sd">      If `endpoints` is True, the normalization uses all nodes in `G`.</span>
+<span class="sd">      The reported value is then between $2N_{in}/(N-1)$ and 1 where $N_{in}$</span>
+<span class="sd">      is the number of nodes in `C` and $N$ the number of nodes in `G`.</span>
 
 <span class="sd">    weight : None or string, optional (default=None)</span>
 <span class="sd">      If None, all edge weights are considered equal.</span>
@@ -592,17 +596,32 @@
 <span class="sd">      The weight of an edge is treated as the length or distance between the two sides.</span>
 
 <span class="sd">    endpoints : bool, optional (default=False)</span>
-<span class="sd">      If True include the endpoints in the shortest path counts.</span>
+<span class="sd">      By default, only node-pairs that are both not in `C` are counted for</span>
+<span class="sd">      group betweenness centrality. The count is how many non-`C` node-pairs have</span>
+<span class="sd">      nodes from `C` "between" them on a shortest path.</span>
+
+<span class="sd">      When ``endpoints=True``, we also count node-pairs with one or both nodes</span>
+<span class="sd">      in `C` while considering endpoint nodes as being between the node-pairs.</span>
+<span class="sd">      So we count paths that start in `C` whether or not they pass through</span>
+<span class="sd">      any other nodes in `C`. This adds centrality to large groups without any</span>
+<span class="sd">      reference to the connectivity of the group. The minimum normalized score</span>
+<span class="sd">      is $N_{in}(N_{in}-1)/(N(N-1))$ instead of 0. For that reason, this feature</span>
+<span class="sd">      is rarely used.</span>
+
+<span class="sd">      We don't currently support considering node-pairs with nodes in `C` without</span>
+<span class="sd">      also counting their endpoints. Nor do we support counting endpoints while</span>
+<span class="sd">      only considering node-pairs that are both not in `C`. This keyword indicates</span>
+<span class="sd">      both coutning endpoints of paths and allowing node-pairs in C.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    NodeNotFound</span>
-<span class="sd">       If node(s) in C are not present in G.</span>
+<span class="sd">       If node(s) in `C` are not present in `G`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    betweenness : list of floats or float</span>
-<span class="sd">       If C is a single group then return a float. If C is a list with</span>
+<span class="sd">       If `C` is a single group then return a float. If `C` is a list with</span>
 <span class="sd">       several groups then return a list of group betweenness centralities.</span>
 
 <span class="sd">    See Also</span>
@@ -611,11 +630,10 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    Group betweenness centrality is described in [1]_ and its importance discussed in [3]_.</span>
-<span class="sd">    The initial implementation of the algorithm is mentioned in [2]_. This function uses</span>
-<span class="sd">    an improved algorithm presented in [4]_.</span>
+<span class="sd">    Group betweenness centrality is defined in [1]_ and discussed in [3]_.</span>
+<span class="sd">    The algorithm is described in [2]_ and is based on techniques mentioned in [4]_.</span>
 
-<span class="sd">    The number of nodes in the group must be a maximum of n - 2 where `n`</span>
+<span class="sd">    The number of nodes in the group must be a maximum of ``N - 2`` where ``N``</span>
 <span class="sd">    is the total number of nodes in the graph.</span>
 
 <span class="sd">    For weighted graphs the edge weights must be greater than zero.</span>
@@ -659,6 +677,10 @@
     <span class="n">set_v</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">C</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">group</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">set_v</span> <span class="o">-</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>  <span class="c1"># element(s) of C not in G</span>
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The node(s) </span><span class="si">{</span><span class="n">set_v</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="si">}</span><span class="s2"> are in C but not in G."</span><span class="p">)</span>
+
+    <span class="c1"># pre-process connectedness for no endpoints treatment</span>
+    <span class="n">is_directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">connected</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_directed</span> <span class="k">else</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
     <span class="c1"># pre-process dict-of-dicts: path btwn(PB), short path counts(sigma), distances(D)</span>
     <span class="n">PB</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">_group_preprocessing</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">set_v</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
@@ -716,20 +738,24 @@
                             <span class="c1"># update sig_xv for future y-values</span>
                             <span class="n">sig_xv</span> <span class="o">-=</span> <span class="n">sig_xvy</span>
         <span class="c1"># endpoints</span>
-        <span class="n">N</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoints</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">endpoints</span><span class="p">:</span>
+            <span class="n">Nscale</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># No endpoints -- usual case</span>
+            <span class="n">N_in</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="n">N_out</span> <span class="o">=</span> <span class="n">Nscale</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="n">N_in</span>
             <span class="c1"># if the graph is connected then subtract the endpoints from</span>
             <span class="c1"># the count for all the nodes in the graph. else count how many</span>
             <span class="c1"># nodes are connected to the group's nodes and subtract that.</span>
-            <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-                    <span class="n">extra</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># count paths for group to or from anything</span>
-                    <span class="n">reachables</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">u</span><span class="p">)</span>
-                    <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reachables</span> <span class="k">if</span> <span class="p">(</span><span class="n">u</span> <span class="ow">in</span> <span class="n">group</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-                <span class="n">extra</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">connected</span><span class="p">:</span>
+                <span class="c1"># N_in * (N_out + N_in-1 + N_out) : in*out + in*(in-1) + out*in</span>
+                <span class="c1"># same as N_in * (N-1 + N_out) : in*(all-1) + out*in</span>
+                <span class="c1"># paper uses equiv: N_in * (2 * N - N_in - 1)</span>
+                <span class="n">extra</span> <span class="o">=</span> <span class="n">N_in</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">N_out</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">is_directed</span><span class="p">:</span>
+                <span class="c1"># count paths for group to or from anything</span>
+                <span class="n">reachables</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">u</span><span class="p">)</span>
+                <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reachables</span> <span class="k">if</span> <span class="p">(</span><span class="n">u</span> <span class="ow">in</span> <span class="n">group</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># count paths for group to anything</span>
                 <span class="c1"># (use 2 if v not in group to shorten reachables)</span>
@@ -738,14 +764,10 @@
 
             <span class="n">GBC_group</span> <span class="o">-=</span> <span class="n">extra</span>
 
-        <span class="c1"># normalized</span>
+        <span class="c1"># scale down for normalized or by 2 for undirected</span>
         <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
-            <span class="n">N_out</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="n">c</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">N_out</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_out</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-            <span class="n">GBC_group</span> <span class="o">*=</span> <span class="n">scale</span>
-
-        <span class="c1"># If undirected than count only the undirected edges</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">GBC_group</span> <span class="o">/=</span> <span class="n">Nscale</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nscale</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_directed</span><span class="p">:</span>
             <span class="n">GBC_group</span> <span class="o">/=</span> <span class="mi">2</span>
 
         <span class="n">GBC</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GBC_group</span><span class="p">)</span>
@@ -864,10 +886,10 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    Group betweenness centrality is described in [1]_ and its importance discussed in [3]_.</span>
+<span class="sd">    Group betweenness centrality is defined in [1]_ and discussed in [3]_.</span>
 <span class="sd">    The algorithm is described in [2]_ and is based on techniques mentioned in [4]_.</span>
 
-<span class="sd">    The number of nodes in the group must be a maximum of ``n - 2`` where ``n``</span>
+<span class="sd">    The number of nodes in the group must be a maximum of ``N - 2`` where ``N``</span>
 <span class="sd">    is the total number of nodes in the graph.</span>
 
 <span class="sd">    For weighted graphs the edge weights must be greater than zero.</span>
@@ -1162,7 +1184,7 @@
 <span class="sd">    It is assumed that 1 / 0 is 0 (required in the case of directed graphs,</span>
 <span class="sd">    or when a shortest path length is 0).</span>
 
-<span class="sd">    The number of nodes in the group must be a maximum of n - 1 where `n`</span>
+<span class="sd">    The number of nodes in the group must be a maximum of ``N - 1`` where ``N``</span>
 <span class="sd">    is the total number of nodes in the graph.</span>
 
 <span class="sd">    For directed graphs, the incoming distance is utilized here. To use the</span>
