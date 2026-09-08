@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Sep 07, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 08, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -1473,12 +1473,12 @@
 <div class="viewcode-block" id="ISMAGS.is_monomorphic">
 <a class="viewcode-back" href="../../../../reference/algorithms/generated/generated/networkx.algorithms.isomorphism.ISMAGS.is_monomorphic.html#networkx.algorithms.isomorphism.ISMAGS.is_monomorphic">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_monomorphic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Returns True if the class input graphs are monomorphic, False otherwise.</span>
+<span class="w">        </span><span class="sd">"""Returns True if ``graph`` contains a monomorphic copy of ``subgraph``.</span>
 
-<span class="sd">        Monomorphic means there is a mapping of some nodes in ``graph`` to all</span>
-<span class="sd">        nodes in ``subgraph`` that covers all nodes/edges in ``subgraph``.</span>
-<span class="sd">        No induced subgraph structure is needed. For example, an edge between</span>
-<span class="sd">        two nodes is monomorphic to any subgraph with two nodes.</span>
+<span class="sd">        All nodes and edges in ``subgraph`` must be matched, respecting node/edge</span>
+<span class="sd">        matching. Extra edges between matched nodes in ``graph`` are allowed.</span>
+<span class="sd">        For example, a triangle contains a three-node path as a non-induced</span>
+<span class="sd">        subgraph.</span>
 
 <span class="sd">        Note: `symmetry` is only used for testing. We only find 1 monomorphism</span>
 <span class="sd">        so there is no gain from looking for symmetries.</span>
@@ -1546,11 +1546,12 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">monomorphisms_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Yields all monomorphisms from :attr:`graph` to :attr:`subgraph`</span>
 
-<span class="sd">        A monomorphism is a mapping of nodes that only maintains connectivity</span>
-<span class="sd">        and node/edge matchings in ``subgraph``. Edges in ``graph`` need not</span>
-<span class="sd">        map to ``subgraph``. In other words, the mapping covers all edges in</span>
-<span class="sd">        ``subgraph``, but is not a bijection (some nodes and edges are not mapped).</span>
-<span class="sd">        Some people call this kind of subgraph a non-induced subgraph.</span>
+<span class="sd">        Each mapping assigns distinct nodes in ``graph`` to all nodes in</span>
+<span class="sd">        ``subgraph``, preserving the connectivity and node/edge matches required</span>
+<span class="sd">        by ``subgraph``. Extra edges between matched nodes in ``graph`` are</span>
+<span class="sd">        allowed, so the matched subgraph need not be induced. For multigraphs,</span>
+<span class="sd">        ``graph`` must supply at least the required number of parallel edges</span>
+<span class="sd">        and self-loops, subject to the edge-matching function.</span>
 
 <span class="sd">        Symmetric monomorphisms can be ignored for the symmetries of ``subgraph``.</span>
 
@@ -1563,7 +1564,20 @@
 <span class="sd">        Yields</span>
 <span class="sd">        ------</span>
 <span class="sd">        dict</span>
-<span class="sd">            The monomorphism mappings in form: {graph_node: subgraph_node}.</span>
+<span class="sd">            The monomorphism mappings in form: ``{graph_node: subgraph_node}``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        A triangle contains a path as a non-induced subgraph. Accounting for</span>
+<span class="sd">        the path's reflection symmetry halves the number of reported mappings.</span>
+
+<span class="sd">        &gt;&gt;&gt; matcher = ISMAGS(nx.cycle_graph(3), nx.path_graph(3))</span>
+<span class="sd">        &gt;&gt;&gt; matcher.subgraph_is_isomorphic()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; len(list(matcher.monomorphisms_iter(symmetry=False)))</span>
+<span class="sd">        6</span>
+<span class="sd">        &gt;&gt;&gt; len(list(matcher.monomorphisms_iter()))</span>
+<span class="sd">        3</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_morphisms</span><span class="p">(</span><span class="n">symmetry</span><span class="p">,</span> <span class="n">problem_type</span><span class="o">=</span><span class="s2">"MONO"</span><span class="p">)</span></div>
 
@@ -1638,7 +1652,6 @@
         <span class="n">subgraph_adj</span> <span class="o">=</span> <span class="n">subgraph</span><span class="o">.</span><span class="n">_adj</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
         <span class="n">graph_adj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_adj</span>
-        <span class="n">self_ge_partition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ge_partition</span>
         <span class="n">self_sge_colors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sge_colors</span>
         <span class="n">is_directed</span> <span class="o">=</span> <span class="n">subgraph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
 
@@ -1710,7 +1723,8 @@
                 <span class="c1"># update the candidate_sets for unmapped sgn based on sgn mapped</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">is_directed</span><span class="p">:</span>
                     <span class="n">sgn_nbrs</span> <span class="o">=</span> <span class="n">subgraph_adj</span><span class="p">[</span><span class="n">sgn</span><span class="p">]</span>
-                    <span class="n">not_gn_nbrs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">graph_adj</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">graph_adj</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">MONO_fits</span> <span class="o">==</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span><span class="p">:</span>
+                        <span class="n">not_gn_nbrs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">graph_adj</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">graph_adj</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
                     <span class="k">for</span> <span class="n">sgn2</span> <span class="ow">in</span> <span class="n">left_to_map</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">sgn2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sgn_nbrs</span><span class="p">:</span>
                             <span class="c1"># Do not change the original set. So do not use |= operator</span>
@@ -1732,9 +1746,12 @@
                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># directed</span>
                     <span class="n">sgn_nbrs</span> <span class="o">=</span> <span class="n">subgraph_adj</span><span class="p">[</span><span class="n">sgn</span><span class="p">]</span>
                     <span class="n">sgn_preds</span> <span class="o">=</span> <span class="n">subgraph</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">sgn</span><span class="p">]</span>
-                    <span class="n">not_gn_nbrs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
-                        <span class="n">graph_adj</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">graph_adj</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">graph</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">MONO_fits</span> <span class="o">==</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span><span class="p">:</span>
+                        <span class="n">not_gn_nbrs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+                            <span class="n">graph_adj</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                            <span class="o">-</span> <span class="n">graph_adj</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                            <span class="o">-</span> <span class="n">graph</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                        <span class="p">)</span>
                     <span class="k">for</span> <span class="n">sgn2</span> <span class="ow">in</span> <span class="n">left_to_map</span><span class="p">:</span>
                         <span class="c1"># edge color must match when sgn2 connected to sgn</span>
                         <span class="k">if</span> <span class="n">sgn2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sgn_nbrs</span><span class="p">:</span>
@@ -1750,6 +1767,10 @@
                                     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">gn</span><span class="p">]</span>
                                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ge_colors</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">gn</span><span class="p">]</span> <span class="o">==</span> <span class="n">sge_color</span>
                                     <span class="k">if</span> <span class="n">MONO_fits</span><span class="p">(</span><span class="n">sgn_in</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">gn</span><span class="p">))</span>
+                                <span class="p">}</span>
+                                <span class="c1"># Restrict predecessors as well as successors.</span>
+                                <span class="n">cand_sets</span><span class="p">[</span><span class="n">sgn2</span><span class="p">]</span> <span class="o">=</span> <span class="n">cand_sets</span><span class="p">[</span><span class="n">sgn2</span><span class="p">]</span> <span class="o">|</span> <span class="p">{</span>
+                                    <span class="nb">frozenset</span><span class="p">(</span><span class="n">gn2_cands</span><span class="p">)</span>
                                 <span class="p">}</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="k">if</span> <span class="n">sgn2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sgn_preds</span><span class="p">:</span>
