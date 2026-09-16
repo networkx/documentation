@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=f84a2825" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=c83e6b79" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -72,7 +72,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Sep 12, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 16, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -600,67 +600,66 @@ DiGraph with 1022 nodes and 5075 edges
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">roget_graph</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">"""Return the thesaurus graph from the roget.dat example in</span>
-<span class="sd">    the Stanford Graph Base.</span>
-<span class="sd">    """</span>
-    <span class="c1"># open file roget_dat.txt.gz</span>
-    <span class="n">fh</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/gzip.html#gzip.open" title="gzip.open" class="sphx-glr-backref-module-gzip sphx-glr-backref-type-py-function"><span class="n">gzip</span><span class="o">.</span><span class="n">open</span></a><span class="p">(</span><span class="s2">"roget_dat.txt.gz"</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span>
-
-    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
-
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
-        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"*"</span><span class="p">):</span>  <span class="c1"># skip comments</span>
-            <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">" "</span><span class="p">):</span>  <span class="c1"># this is a continuation line, append</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">oldline</span> <span class="o">+</span> <span class="n">line</span>
-        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"</span><span class="se">\\\n</span><span class="s2">"</span><span class="p">):</span>  <span class="c1"># continuation line, buffer, goto next</span>
-            <span class="n">oldline</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"</span><span class="se">\\\n</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">continue</span>
-
-        <span class="p">(</span><span class="n">headname</span><span class="p">,</span> <span class="n">tails</span><span class="p">)</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
-
-        <span class="c1"># head</span>
-        <span class="n">numfind</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/re.html#re.compile" title="re.compile" class="sphx-glr-backref-module-re sphx-glr-backref-type-py-function"><span class="n">re</span><span class="o">.</span><span class="n">compile</span></a><span class="p">(</span><span class="sa">r</span><span class="s2">"^\d+"</span><span class="p">)</span>  <span class="c1"># re to find the number of this word</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="n">numfind</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">headname</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># get the number</span>
-
-        <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">tail</span> <span class="ow">in</span> <span class="n">tails</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">head</span> <span class="o">==</span> <span class="n">tail</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">"skipping self loop"</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><a href="https://docs.python.org/3/library/sys.html#sys.stderr" title="sys.stderr" class="sphx-glr-backref-module-sys sphx-glr-backref-type-py-data"><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span></a><span class="p">)</span>
-            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">G</span>
-
-
-<span class="n">G</span> <span class="o">=</span> <span class="n">roget_graph</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Loaded roget_dat.txt containing 1022 categories."</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-<span class="n">UG</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">number_connected_components</span><span class="p">(</span><span class="n">UG</span><span class="p">),</span> <span class="s2">"connected components"</span><span class="p">)</span>
-
-<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">options</span></a> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"node_color"</span><span class="p">:</span> <span class="s2">"black"</span><span class="p">,</span>
-    <span class="s2">"node_size"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">"edge_color"</span><span class="p">:</span> <span class="s2">"gray"</span><span class="p">,</span>
-    <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">"width"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
-<span class="p">}</span>
-<span class="n">nx</span><span class="o">.</span><span class="n">draw_circular</span><span class="p">(</span><span class="n">UG</span><span class="p">,</span> <span class="o">**</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">options</span></a><span class="p">)</span>
-<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
-</pre></div>
-</div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.166 seconds)</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="w">
+</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="nn">.</span><span class="nn">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><span class="k">def</span><span class="w"> </span><span class="nf">roget_graph</span><span class="p">(</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the thesaurus graph from the roget.dat example in
+    the Stanford Graph Base.
+    &quot;&quot;&quot;</span><span class="w">
+</span>    <span class="c1"># open file roget_dat.txt.gz</span><span class="w">
+</span>    <span class="n">fh</span> <span class="o">=</span> <a class="sphx-glr-backref-module-gzip sphx-glr-backref-type-py-function reference external" href="https://docs.python.org/3/library/gzip.html#gzip.open" title="gzip.open"><span class="n">gzip</span><span class="o">.</span><span class="n">open</span></a><span class="p">(</span><span class="s2">&quot;</span><span class="s2">roget_dat.txt.gz</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="s2">r</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/digraph.html#networkx.DiGraph" title="networkx.DiGraph"><span class="n">G</span></a> <span class="o">=</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/digraph.html#networkx.DiGraph" title="networkx.DiGraph"><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span></a><span class="p">(</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">(</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="p">)</span><span class="w">
+</span>        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="s2">*</span><span class="s2">&quot;</span><span class="p">)</span><span class="p">:</span>  <span class="c1"># skip comments</span><span class="w">
+</span>            <span class="k">continue</span><span class="w">
+</span>        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="s2"> </span><span class="s2">&quot;</span><span class="p">)</span><span class="p">:</span>  <span class="c1"># this is a continuation line, append</span><span class="w">
+</span>            <span class="n">line</span> <span class="o">=</span> <span class="n">oldline</span> <span class="o">+</span> <span class="n">line</span><span class="w">
+</span>        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="p">:</span>  <span class="c1"># continuation line, buffer, goto next</span><span class="w">
+</span>            <span class="n">oldline</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span>            <span class="k">continue</span><span class="w">
+</span><span class="w">
+</span>        <span class="p">(</span><span class="n">headname</span><span class="p">,</span> <span class="n">tails</span><span class="p">)</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="s2">:</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span>        <span class="c1"># head</span><span class="w">
+</span>        <span class="n">numfind</span> <span class="o">=</span> <a class="sphx-glr-backref-module-re sphx-glr-backref-type-py-function reference external" href="https://docs.python.org/3/library/re.html#re.compile" title="re.compile"><span class="n">re</span><span class="o">.</span><span class="n">compile</span></a><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="s2">^</span><span class="s2">\</span><span class="s2">d+</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># re to find the number of this word</span><span class="w">
+</span>        <span class="n">head</span> <span class="o">=</span> <span class="n">numfind</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">headname</span><span class="p">)</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># get the number</span><span class="w">
+</span><span class="w">
+</span>        <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-method reference internal" href="../../reference/classes/generated/networkx.DiGraph.add_node.html#networkx.DiGraph.add_node" title="networkx.DiGraph.add_node"><span class="n">G</span><span class="o">.</span><span class="n">add_node</span></a><span class="p">(</span><span class="n">head</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span>        <span class="k">for</span> <span class="n">tail</span> <span class="ow">in</span> <span class="n">tails</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>            <span class="k">if</span> <span class="n">head</span> <span class="o">==</span> <span class="n">tail</span><span class="p">:</span><span class="w">
+</span>                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="s2">skipping self loop</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><a class="sphx-glr-backref-module-sys sphx-glr-backref-type-py-data reference external" href="https://docs.python.org/3/library/sys.html#sys.stderr" title="sys.stderr"><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span></a><span class="p">)</span><span class="w">
+</span>            <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-method reference internal" href="../../reference/classes/generated/networkx.DiGraph.add_edge.html#networkx.DiGraph.add_edge" title="networkx.DiGraph.add_edge"><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span></a><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">tail</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">return</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/digraph.html#networkx.DiGraph" title="networkx.DiGraph"><span class="n">G</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/digraph.html#networkx.DiGraph" title="networkx.DiGraph"><span class="n">G</span></a> <span class="o">=</span> <span class="n">roget_graph</span><span class="p">(</span><span class="p">)</span><span class="w">
+</span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="s2">Loaded roget_dat.txt containing 1022 categories.</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span><span class="nb">print</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/digraph.html#networkx.DiGraph" title="networkx.DiGraph"><span class="n">G</span></a><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">UG</span></a> <span class="o">=</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-method reference internal" href="../../reference/classes/generated/networkx.DiGraph.to_undirected.html#networkx.DiGraph.to_undirected" title="networkx.DiGraph.to_undirected"><span class="n">G</span><span class="o">.</span><span class="n">to_undirected</span></a><span class="p">(</span><span class="p">)</span><span class="w">
+</span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">number_connected_components</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">UG</span></a><span class="p">)</span><span class="p">,</span> <span class="s2">&quot;</span><span class="s2">connected components</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">options</span></a> <span class="o">=</span> <span class="p">{</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">node_color</span><span class="s2">&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="s2">black</span><span class="s2">&quot;</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">node_size</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">edge_color</span><span class="s2">&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="s2">gray</span><span class="s2">&quot;</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">linewidths</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">width</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="n">nx</span><span class="o">.</span><span class="n">draw_circular</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">UG</span></a><span class="p">,</span> <span class="o">*</span><span class="o">*</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">options</span></a><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">(</span><span class="p">)</span><span class="w">
+</span></pre></div></div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.173 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-graph-plot-roget-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/1824a5213ee1c1521c974d50ba43d761/plot_roget.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_roget.ipynb</span></code></a></p>

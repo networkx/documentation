@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=f84a2825" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=c83e6b79" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -72,7 +72,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Sep 12, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 16, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -573,184 +573,183 @@ directly in several NetworkX algorithms.</p>
 <p>This subclass has only been tested for k-core, connected_components,
 and biconnected_components algorithms but might also work for other
 algorithms.</p>
-<img src="../../_images/sphx_glr_plot_antigraph_001.png" srcset="../../_images/sphx_glr_plot_antigraph_001.png" alt="plot antigraph" class = "sphx-glr-single-img"/><div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+<img src="../../_images/sphx_glr_plot_antigraph_001.png" srcset="../../_images/sphx_glr_plot_antigraph_001.png" alt="plot antigraph" class = "sphx-glr-single-img"/><div class="highlight-Python notranslate"><div class="highlight"><pre><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="nn">.</span><span class="nn">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span><span class="w">
+</span><span class="kn">from</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="kn">import</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Graph</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><span class="k">class</span><span class="w"> </span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="nc">AntiGraph</span></a><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Graph</span></a><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;
+    Class for complement graphs.
 
+    The main goal is to be able to work with big and dense graphs with
+    a low memory footprint.
 
-<span class="k">class</span><span class="w"> </span><span class="nc">AntiGraph</span><span class="p">(</span><span class="n">Graph</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Class for complement graphs.</span>
+    In this class you add the edges that *do not exist* in the dense graph,
+    the report methods of the class return the neighbors, the edges and
+    the degree as if it was the dense graph. Thus it's possible to use
+    an instance of this class with some of NetworkX functions.
+    &quot;&quot;&quot;</span><span class="w">
+</span><span class="w">
+</span>    <span class="n">all_edge_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;</span><span class="s2">weight</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">def</span><span class="w"> </span><span class="nf">single_edge_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span><span class="w">
+</span><span class="w">
+</span>    <span class="n">edge_attr_dict_factory</span> <span class="o">=</span> <span class="n">single_edge_dict</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a dict of neighbors of node n in the dense graph.
 
-<span class="sd">    The main goal is to be able to work with big and dense graphs with</span>
-<span class="sd">    a low memory footprint.</span>
+        Parameters
+        ----------
+        n : node
+           A node in the graph.
 
-<span class="sd">    In this class you add the edges that *do not exist* in the dense graph,</span>
-<span class="sd">    the report methods of the class return the neighbors, the edges and</span>
-<span class="sd">    the degree as if it was the dense graph. Thus it's possible to use</span>
-<span class="sd">    an instance of this class with some of NetworkX functions.</span>
-<span class="sd">    """</span>
+        Returns
+        -------
+        adj_dict : dictionary
+           The adjacency dictionary for nodes connected to n.
 
-    <span class="n">all_edge_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"weight"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        &quot;&quot;&quot;</span><span class="w">
+</span>        <span class="k">return</span> <span class="p">{</span><span class="w">
+</span>            <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">node</span></a><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span> <span class="k">for</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">node</span></a> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span><span class="w">
+</span>        <span class="p">}</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">def</span><span class="w"> </span><span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator over all neighbors of node n in the
+        dense graph.
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">single_edge_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span>
+        &quot;&quot;&quot;</span><span class="w">
+</span>        <span class="k">try</span><span class="p">:</span><span class="w">
+</span>            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span><span class="p">)</span><span class="w">
+</span>        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span><span class="w">
+</span>            <span class="k">raise</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/exceptions.html#networkx.NetworkXError" title="networkx.NetworkXError"><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span></a><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="s2">The node </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> is not in the graph.</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">def</span><span class="w"> </span><span class="nf">degree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator for (node, degree) in the dense graph.
 
-    <span class="n">edge_attr_dict_factory</span> <span class="o">=</span> <span class="n">single_edge_dict</span>
+        The node degree is the number of edges adjacent to the node.
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Return a dict of neighbors of node n in the dense graph.</span>
+        Parameters
+        ----------
+        nbunch : iterable container, optional (default=all nodes)
+            A container of nodes.  The container will be iterated
+            through once.
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        n : node</span>
-<span class="sd">           A node in the graph.</span>
+        weight : string or None, optional (default=None)
+           The edge attribute that holds the numerical value used
+           as a weight.  If None, then each edge has weight 1.
+           The degree is the sum of the edge weights adjacent to the node.
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        adj_dict : dictionary</span>
-<span class="sd">           The adjacency dictionary for nodes connected to n.</span>
+        Returns
+        -------
+        nd_iter : iterator
+            The iterator returns two-tuples of (node, degree).
 
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">node</span></a><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span> <span class="k">for</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">node</span></a> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span>
-        <span class="p">}</span>
+        See Also
+        --------
+        degree
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Return an iterator over all neighbors of node n in the</span>
-<span class="sd">        dense graph.</span>
+        Examples
+        --------
+        &gt;&gt;&gt; G = nx.path_graph(4)  # or DiGraph, MultiGraph, MultiDiGraph, etc
+        &gt;&gt;&gt; G.degree(0)  # node 0 with degree 1
+        1
+        &gt;&gt;&gt; list(G.degree([0, 1]))
+        [(0, 1), (1, 2)]
 
-<span class="sd">        """</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">})</span>
-        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="k">raise</span> <a href="https://docs.python.org/3/library/exceptions.html#Exception" title="builtins.Exception" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-exception"><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span></a><span class="p">(</span><span class="sa">f</span><span class="s2">"The node </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> is not in the graph."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+        &quot;&quot;&quot;</span><span class="w">
+</span>        <span class="k">if</span> <span class="n">nbunch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span><span class="w">
+</span>            <span class="n">nodes_nbrs</span> <span class="o">=</span> <span class="p">(</span><span class="w">
+</span>                <span class="p">(</span><span class="w">
+</span>                    <span class="n">n</span><span class="p">,</span><span class="w">
+</span>                    <span class="p">{</span><span class="w">
+</span>                        <span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span><span class="w">
+</span>                        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span><span class="w">
+</span>                    <span class="p">}</span><span class="p">,</span><span class="w">
+</span>                <span class="p">)</span><span class="w">
+</span>                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="p">)</span><span class="w">
+</span>            <span class="p">)</span><span class="w">
+</span>        <span class="k">elif</span> <span class="n">nbunch</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span><span class="w">
+</span>            <span class="n">nbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="p">)</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">nbunch</span><span class="p">]</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">nbunch</span><span class="p">}</span><span class="w">
+</span>            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span><span class="w">
+</span>        <span class="k">else</span><span class="p">:</span><span class="w">
+</span>            <span class="n">nodes_nbrs</span> <span class="o">=</span> <span class="p">(</span><span class="w">
+</span>                <span class="p">(</span><span class="w">
+</span>                    <span class="n">n</span><span class="p">,</span><span class="w">
+</span>                    <span class="p">{</span><span class="w">
+</span>                        <span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span><span class="w">
+</span>                        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="p">)</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span><span class="w">
+</span>                    <span class="p">}</span><span class="p">,</span><span class="w">
+</span>                <span class="p">)</span><span class="w">
+</span>                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nbunch</span><span class="p">)</span><span class="w">
+</span>            <span class="p">)</span><span class="w">
+</span><span class="w">
+</span>        <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span><span class="w">
+</span>            <span class="k">return</span> <span class="p">(</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">nodes_nbrs</span><span class="p">)</span><span class="w">
+</span>        <span class="k">else</span><span class="p">:</span><span class="w">
+</span>            <span class="c1"># AntiGraph is a ThinGraph so all edges have weight 1</span><span class="w">
+</span>            <span class="k">return</span> <span class="p">(</span><span class="w">
+</span>                <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="p">(</span><span class="n">nbrs</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="p">)</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">)</span><span class="p">)</span><span class="w">
+</span>                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">nodes_nbrs</span><span class="w">
+</span>            <span class="p">)</span><span class="w">
+</span><span class="w">
+</span>    <span class="k">def</span><span class="w"> </span><span class="nf">adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an iterator of (node, adjacency set) tuples for all nodes
+           in the dense graph.
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">degree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Return an iterator for (node, degree) in the dense graph.</span>
+        This is the fastest way to look at every edge.
+        For directed graphs, only outgoing adjacencies are included.
 
-<span class="sd">        The node degree is the number of edges adjacent to the node.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nbunch : iterable container, optional (default=all nodes)</span>
-<span class="sd">            A container of nodes.  The container will be iterated</span>
-<span class="sd">            through once.</span>
-
-<span class="sd">        weight : string or None, optional (default=None)</span>
-<span class="sd">           The edge attribute that holds the numerical value used</span>
-<span class="sd">           as a weight.  If None, then each edge has weight 1.</span>
-<span class="sd">           The degree is the sum of the edge weights adjacent to the node.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        nd_iter : iterator</span>
-<span class="sd">            The iterator returns two-tuples of (node, degree).</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        degree</span>
-
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; G = nx.path_graph(4)  # or DiGraph, MultiGraph, MultiDiGraph, etc</span>
-<span class="sd">        &gt;&gt;&gt; G.degree(0)  # node 0 with degree 1</span>
-<span class="sd">        1</span>
-<span class="sd">        &gt;&gt;&gt; list(G.degree([0, 1]))</span>
-<span class="sd">        [(0, 1), (1, 2)]</span>
-
-<span class="sd">        """</span>
-        <span class="k">if</span> <span class="n">nbunch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">nodes_nbrs</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="n">n</span><span class="p">,</span>
-                    <span class="p">{</span>
-                        <span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span>
-                        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span>
-                    <span class="p">},</span>
-                <span class="p">)</span>
-                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">()</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">nbunch</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
-            <span class="n">nbrs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">nbunch</span><span class="p">])</span> <span class="o">-</span> <span class="p">{</span><span class="n">nbunch</span><span class="p">}</span>
-            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">nodes_nbrs</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="n">n</span><span class="p">,</span>
-                    <span class="p">{</span>
-                        <span class="n">v</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_edge_dict</span>
-                        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span>
-                    <span class="p">},</span>
-                <span class="p">)</span>
-                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nbunch</span><span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nbrs</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">nodes_nbrs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># AntiGraph is a ThinGraph so all edges have weight 1</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">sum</span><span class="p">((</span><span class="n">nbrs</span><span class="p">[</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">nodes_nbrs</span>
-            <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Return an iterator of (node, adjacency set) tuples for all nodes</span>
-<span class="sd">           in the dense graph.</span>
-
-<span class="sd">        This is the fastest way to look at every edge.</span>
-<span class="sd">        For directed graphs, only outgoing adjacencies are included.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        adj_iter : iterator</span>
-<span class="sd">           An iterator of (node, adjacency set) for all nodes in</span>
-<span class="sd">           the graph.</span>
-<span class="sd">        """</span>
-        <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">yield</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">})</span>
-
-
-<span class="c1"># Build several pairs of graphs, a regular graph</span>
-<span class="c1"># and the AntiGraph of it's complement, which behaves</span>
-<span class="c1"># as if it were the original graph.</span>
-<span class="n">Gnp</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">gnp_random_graph</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">Anp</span> <span class="o">=</span> <span class="n">AntiGraph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><span class="n">Gnp</span><span class="p">))</span>
-<span class="n">Gd</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">davis_southern_women_graph</span><span class="p">()</span>
-<span class="n">Ad</span> <span class="o">=</span> <span class="n">AntiGraph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><span class="n">Gd</span><span class="p">))</span>
-<span class="n">Gk</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">karate_club_graph</span><span class="p">()</span>
-<span class="n">Ak</span> <span class="o">=</span> <span class="n">AntiGraph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><span class="n">Gk</span><span class="p">))</span>
-<a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pairs</span></a> <span class="o">=</span> <span class="p">[(</span><span class="n">Gnp</span><span class="p">,</span> <span class="n">Anp</span><span class="p">),</span> <span class="p">(</span><span class="n">Gd</span><span class="p">,</span> <span class="n">Ad</span><span class="p">),</span> <span class="p">(</span><span class="n">Gk</span><span class="p">,</span> <span class="n">Ak</span><span class="p">)]</span>
-<span class="c1"># test connected components</span>
-<span class="k">for</span> <span class="n">G</span><span class="p">,</span> <span class="n">A</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pairs</span></a><span class="p">:</span>
-    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">gc</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)]</span>
-    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ac</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">A</span><span class="p">)]</span>
-    <span class="k">for</span> <a href="https://docs.python.org/3/library/stdtypes.html#set" title="builtins.set" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">comp</span></a> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ac</span></a><span class="p">:</span>
-        <span class="k">assert</span> <a href="https://docs.python.org/3/library/stdtypes.html#set" title="builtins.set" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">comp</span></a> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">gc</span></a>
-<span class="c1"># test biconnected components</span>
-<span class="k">for</span> <span class="n">G</span><span class="p">,</span> <span class="n">A</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pairs</span></a><span class="p">:</span>
-    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">gc</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">biconnected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)]</span>
-    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ac</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">biconnected_components</span><span class="p">(</span><span class="n">A</span><span class="p">)]</span>
-    <span class="k">for</span> <a href="https://docs.python.org/3/library/stdtypes.html#set" title="builtins.set" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">comp</span></a> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">ac</span></a><span class="p">:</span>
-        <span class="k">assert</span> <a href="https://docs.python.org/3/library/stdtypes.html#set" title="builtins.set" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">comp</span></a> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">gc</span></a>
-<span class="c1"># test degree</span>
-<span class="k">for</span> <span class="n">G</span><span class="p">,</span> <span class="n">A</span> <span class="ow">in</span> <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pairs</span></a><span class="p">:</span>
-    <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">node</span></a> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
-    <a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">())[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">node</span></a><span class="p">)</span> <span class="o">==</span> <span class="n">A</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">node</span></a><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
-    <span class="c1"># AntiGraph is a ThinGraph, so all the weights are 1</span>
-    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">))</span>
-    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">))</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#list" title="builtins.list" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">nodes</span></a><span class="p">))</span>
-
-<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pos</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">268</span><span class="p">)</span>  <span class="c1"># Seed for reproducible layout</span>
-<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">Gnp</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pos</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pos</span></a><span class="p">)</span>
-<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
-</pre></div>
-</div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.050 seconds)</p>
+        Returns
+        -------
+        adj_iter : iterator
+           An iterator of (node, adjacency set) for all nodes in
+           the graph.
+        &quot;&quot;&quot;</span><span class="w">
+</span>        <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">nodes</span></a> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span><span class="w">
+</span>        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>            <span class="k">yield</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">nodes</span></a> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">nbrs</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">n</span><span class="p">}</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><span class="c1"># Build several pairs of graphs, a regular graph</span><span class="w">
+</span><span class="c1"># and the AntiGraph of it's complement, which behaves</span><span class="w">
+</span><span class="c1"># as if it were the original graph.</span><span class="w">
+</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gnp</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">gnp_random_graph</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="w">
+</span><span class="n">Anp</span> <span class="o">=</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">AntiGraph</span></a><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gnp</span></a><span class="p">)</span><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gd</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">davis_southern_women_graph</span><span class="p">(</span><span class="p">)</span><span class="w">
+</span><span class="n">Ad</span> <span class="o">=</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">AntiGraph</span></a><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gd</span></a><span class="p">)</span><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gk</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">karate_club_graph</span><span class="p">(</span><span class="p">)</span><span class="w">
+</span><span class="n">Ak</span> <span class="o">=</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">AntiGraph</span></a><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">complement</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gk</span></a><span class="p">)</span><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">pairs</span></a> <span class="o">=</span> <span class="p">[</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gnp</span></a><span class="p">,</span> <span class="n">Anp</span><span class="p">)</span><span class="p">,</span> <span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gd</span></a><span class="p">,</span> <span class="n">Ad</span><span class="p">)</span><span class="p">,</span> <span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gk</span></a><span class="p">,</span> <span class="n">Ak</span><span class="p">)</span><span class="p">]</span><span class="w">
+</span><span class="c1"># test connected components</span><span class="w">
+</span><span class="k">for</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <span class="n">A</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">pairs</span></a><span class="p">:</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">gc</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">)</span><span class="p">]</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">ac</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="p">]</span><span class="w">
+</span>    <span class="k">for</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="set"><span class="n">comp</span></a> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">ac</span></a><span class="p">:</span><span class="w">
+</span>        <span class="k">assert</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="set"><span class="n">comp</span></a> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">gc</span></a><span class="w">
+</span><span class="c1"># test biconnected components</span><span class="w">
+</span><span class="k">for</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <span class="n">A</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">pairs</span></a><span class="p">:</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">gc</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">biconnected_components</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">)</span><span class="p">]</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">ac</span></a> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">biconnected_components</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="p">]</span><span class="w">
+</span>    <span class="k">for</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="set"><span class="n">comp</span></a> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">ac</span></a><span class="p">:</span><span class="w">
+</span>        <span class="k">assert</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#set" title="set"><span class="n">comp</span></a> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">gc</span></a><span class="w">
+</span><span class="c1"># test degree</span><span class="w">
+</span><span class="k">for</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <span class="n">A</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">pairs</span></a><span class="p">:</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">node</span></a> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx-classes-reportviews sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/generated/networkx.classes.reportviews.NodeView.html#networkx.classes.reportviews.NodeView" title="networkx.classes.reportviews.NodeView"><span class="n">G</span><span class="o">.</span><span class="n">nodes</span></a><span class="p">(</span><span class="p">)</span><span class="p">)</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w">
+</span>    <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">nodes</span></a> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx-classes-reportviews sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/generated/networkx.classes.reportviews.NodeView.html#networkx.classes.reportviews.NodeView" title="networkx.classes.reportviews.NodeView"><span class="n">G</span><span class="o">.</span><span class="n">nodes</span></a><span class="p">(</span><span class="p">)</span><span class="p">)</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span><span class="w">
+</span>    <span class="k">assert</span> <a class="sphx-glr-backref-module-networkx-classes-reportviews sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/generated/networkx.classes.reportviews.DegreeView.html#networkx.classes.reportviews.DegreeView" title="networkx.classes.reportviews.DegreeView"><span class="n">G</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">node</span></a><span class="p">)</span> <span class="o">==</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-property reference internal" href="../../reference/classes/generated/networkx.Graph.degree.html#networkx.Graph.degree" title="networkx.Graph.degree"><span class="n">A</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">node</span></a><span class="p">)</span><span class="w">
+</span>    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-networkx-classes-reportviews sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/generated/networkx.classes.reportviews.DegreeView.html#networkx.classes.reportviews.DegreeView" title="networkx.classes.reportviews.DegreeView"><span class="n">G</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><span class="p">)</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-property reference internal" href="../../reference/classes/generated/networkx.Graph.degree.html#networkx.Graph.degree" title="networkx.Graph.degree"><span class="n">A</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><span class="p">)</span><span class="p">)</span><span class="w">
+</span>    <span class="c1"># AntiGraph is a ThinGraph, so all the weights are 1</span><span class="w">
+</span>    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-property reference internal" href="../../reference/classes/generated/networkx.Graph.degree.html#networkx.Graph.degree" title="networkx.Graph.degree"><span class="n">A</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><span class="p">)</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-property reference internal" href="../../reference/classes/generated/networkx.Graph.degree.html#networkx.Graph.degree" title="networkx.Graph.degree"><span class="n">A</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="s2">&quot;</span><span class="s2">weight</span><span class="s2">&quot;</span><span class="p">)</span><span class="p">)</span><span class="w">
+</span>    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-networkx-classes-reportviews sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/generated/networkx.classes.reportviews.DegreeView.html#networkx.classes.reportviews.DegreeView" title="networkx.classes.reportviews.DegreeView"><span class="n">G</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">nodes</span></a><span class="p">)</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-property reference internal" href="../../reference/classes/generated/networkx.Graph.degree.html#networkx.Graph.degree" title="networkx.Graph.degree"><span class="n">A</span><span class="o">.</span><span class="n">degree</span></a><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="list"><span class="n">nodes</span></a><span class="p">)</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">pos</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">268</span><span class="p">)</span>  <span class="c1"># Seed for reproducible layout</span><span class="w">
+</span><span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">Gnp</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">pos</span></a><span class="o">=</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">pos</span></a><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">(</span><span class="p">)</span><span class="w">
+</span></pre></div></div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.049 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-subclass-plot-antigraph-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/6e2c510995a45587219c6f187a57f22b/plot_antigraph.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_antigraph.ipynb</span></code></a></p>

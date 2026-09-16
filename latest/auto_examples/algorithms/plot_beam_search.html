@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=f84a2825" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=c83e6b79" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
     <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -72,7 +72,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Sep 12, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 16, 2026"/>
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -592,111 +592,109 @@ to download the full example code.</p>
 <p>Beam search with dynamic beam width.</p>
 <p>The progressive widening beam search repeatedly executes a beam search
 with increasing beam width until the target node is found.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span class="kn">import</span><span class="w"> </span><span class="nn">math</span><span class="w">
+</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="nn">.</span><span class="nn">pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="w">
+</span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><span class="k">def</span><span class="w"> </span><span class="nf">progressive_widening_search</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">source</span></a><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">initial_width</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Progressive widening beam search to find a node.
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+    The progressive widening beam search involves a repeated beam
+    search, starting with a small beam width then extending to
+    progressively larger beam widths if the target node is not
+    found. This implementation simply returns the first node found that
+    matches the termination condition.
 
+    `G` is a NetworkX graph.
 
-<span class="k">def</span><span class="w"> </span><span class="nf">progressive_widening_search</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">source</span></a><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">initial_width</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Progressive widening beam search to find a node.</span>
+    `source` is a node in the graph. The search for the node of interest
+    begins here and extends only to those nodes in the (weakly)
+    connected component of this node.
 
-<span class="sd">    The progressive widening beam search involves a repeated beam</span>
-<span class="sd">    search, starting with a small beam width then extending to</span>
-<span class="sd">    progressively larger beam widths if the target node is not</span>
-<span class="sd">    found. This implementation simply returns the first node found that</span>
-<span class="sd">    matches the termination condition.</span>
+    `value` is a function that returns a real number indicating how good
+    a potential neighbor node is when deciding which neighbor nodes to
+    enqueue in the breadth-first search. Only the best nodes within the
+    current beam width will be enqueued at each step.
 
-<span class="sd">    `G` is a NetworkX graph.</span>
+    `condition` is the termination condition for the search. This is a
+    function that takes a node as input and return a Boolean indicating
+    whether the node is the target. If no node matches the termination
+    condition, this function raises :exc:`NodeNotFound`.
 
-<span class="sd">    `source` is a node in the graph. The search for the node of interest</span>
-<span class="sd">    begins here and extends only to those nodes in the (weakly)</span>
-<span class="sd">    connected component of this node.</span>
+    `initial_width` is the starting beam width for the beam search (the
+    default is one). If no node matching the `condition` is found with
+    this beam width, the beam search is restarted from the `source` node
+    with a beam width that is twice as large (so the beam width
+    increases exponentially). The search terminates after the beam width
+    exceeds the number of nodes in the graph.
 
-<span class="sd">    `value` is a function that returns a real number indicating how good</span>
-<span class="sd">    a potential neighbor node is when deciding which neighbor nodes to</span>
-<span class="sd">    enqueue in the breadth-first search. Only the best nodes within the</span>
-<span class="sd">    current beam width will be enqueued at each step.</span>
-
-<span class="sd">    `condition` is the termination condition for the search. This is a</span>
-<span class="sd">    function that takes a node as input and return a Boolean indicating</span>
-<span class="sd">    whether the node is the target. If no node matches the termination</span>
-<span class="sd">    condition, this function raises :exc:`NodeNotFound`.</span>
-
-<span class="sd">    `initial_width` is the starting beam width for the beam search (the</span>
-<span class="sd">    default is one). If no node matching the `condition` is found with</span>
-<span class="sd">    this beam width, the beam search is restarted from the `source` node</span>
-<span class="sd">    with a beam width that is twice as large (so the beam width</span>
-<span class="sd">    increases exponentially). The search terminates after the beam width</span>
-<span class="sd">    exceeds the number of nodes in the graph.</span>
-
-<span class="sd">    """</span>
-    <span class="c1"># Check for the special case in which the source node satisfies the</span>
-    <span class="c1"># termination condition.</span>
-    <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">source</span></a><span class="p">):</span>
-        <span class="k">return</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">source</span></a>
-    <span class="c1"># The largest possible value of `i` in this range yields a width at</span>
-    <span class="c1"># least the number of nodes in the graph, so the final invocation of</span>
-    <span class="c1"># `bfs_beam_edges` is equivalent to a plain old breadth-first</span>
-    <span class="c1"># search. Therefore, all nodes will eventually be visited.</span>
-    <span class="n">log_m</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/math.html#math.ceil" title="math.ceil" class="sphx-glr-backref-module-math sphx-glr-backref-type-py-function"><span class="n">math</span><span class="o">.</span><span class="n">ceil</span></a><span class="p">(</span><a href="https://docs.python.org/3/library/math.html#math.log2" title="math.log2" class="sphx-glr-backref-module-math sphx-glr-backref-type-py-function"><span class="n">math</span><span class="o">.</span><span class="n">log2</span></a><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)))</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">log_m</span><span class="p">):</span>
-        <span class="n">width</span> <span class="o">=</span> <span class="n">initial_width</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-        <span class="c1"># Since we are always starting from the same source node, this</span>
-        <span class="c1"># search may visit the same nodes many times (depending on the</span>
-        <span class="c1"># implementation of the `value` function).</span>
-        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_beam_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">source</span></a><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">v</span>
-    <span class="c1"># At this point, since all nodes have been visited, we know that</span>
-    <span class="c1"># none of the nodes satisfied the termination condition.</span>
-    <span class="k">raise</span> <a href="https://docs.python.org/3/library/exceptions.html#Exception" title="builtins.Exception" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-exception"><span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span></a><span class="p">(</span><span class="s2">"no node satisfied the termination condition"</span><span class="p">)</span>
-</pre></div>
-</div>
+    &quot;&quot;&quot;</span><span class="w">
+</span>    <span class="c1"># Check for the special case in which the source node satisfies the</span><span class="w">
+</span>    <span class="c1"># termination condition.</span><span class="w">
+</span>    <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">source</span></a><span class="p">)</span><span class="p">:</span><span class="w">
+</span>        <span class="k">return</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">source</span></a><span class="w">
+</span>    <span class="c1"># The largest possible value of `i` in this range yields a width at</span><span class="w">
+</span>    <span class="c1"># least the number of nodes in the graph, so the final invocation of</span><span class="w">
+</span>    <span class="c1"># `bfs_beam_edges` is equivalent to a plain old breadth-first</span><span class="w">
+</span>    <span class="c1"># search. Therefore, all nodes will eventually be visited.</span><span class="w">
+</span>    <span class="n">log_m</span> <span class="o">=</span> <a class="sphx-glr-backref-module-math sphx-glr-backref-type-py-function reference external" href="https://docs.python.org/3/library/math.html#math.ceil" title="math.ceil"><span class="n">math</span><span class="o">.</span><span class="n">ceil</span></a><span class="p">(</span><a class="sphx-glr-backref-module-math sphx-glr-backref-type-py-function reference external" href="https://docs.python.org/3/library/math.html#math.log2" title="math.log2"><span class="n">math</span><span class="o">.</span><span class="n">log2</span></a><span class="p">(</span><span class="nb">len</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">)</span><span class="p">)</span><span class="p">)</span><span class="w">
+</span>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">log_m</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>        <span class="n">width</span> <span class="o">=</span> <span class="n">initial_width</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="w">
+</span>        <span class="c1"># Since we are always starting from the same source node, this</span><span class="w">
+</span>        <span class="c1"># search may visit the same nodes many times (depending on the</span><span class="w">
+</span>        <span class="c1"># implementation of the `value` function).</span><span class="w">
+</span>        <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_beam_edges</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">source</span></a><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>            <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>                <span class="k">return</span> <span class="n">v</span><span class="w">
+</span>    <span class="c1"># At this point, since all nodes have been visited, we know that</span><span class="w">
+</span>    <span class="c1"># none of the nodes satisfied the termination condition.</span><span class="w">
+</span>    <span class="k">raise</span> <a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class reference internal" href="../../reference/exceptions.html#networkx.NodeNotFound" title="networkx.NodeNotFound"><span class="n">nx</span><span class="o">.</span><span class="n">NodeNotFound</span></a><span class="p">(</span><span class="s2">&quot;</span><span class="s2">no node satisfied the termination condition</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span></pre></div></div>
 <section id="search-for-a-node-with-high-centrality">
 <h2>Search for a node with high centrality.<a class="headerlink" href="#search-for-a-node-with-high-centrality" title="Link to this heading">#</a></h2>
 <p>We generate a random graph, compute the centrality of each node, then perform
 the progressive widening search in order to find a node of high centrality.</p>
-<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set a seed for random number generation so the example is reproducible</span>
-<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seed</span></a> <span class="o">=</span> <span class="mi">89</span>
-
-<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">gnp_random_graph</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seed</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seed</span></a><span class="p">)</span>
-<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">centrality</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">avg_centrality</span></a> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">centrality</span></a><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">has_high_centrality</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-    <span class="k">return</span> <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">centrality</span></a><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;=</span> <a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">avg_centrality</span></a>
-
-
-<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">source</span></a> <span class="o">=</span> <span class="mi">0</span>
-<span class="n">value</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">centrality</span></a><span class="o">.</span><span class="n">get</span>
-<span class="n">condition</span> <span class="o">=</span> <span class="n">has_high_centrality</span>
-
-<a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">found_node</span></a> <span class="o">=</span> <span class="n">progressive_widening_search</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">source</span></a><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
-<a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">c</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">centrality</span></a><span class="p">[</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">found_node</span></a><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"found node </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">found_node</span></a><span class="si">}</span><span class="s2"> with centrality </span><span class="si">{</span><a href="https://docs.python.org/3/library/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">c</span></a><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-
-<span class="c1"># Draw graph</span>
-<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pos</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seed</span></a><span class="o">=</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seed</span></a><span class="p">)</span>
-<a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">options</span></a> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"node_color"</span><span class="p">:</span> <span class="s2">"blue"</span><span class="p">,</span>
-    <span class="s2">"node_size"</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-    <span class="s2">"edge_color"</span><span class="p">:</span> <span class="s2">"grey"</span><span class="p">,</span>
-    <span class="s2">"linewidths"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">"width"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
-<span class="p">}</span>
-<span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pos</span></a><span class="p">,</span> <span class="o">**</span><a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">options</span></a><span class="p">)</span>
-<span class="c1"># Draw node with high centrality as large and red</span>
-<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <a href="https://docs.python.org/3/library/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">pos</span></a><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="p">[</span><a href="https://docs.python.org/3/library/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">found_node</span></a><span class="p">],</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
-<a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show" class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
-</pre></div>
-</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span class="c1"># Set a seed for random number generation so the example is reproducible</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">seed</span></a> <span class="o">=</span> <span class="mi">89</span><span class="w">
+</span><span class="w">
+</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">gnp_random_graph</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">seed</span></a><span class="o">=</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">seed</span></a><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">centrality</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="float"><span class="n">avg_centrality</span></a> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">centrality</span></a><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="p">)</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><span class="k">def</span><span class="w"> </span><span class="nf">has_high_centrality</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="p">:</span><span class="w">
+</span>    <span class="k">return</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">centrality</span></a><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span><span class="o">=</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="float"><span class="n">avg_centrality</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">source</span></a> <span class="o">=</span> <span class="mi">0</span><span class="w">
+</span><span class="n">value</span> <span class="o">=</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">centrality</span></a><span class="o">.</span><span class="n">get</span><span class="w">
+</span><span class="n">condition</span> <span class="o">=</span> <span class="n">has_high_centrality</span><span class="w">
+</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">found_node</span></a> <span class="o">=</span> <span class="n">progressive_widening_search</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">source</span></a><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="float"><span class="n">c</span></a> <span class="o">=</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">centrality</span></a><span class="p">[</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">found_node</span></a><span class="p">]</span><span class="w">
+</span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="s2">found node </span><span class="si">{</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">found_node</span></a><span class="si">}</span><span class="s2"> with centrality </span><span class="si">{</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="float"><span class="n">c</span></a><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">
+</span><span class="c1"># Draw graph</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">pos</span></a> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">seed</span></a><span class="o">=</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">seed</span></a><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">options</span></a> <span class="o">=</span> <span class="p">{</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">node_color</span><span class="s2">&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="s2">blue</span><span class="s2">&quot;</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">node_size</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">edge_color</span><span class="s2">&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="s2">grey</span><span class="s2">&quot;</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">linewidths</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span><span class="w">
+</span>    <span class="s2">&quot;</span><span class="s2">width</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">pos</span></a><span class="p">,</span> <span class="o">*</span><span class="o">*</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">options</span></a><span class="p">)</span><span class="w">
+</span><span class="c1"># Draw node with high centrality as large and red</span><span class="w">
+</span><span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><a class="sphx-glr-backref-module-networkx sphx-glr-backref-type-py-class sphx-glr-backref-instance reference internal" href="../../reference/classes/graph.html#networkx.Graph" title="networkx.Graph"><span class="n">G</span></a><span class="p">,</span> <a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="dict"><span class="n">pos</span></a><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="p">[</span><a class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="int"><span class="n">found_node</span></a><span class="p">]</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s2">&quot;</span><span class="s2">r</span><span class="s2">&quot;</span><span class="p">)</span><span class="w">
+</span><a class="sphx-glr-backref-module-matplotlib-pyplot sphx-glr-backref-type-py-function reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html#matplotlib.pyplot.show" title="matplotlib.pyplot.show"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">(</span><span class="p">)</span><span class="w">
+</span></pre></div></div>
 <img src="../../_images/sphx_glr_plot_beam_search_001.png" srcset="../../_images/sphx_glr_plot_beam_search_001.png" alt="plot beam search" class = "sphx-glr-single-img"/><div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>found node 73 with centrality 0.12598283530728402
 </pre></div>
 </div>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.151 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 0.159 seconds)</p>
 <div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-algorithms-plot-beam-search-py">
 <div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
 <p><a class="reference download internal" download="" href="../../_downloads/d4ff05da55438abd8747b5d94df09ea1/plot_beam_search.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_beam_search.ipynb</span></code></a></p>
