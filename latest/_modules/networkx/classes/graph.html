@@ -69,7 +69,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7rc0.dev0" />
-    <meta name="docbuild:last-update" content="Sep 16, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 17, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -548,7 +548,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.classes.coreviews</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdjacencyView</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.classes.reportviews</span><span class="w"> </span><span class="kn">import</span> <span class="n">DegreeView</span><span class="p">,</span> <span class="n">EdgeView</span><span class="p">,</span> <span class="n">NodeView</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">networkx.classes.reportviews</span><span class="w"> </span><span class="kn">import</span> <span class="n">DegreeView</span><span class="p">,</span> <span class="n">EdgeView</span><span class="p">,</span> <span class="n">NodeView</span><span class="p">,</span> <span class="n">_nbunch_iter</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Graph"</span><span class="p">]</span>
 
@@ -2680,36 +2680,7 @@
 <span class="sd">        or None, a :exc:`NetworkXError` is raised.  Also, if any object in</span>
 <span class="sd">        nbunch is not hashable, a :exc:`NetworkXError` is raised.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="n">nbunch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># include all nodes via iterator</span>
-            <span class="n">bunch</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">nbunch</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>  <span class="c1"># if nbunch is a single node</span>
-            <span class="n">bunch</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="n">nbunch</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># if nbunch is a sequence of nodes</span>
-
-            <span class="k">def</span><span class="w"> </span><span class="nf">bunch_iter</span><span class="p">(</span><span class="n">nlist</span><span class="p">,</span> <span class="n">adj</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nlist</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">adj</span><span class="p">:</span>
-                            <span class="k">yield</span> <span class="n">n</span>
-                <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-                    <span class="n">exc</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">err</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="c1"># capture error for non-sequence/iterator nbunch.</span>
-                    <span class="k">if</span> <span class="s2">"iter"</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
-                        <span class="n">exc</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
-                            <span class="s2">"nbunch is not a node or a sequence of nodes."</span>
-                        <span class="p">)</span>
-                    <span class="c1"># capture single nodes that are not in the graph.</span>
-                    <span class="k">if</span> <span class="s2">"object is not iterable"</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
-                        <span class="n">exc</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">nbunch</span><span class="si">}</span><span class="s2"> is not in the graph."</span><span class="p">)</span>
-                    <span class="c1"># capture error for unhashable node.</span>
-                    <span class="k">if</span> <span class="s2">"hashable"</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
-                        <span class="n">exc</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> in sequence nbunch is not a valid node."</span>
-                        <span class="p">)</span>
-                    <span class="k">raise</span> <span class="n">exc</span>
-
-            <span class="n">bunch</span> <span class="o">=</span> <span class="n">bunch_iter</span><span class="p">(</span><span class="n">nbunch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">bunch</span></div>
+        <span class="k">return</span> <span class="n">_nbunch_iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">,</span> <span class="n">nbunch</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
