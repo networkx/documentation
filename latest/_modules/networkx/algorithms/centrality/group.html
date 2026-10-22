@@ -561,7 +561,7 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Compute the group betweenness centrality for a group of nodes.</span>
 
 <span class="sd">    Group betweenness centrality of a group of nodes $C$ is the sum of the</span>
-<span class="sd">    fraction of all-pairs shortest paths that pass through any vertex in $C$</span>
+<span class="sd">    fraction of all-pairs shortest paths that pass through any node in $C$</span>
 
 <span class="sd">    .. math::</span>
 
@@ -576,11 +576,11 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    G : graph</span>
-<span class="sd">      A NetworkX graph.</span>
+<span class="sd">       A NetworkX graph.</span>
 
 <span class="sd">    C : list or set or list of lists or list of sets</span>
-<span class="sd">      A group or a list of groups containing nodes which belong to G,</span>
-<span class="sd">      for which group betweenness centrality is to be calculated.</span>
+<span class="sd">       A group or a list of groups containing nodes which belong to G,</span>
+<span class="sd">       for which group betweenness centrality is to be calculated.</span>
 
 <span class="sd">    normalized : bool, optional (default=True)</span>
 <span class="sd">       If True, group betweenness is normalized by $1/(N_{out}(N_{out}-1))$</span>
@@ -710,8 +710,8 @@
                 <span class="n">x_in_Dv</span> <span class="o">=</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Dv</span>
                 <span class="n">v_in_Dx</span> <span class="o">=</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Dx</span>
 
-                <span class="c1"># ensure y is in Dx otherwise all 3 Orders will not occur</span>
                 <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                    <span class="c1"># ensure y is in Dx, otherwise none of 3 Orders occur so skip</span>
                     <span class="k">if</span> <span class="n">y</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Dx</span><span class="p">:</span>
                         <span class="k">continue</span>
                     <span class="c1"># store lookups</span>
@@ -767,7 +767,7 @@
 
         <span class="c1"># scale down for normalized or by 2 for undirected</span>
         <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
-            <span class="n">GBC_group</span> <span class="o">/=</span> <span class="n">Nscale</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nscale</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">GBC_group</span> <span class="o">/=</span> <span class="n">Nscale</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nscale</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">Nscale</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_directed</span><span class="p">:</span>
             <span class="n">GBC_group</span> <span class="o">/=</span> <span class="mi">2</span>
 
@@ -794,26 +794,24 @@
                 <span class="n">delta</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">sigma</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+
     <span class="c1"># building the path betweenness matrix only for nodes that appear in the group</span>
-    <span class="n">PB</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">group_node1</span> <span class="ow">in</span> <span class="n">set_v</span><span class="p">:</span>
-        <span class="n">PB</span><span class="p">[</span><span class="n">group_node1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">group_node2</span> <span class="ow">in</span> <span class="n">set_v</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">group_node2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">group_node1</span><span class="p">]:</span>
-                <span class="k">continue</span>
-            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-                <span class="c1"># if node is connected to the two group nodes than continue</span>
-                <span class="k">if</span> <span class="n">group_node2</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="ow">and</span> <span class="n">group_node1</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">D</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">group_node2</span><span class="p">]</span>
-                        <span class="o">==</span> <span class="n">D</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">group_node1</span><span class="p">]</span> <span class="o">+</span> <span class="n">D</span><span class="p">[</span><span class="n">group_node1</span><span class="p">][</span><span class="n">group_node2</span><span class="p">]</span>
-                    <span class="p">):</span>
-                        <span class="n">PB</span><span class="p">[</span><span class="n">group_node1</span><span class="p">][</span><span class="n">group_node2</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
-                            <span class="n">delta</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">group_node2</span><span class="p">]</span>
-                            <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">group_node1</span><span class="p">]</span>
-                            <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="n">group_node1</span><span class="p">][</span><span class="n">group_node2</span><span class="p">]</span>
-                            <span class="o">/</span> <span class="n">sigma</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">group_node2</span><span class="p">]</span>
-                        <span class="p">)</span>
+    <span class="n">PB</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">set_v</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">set_v</span><span class="p">:</span>
+        <span class="n">PB</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">set_v</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">Ds</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="n">delta_s</span> <span class="o">=</span> <span class="n">delta</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="n">sig_s</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="n">s_descendants</span> <span class="o">=</span> <span class="n">set_v</span> <span class="o">&amp;</span> <span class="n">Ds</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">s_descendants</span><span class="p">:</span>
+            <span class="n">Dx</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">Dsx</span> <span class="o">=</span> <span class="n">Ds</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">sig_x</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">sig_sx</span> <span class="o">=</span> <span class="n">sig_s</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">s_descendants</span> <span class="o">&amp;</span> <span class="n">Dx</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">Ds</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dsx</span> <span class="o">+</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]:</span>
+                    <span class="n">PB</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">+=</span> <span class="n">delta_s</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig_sx</span> <span class="o">*</span> <span class="n">sig_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">/</span> <span class="n">sig_s</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">PB</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">D</span>
 
 
@@ -823,11 +821,11 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">prominent_group</span><span class="p">(</span>
     <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">endpoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">greedy</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Find the prominent group of size $k$ in graph $G$. The prominence of the</span>
-<span class="sd">    group is evaluated by the group betweenness centrality.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Find the prominent group (and its centrality) of size $k$ in graph $G$.</span>
 
+<span class="sd">    The prominent group of nodes has the highest group betweenness centrality.</span>
 <span class="sd">    Group betweenness centrality of a group of nodes $C$ is the sum of the</span>
-<span class="sd">    fraction of all-pairs shortest paths that pass through any vertex in $C$</span>
+<span class="sd">    fraction of all-pairs shortest paths that pass through any node in $C$</span>
 
 <span class="sd">    .. math::</span>
 
@@ -858,7 +856,22 @@
 <span class="sd">       The weight of an edge is treated as the length or distance between the two sides.</span>
 
 <span class="sd">    endpoints : bool, optional (default=False)</span>
-<span class="sd">       If True include the endpoints in the shortest path counts.</span>
+<span class="sd">       By default, only node-pairs that are both not in the group are counted for</span>
+<span class="sd">       group betweenness centrality. The count is how many non-`C` node-pairs have</span>
+<span class="sd">       nodes from the group "between" them on a shortest path.</span>
+
+<span class="sd">       When ``endpoints=True``, we also count node-pairs with one or both nodes</span>
+<span class="sd">       in the group while considering endpoint nodes as being between the node-pairs.</span>
+<span class="sd">       So we count paths that start in the group whether or not they pass through</span>
+<span class="sd">       any other nodes in the group. This adds centrality to large groups without any</span>
+<span class="sd">       reference to the connectivity of the group. The minimum normalized score</span>
+<span class="sd">       is $N_{in}(N_{in}-1)/(N(N-1))$ instead of 0. For that reason, this feature</span>
+<span class="sd">       is rarely used.</span>
+
+<span class="sd">       We don't currently support considering node-pairs with nodes in the group without</span>
+<span class="sd">       also counting their endpoints. Nor do we support counting endpoints while only</span>
+<span class="sd">       considering node-pairs that are both not in the group. This keyword indicates</span>
+<span class="sd">       both counting endpoints of paths and allowing node-pairs in the group.</span>
 
 <span class="sd">    C : list or set, optional (default=None)</span>
 <span class="sd">       list of nodes which won't be candidates of the prominent group.</span>
@@ -868,18 +881,16 @@
 <span class="sd">       group. For scale free networks the results are negligibly below the optimal</span>
 <span class="sd">       results.</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    max_GBC, max_group : 2-tuple of (float, list or nodes)</span>
+<span class="sd">       A 2-tuple of the group betweenness centrality of the prominent group,</span>
+<span class="sd">       and a list of nodes in the prominent group.</span>
+
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    NodeNotFound</span>
-<span class="sd">       If node(s) in C are not present in G.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    max_GBC : float</span>
-<span class="sd">       The group betweenness centrality of the prominent group.</span>
-
-<span class="sd">    max_group : list</span>
-<span class="sd">        The list of nodes in the prominent group.</span>
+<span class="sd">       If any node(s) in C are not present in G.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -922,9 +933,6 @@
 <span class="sd">       "Fast algorithm for successive computation of group betweenness centrality."</span>
 <span class="sd">       https://journals.aps.org/pre/pdf/10.1103/PhysRevE.76.056709</span>
 <span class="sd">    """</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
     <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">C</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">C</span> <span class="o">-</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>  <span class="c1"># element(s) of C not in G</span>
@@ -932,199 +940,158 @@
         <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span> <span class="o">-</span> <span class="n">C</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
-    <span class="n">DF_tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">__networkx_cache__</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Disable caching</span>
+
+    <span class="c1"># pre-process connectedness for no endpoints treatment</span>
+    <span class="n">is_directed</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+    <span class="n">connected</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_directed</span> <span class="k">else</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
     <span class="n">PB</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">_group_preprocessing</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
-    <span class="n">betweenness</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">PB</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">C</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">C</span><span class="p">:</span>
-            <span class="c1"># remove from the betweenness all the nodes not part of the group</span>
-            <span class="n">betweenness</span> <span class="o">=</span> <span class="n">betweenness</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
-            <span class="n">betweenness</span> <span class="o">=</span> <span class="n">betweenness</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
-    <span class="n">CL</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">betweenness</span><span class="p">),</span> <span class="n">nodes</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
-    <span class="n">max_GBC</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">max_group</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
-        <span class="mi">1</span><span class="p">,</span>
-        <span class="n">CL</span><span class="o">=</span><span class="n">CL</span><span class="p">,</span>
-        <span class="n">betweenness</span><span class="o">=</span><span class="n">betweenness</span><span class="p">,</span>
-        <span class="n">GBC</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">GM</span><span class="o">=</span><span class="p">[],</span>
-        <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span>
-        <span class="n">cont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">betweenness</span><span class="p">))),</span>
-    <span class="p">)</span>
+    <span class="c1"># top remaining nodes sorted by partial betweenness (PB)</span>
+    <span class="n">tops</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">PB</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>
+    <span class="n">heu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">PB</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">node</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tops</span><span class="p">[</span><span class="o">-</span><span class="n">k</span><span class="p">:])</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"GBC"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"Grp"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"tops"</span><span class="p">:</span> <span class="n">tops</span><span class="p">,</span> <span class="s2">"PB"</span><span class="p">:</span> <span class="n">PB</span><span class="p">,</span> <span class="s2">"sigma"</span><span class="p">:</span> <span class="n">sigma</span><span class="p">,</span> <span class="s2">"heu"</span><span class="p">:</span> <span class="n">heu</span><span class="p">}</span>
 
     <span class="c1"># the algorithm</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">"cont"</span><span class="p">][</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span>
-    <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_dfbnb</span><span class="p">(</span>
-        <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span>
-    <span class="p">)</span>
+    <span class="n">max_GBC</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_prominent</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span><span class="p">)</span>
 
-    <span class="n">v</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">endpoints</span><span class="p">:</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># endpoints</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">endpoints</span><span class="p">:</span>
+        <span class="n">Nscale</span> <span class="o">=</span> <span class="n">N</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">N_in</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="n">N_out</span> <span class="o">=</span> <span class="n">Nscale</span> <span class="o">=</span> <span class="n">N</span> <span class="o">-</span> <span class="n">N_in</span>
         <span class="c1"># if the graph is connected then subtract the endpoints from</span>
         <span class="c1"># the count for all the nodes in the graph. else count how many</span>
         <span class="c1"># nodes are connected to the group's nodes and subtract that.</span>
-        <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_strongly_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-                <span class="n">scale</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_connected</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">group_node1</span> <span class="ow">in</span> <span class="n">max_group</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">group_node1</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="n">group_node1</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">max_group</span><span class="p">:</span>
-                            <span class="n">scale</span> <span class="o">+=</span> <span class="mi">1</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">scale</span> <span class="o">+=</span> <span class="mi">2</span>
-        <span class="n">max_GBC</span> <span class="o">-=</span> <span class="n">scale</span>
+        <span class="k">if</span> <span class="n">connected</span><span class="p">:</span>
+            <span class="n">extra</span> <span class="o">=</span> <span class="n">N_in</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">N_out</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_directed</span><span class="p">:</span>
+            <span class="c1"># count paths for group to or from anything</span>
+            <span class="n">reachables</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">u</span><span class="p">)</span>
+            <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reachables</span> <span class="k">if</span> <span class="p">(</span><span class="n">u</span> <span class="ow">in</span> <span class="n">max_group</span> <span class="ow">or</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">max_group</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># count paths for group to anything</span>
+            <span class="c1"># (use 2 if v not in group to shorten reachables)</span>
+            <span class="n">reachables</span> <span class="o">=</span> <span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">max_group</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">u</span><span class="p">)</span>
+            <span class="n">extra</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">max_group</span> <span class="k">else</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">reachables</span><span class="p">)</span>
+        <span class="n">max_GBC</span> <span class="o">-=</span> <span class="n">extra</span>
 
-    <span class="c1"># normalized</span>
+    <span class="c1"># normalize</span>
     <span class="k">if</span> <span class="n">normalized</span><span class="p">:</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">((</span><span class="n">v</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">max_GBC</span> <span class="o">*=</span> <span class="n">scale</span>
-
+        <span class="n">max_GBC</span> <span class="o">/=</span> <span class="n">Nscale</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nscale</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">Nscale</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span>
     <span class="c1"># If undirected then count only the undirected edges</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_directed</span><span class="p">:</span>
         <span class="n">max_GBC</span> <span class="o">/=</span> <span class="mi">2</span>
-    <span class="k">return</span> <span class="n">max_GBC</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="n">max_group</span></div>
+    <span class="k">return</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">max_group</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_dfbnb</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span><span class="p">):</span>
-    <span class="c1"># stopping condition - if we found a group of size k and with higher GBC then prune</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">])</span> <span class="o">==</span> <span class="n">k</span> <span class="ow">and</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max_GBC</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GBC"</span><span class="p">],</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">]</span>
-    <span class="c1"># stopping condition - if the size of group members equal to k or there are less than</span>
-    <span class="c1"># k - |GM| in the candidate list or the heuristic function plus the GBC is below the</span>
-    <span class="c1"># maximal GBC found then prune</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="nb">len</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">])</span> <span class="o">==</span> <span class="n">k</span>
-        <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">])</span>
-        <span class="ow">or</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">max_GBC</span>
-    <span class="p">):</span>
-        <span class="k">return</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_prominent</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the GBC and the group of k nodes with the biggest GBC value"""</span>
+    <span class="n">max_GBC</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_group</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">info</span><span class="p">]</span>
+    <span class="n">its</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="c1"># finding the heuristic of both children</span>
-    <span class="n">node_p</span><span class="p">,</span> <span class="n">node_m</span><span class="p">,</span> <span class="n">DF_tree</span> <span class="o">=</span> <span class="n">_heuristic</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="c1"># info:</span>
+        <span class="c1">#   "sigma": dod[s][t], count of s-t paths thru group nodes</span>
+        <span class="c1">#   "PB": path btwn, dod[s][v], fraction of paths from s through v</span>
+        <span class="n">Grp</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"Grp"</span><span class="p">]</span>  <span class="c1"># list : group being considered</span>
+        <span class="n">GBC</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"GBC"</span><span class="p">]</span>  <span class="c1"># number : group betweenness centrality of the group</span>
+        <span class="n">tops</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"tops"</span><span class="p">]</span>  <span class="c1"># list : candidate nodes for Grp sorted by heuristic</span>
+        <span class="n">heu</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"heu"</span><span class="p">]</span>  <span class="c1"># dict : {node: max GBC change when adding node}</span>
+        <span class="c1"># We use heuristic h4 from article: max sum_v PB[v][v] for best nodes</span>
+        <span class="c1"># Names: the article uses names replaced here as:</span>
+        <span class="c1"># GM&lt;-&gt;Grp, CL&lt;-&gt;tops, g&lt;-&gt;GBC, h&lt;-&gt;heu</span>
 
-    <span class="c1"># finding the child with the bigger heuristic + GBC and expand</span>
-    <span class="c1"># that node first if greedy then only expand the plus node</span>
-    <span class="k">if</span> <span class="n">greedy</span><span class="p">:</span>
-        <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_dfbnb</span><span class="p">(</span>
-            <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">node_p</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span>
-        <span class="p">)</span>
+        <span class="c1"># Stopping conditions: go to next item on queue</span>
+        <span class="k">if</span> <span class="n">GBC</span> <span class="o">&gt;</span> <span class="n">max_GBC</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">Grp</span><span class="p">)</span> <span class="o">==</span> <span class="n">k</span><span class="p">:</span>  <span class="c1"># new max with group of size k found</span>
+            <span class="n">max_GBC</span> <span class="o">=</span> <span class="n">GBC</span>
+            <span class="n">max_group</span> <span class="o">=</span> <span class="n">Grp</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">Grp</span><span class="p">)</span> <span class="o">==</span> <span class="n">k</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">tops</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">Grp</span><span class="p">)</span> <span class="ow">or</span> <span class="n">GBC</span> <span class="o">+</span> <span class="n">heu</span> <span class="o">&lt;=</span> <span class="n">max_GBC</span><span class="p">:</span>
+            <span class="k">continue</span>
 
-    <span class="k">elif</span> <span class="p">(</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span>
-        <span class="o">&gt;</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span>
-    <span class="p">):</span>
-        <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_dfbnb</span><span class="p">(</span>
-            <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">node_p</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span>
-        <span class="p">)</span>
-        <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_dfbnb</span><span class="p">(</span>
-            <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">node_m</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_dfbnb</span><span class="p">(</span>
-            <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">node_m</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span>
-        <span class="p">)</span>
-        <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span> <span class="o">=</span> <span class="n">_dfbnb</span><span class="p">(</span>
-            <span class="n">G</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">node_p</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">max_group</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">max_group</span>
+        <span class="c1"># add to the queue</span>
+        <span class="n">new_info</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
 
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">new_info</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">]</span>
+        <span class="n">PB</span> <span class="o">=</span> <span class="n">new_info</span><span class="p">[</span><span class="s2">"PB"</span><span class="p">]</span>
+        <span class="n">tops</span> <span class="o">=</span> <span class="n">new_info</span><span class="p">[</span><span class="s2">"tops"</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">tops</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">new_info</span><span class="p">[</span><span class="s2">"Grp"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="c1"># Key step in updating GBC</span>
+        <span class="n">new_info</span><span class="p">[</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">PB</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_heuristic</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">DF_tree</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">greedy</span><span class="p">):</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+        <span class="c1"># loop over all pairs of nodes (x, y); update PB and sigma</span>
+        <span class="n">Dv</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="n">PB_v</span> <span class="o">=</span> <span class="n">PB</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="n">sig_v</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
 
-    <span class="c1"># This helper function add two nodes to DF_tree - one left son and the</span>
-    <span class="c1"># other right son, finds their heuristic, CL, GBC, and GM</span>
-    <span class="n">node_p</span> <span class="o">=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="n">node_m</span> <span class="o">=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span>
-    <span class="n">added_node</span> <span class="o">=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="c1"># store lookups and set</span>
+            <span class="n">Dx</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">PB_x</span> <span class="o">=</span> <span class="n">PB</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">sig_x</span> <span class="o">=</span> <span class="n">sigma</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">sig_xv</span> <span class="o">=</span> <span class="n">sig_x</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">sig_vx</span> <span class="o">=</span> <span class="n">sig_v</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+            <span class="n">x_in_Dv</span> <span class="o">=</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Dv</span>
+            <span class="n">v_in_Dx</span> <span class="o">=</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Dx</span>
 
-    <span class="c1"># adding the plus node</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">node_p</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">]))])</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">added_node</span><span class="p">)</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"cont"</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span>
-    <span class="n">root_node</span> <span class="o">=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-            <span class="n">dxvy</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">dxyv</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">dvxy</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="ow">or</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="ow">or</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">added_node</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
-            <span class="p">):</span>
-                <span class="k">if</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span> <span class="o">==</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">added_node</span><span class="p">]:</span>
-                    <span class="n">dxyv</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
-                        <span class="o">*</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">y</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span>
-                        <span class="o">/</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span>
-                    <span class="p">)</span>
-                <span class="k">if</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span> <span class="o">+</span> <span class="n">D</span><span class="p">[</span><span class="n">added_node</span><span class="p">][</span><span class="n">y</span><span class="p">]:</span>
-                    <span class="n">dxvy</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span>
-                        <span class="o">*</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">added_node</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
-                        <span class="o">/</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
-                    <span class="p">)</span>
-                <span class="k">if</span> <span class="n">D</span><span class="p">[</span><span class="n">added_node</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">D</span><span class="p">[</span><span class="n">added_node</span><span class="p">][</span><span class="n">x</span><span class="p">]</span> <span class="o">+</span> <span class="n">D</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]:</span>
-                    <span class="n">dvxy</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">added_node</span><span class="p">][</span><span class="n">x</span><span class="p">]</span>
-                        <span class="o">*</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
-                        <span class="o">/</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">added_node</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
-                    <span class="p">)</span>
-            <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"sigma"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">dxvy</span><span class="p">)</span>
-            <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"betweenness"</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">root_node</span><span class="p">[</span><span class="s2">"betweenness"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">-</span> <span class="n">root_node</span><span class="p">[</span><span class="s2">"betweenness"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">*</span> <span class="n">dxvy</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">y</span> <span class="o">!=</span> <span class="n">added_node</span><span class="p">:</span>
-                <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"betweenness"</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">-=</span> <span class="p">(</span>
-                    <span class="n">root_node</span><span class="p">[</span><span class="s2">"betweenness"</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">added_node</span><span class="p">]</span> <span class="o">*</span> <span class="n">dxyv</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">added_node</span><span class="p">:</span>
-                <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"betweenness"</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">-=</span> <span class="p">(</span>
-                    <span class="n">root_node</span><span class="p">[</span><span class="s2">"betweenness"</span><span class="p">][</span><span class="n">added_node</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">*</span> <span class="n">dvxy</span>
-                <span class="p">)</span>
+            <span class="c1"># ensure y is in Dx otherwise none of the 3 Orders occur, so skip</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">Dx</span><span class="p">):</span>
+                <span class="c1"># store lookups</span>
+                <span class="n">Dy</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+                <span class="n">sig_xy</span> <span class="o">=</span> <span class="n">sig_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+                <span class="n">sig_vy</span> <span class="o">=</span> <span class="n">sig_v</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+                <span class="n">v_in_Dy</span> <span class="o">=</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Dy</span>
+                <span class="n">y_in_Dv</span> <span class="o">=</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">Dv</span>
 
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">node</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"betweenness"</span><span class="p">]),</span> <span class="n">nodes</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">]</span>
-    <span class="p">]</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"cont"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-        <span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"betweenness"</span><span class="p">]))</span>
-    <span class="p">)</span>
-    <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">])):</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"cont"</span><span class="p">][</span>
-            <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_p</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
-        <span class="p">]</span>
+                <span class="c1"># Order x-y-v  If v_in_Dy then v_in_Dx for sure.</span>
+                <span class="k">if</span> <span class="n">v_in_Dy</span> <span class="ow">and</span> <span class="n">Dx</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dy</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_xv</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">y</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">PB_x</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig_xy</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">v</span><span class="p">]</span> <span class="o">/</span> <span class="n">sig_xv</span>
+                <span class="c1"># Order v-x-y  If x_in_Dv then y_in_Dv for sure.</span>
+                <span class="k">if</span> <span class="n">x_in_Dv</span> <span class="ow">and</span> <span class="n">Dv</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dv</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_vy</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="c1"># fraction of v-&gt;y paths that pass through x</span>
+                        <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">PB_v</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig_vx</span> <span class="o">*</span> <span class="n">sig_xy</span> <span class="o">/</span> <span class="n">sig_vy</span>
+                <span class="c1"># order x-v-y</span>
+                <span class="k">if</span> <span class="n">v_in_Dx</span> <span class="ow">and</span> <span class="n">y_in_Dv</span> <span class="ow">and</span> <span class="n">Dx</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">==</span> <span class="n">Dx</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+</span> <span class="n">Dv</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="ow">and</span> <span class="n">sig_xy</span><span class="p">:</span>
+                    <span class="n">sig_xvy</span> <span class="o">=</span> <span class="n">sig_xv</span> <span class="o">*</span> <span class="n">sig_vy</span>
+                    <span class="n">PB_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">sig_xvy</span> <span class="o">/</span> <span class="n">sig_xy</span>
+                    <span class="n">sig_x</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">-=</span> <span class="n">sig_xvy</span>
+                    <span class="k">if</span> <span class="n">y</span> <span class="o">==</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="c1"># update sig_xv for future y-values</span>
+                        <span class="n">sig_xv</span> <span class="o">-=</span> <span class="n">sig_xvy</span>
 
-    <span class="c1"># adding the minus node - don't insert the first node in the CL to GM</span>
-    <span class="c1"># Insert minus node only if isn't greedy type algorithm</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">greedy</span><span class="p">:</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([(</span><span class="n">node_m</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">root</span><span class="p">]))])</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"cont"</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">added_node</span><span class="p">)</span>
-        <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"GM"</span><span class="p">])):</span>
-            <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"cont"</span><span class="p">][</span>
-                <span class="n">DF_tree</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_m</span><span class="p">][</span><span class="s2">"CL"</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
-            <span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">node_m</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># update tops and heu</span>
+        <span class="n">new_info</span><span class="p">[</span><span class="s2">"tops"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tops</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tops</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">PB</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">top_few</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_info</span><span class="p">[</span><span class="s2">"Grp"</span><span class="p">])</span>
+        <span class="n">new_info</span><span class="p">[</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">PB</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">tops</span><span class="p">[</span><span class="o">-</span><span class="n">top_few</span><span class="p">:])</span> <span class="k">if</span> <span class="n">top_few</span> <span class="k">else</span> <span class="mi">0</span>
 
-    <span class="k">return</span> <span class="n">node_p</span><span class="p">,</span> <span class="n">node_m</span><span class="p">,</span> <span class="n">DF_tree</span>
+        <span class="k">if</span> <span class="n">greedy</span><span class="p">:</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_info</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># not greedy: add the "minus" version and the new_info (plus version)</span>
+        <span class="n">m_info</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">top_few</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">m_info</span><span class="p">[</span><span class="s2">"Grp"</span><span class="p">])</span>
+        <span class="n">m_tops</span> <span class="o">=</span> <span class="n">m_info</span><span class="p">[</span><span class="s2">"tops"</span><span class="p">]</span>
+        <span class="n">m_tops</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">PB</span> <span class="o">=</span> <span class="n">m_info</span><span class="p">[</span><span class="s2">"PB"</span><span class="p">]</span>
+        <span class="n">m_info</span><span class="p">[</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">PB</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">m_tops</span><span class="p">[</span><span class="o">-</span><span class="n">top_few</span><span class="p">:])</span> <span class="k">if</span> <span class="n">top_few</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">new_info</span><span class="p">[</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_info</span><span class="p">[</span><span class="s2">"heu"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">m_info</span><span class="p">[</span><span class="s2">"GBC"</span><span class="p">]</span> <span class="o">+</span> <span class="n">m_info</span><span class="p">[</span><span class="s2">"heu"</span><span class="p">]:</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_info</span><span class="p">)</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_info</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_info</span><span class="p">)</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_info</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">max_GBC</span><span class="p">,</span> <span class="n">max_group</span>
 
 
 <div class="viewcode-block" id="group_closeness_centrality">

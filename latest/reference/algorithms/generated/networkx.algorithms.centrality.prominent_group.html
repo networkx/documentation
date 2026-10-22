@@ -647,10 +647,10 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="networkx.algorithms.centrality.prominent_group">
 <span class="sig-name descname"><span class="pre">prominent_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">greedy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/networkx/algorithms/centrality/group.html#prominent_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#networkx.algorithms.centrality.prominent_group" title="Link to this definition">#</a></dt>
-<dd><p>Find the prominent group of size <span class="math notranslate nohighlight">\(k\)</span> in graph <span class="math notranslate nohighlight">\(G\)</span>. The prominence of the
-group is evaluated by the group betweenness centrality.</p>
-<p>Group betweenness centrality of a group of nodes <span class="math notranslate nohighlight">\(C\)</span> is the sum of the
-fraction of all-pairs shortest paths that pass through any vertex in <span class="math notranslate nohighlight">\(C\)</span></p>
+<dd><p>Find the prominent group (and its centrality) of size <span class="math notranslate nohighlight">\(k\)</span> in graph <span class="math notranslate nohighlight">\(G\)</span>.</p>
+<p>The prominent group of nodes has the highest group betweenness centrality.
+Group betweenness centrality of a group of nodes <span class="math notranslate nohighlight">\(C\)</span> is the sum of the
+fraction of all-pairs shortest paths that pass through any node in <span class="math notranslate nohighlight">\(C\)</span></p>
 <div class="math notranslate nohighlight">
 \[c_B(v) =\sum_{s,t \in V-C} \frac{\sigma(s, t|v)}{\sigma(s, t)}\]</div>
 <p>where <span class="math notranslate nohighlight">\(V\)</span> is the set of nodes, <span class="math notranslate nohighlight">\(\sigma(s, t)\)</span> is the number of
@@ -658,9 +658,9 @@ shortest <span class="math notranslate nohighlight">\((s, t)\)</span>-paths, and
 those paths passing through some node in group <span class="math notranslate nohighlight">\(C\)</span>. Note that
 <span class="math notranslate nohighlight">\((s, t)\)</span> are not members of the group (<span class="math notranslate nohighlight">\(V-C\)</span> is the set of nodes
 in <span class="math notranslate nohighlight">\(V\)</span> that are not in <span class="math notranslate nohighlight">\(C\)</span> – see <code class="xref py py-obj docutils literal notranslate"><span class="pre">endpoints</span></code> for other options).</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>G</strong><span class="classifier">graph</span></dt><dd><p>A NetworkX graph.</p>
 </dd>
 <dt><strong>k</strong><span class="classifier">int</span></dt><dd><p>The number of nodes in the group.</p>
@@ -673,7 +673,20 @@ nodes in C.</p>
 Otherwise holds the name of the edge attribute used as weight.
 The weight of an edge is treated as the length or distance between the two sides.</p>
 </dd>
-<dt><strong>endpoints</strong><span class="classifier">bool, optional (default=False)</span></dt><dd><p>If True include the endpoints in the shortest path counts.</p>
+<dt><strong>endpoints</strong><span class="classifier">bool, optional (default=False)</span></dt><dd><p>By default, only node-pairs that are both not in the group are counted for
+group betweenness centrality. The count is how many non-<code class="xref py py-obj docutils literal notranslate"><span class="pre">C</span></code> node-pairs have
+nodes from the group “between” them on a shortest path.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">endpoints=True</span></code>, we also count node-pairs with one or both nodes
+in the group while considering endpoint nodes as being between the node-pairs.
+So we count paths that start in the group whether or not they pass through
+any other nodes in the group. This adds centrality to large groups without any
+reference to the connectivity of the group. The minimum normalized score
+is <span class="math notranslate nohighlight">\(N_{in}(N_{in}-1)/(N(N-1))\)</span> instead of 0. For that reason, this feature
+is rarely used.</p>
+<p>We don’t currently support considering node-pairs with nodes in the group without
+also counting their endpoints. Nor do we support counting endpoints while only
+considering node-pairs that are both not in the group. This keyword indicates
+both counting endpoints of paths and allowing node-pairs in the group.</p>
 </dd>
 <dt><strong>C</strong><span class="classifier">list or set, optional (default=None)</span></dt><dd><p>list of nodes which won’t be candidates of the prominent group.</p>
 </dd>
@@ -685,15 +698,14 @@ results.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>max_GBC</strong><span class="classifier">float</span></dt><dd><p>The group betweenness centrality of the prominent group.</p>
-</dd>
-<dt><strong>max_group</strong><span class="classifier">list</span></dt><dd><p>The list of nodes in the prominent group.</p>
+<dt><strong>max_GBC, max_group</strong><span class="classifier">2-tuple of (float, list or nodes)</span></dt><dd><p>A 2-tuple of the group betweenness centrality of the prominent group,
+and a list of nodes in the prominent group.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>NodeNotFound</dt><dd><p>If node(s) in C are not present in G.</p>
+<dt>NodeNotFound</dt><dd><p>If any node(s) in C are not present in G.</p>
 </dd>
 </dl>
 </dd>
