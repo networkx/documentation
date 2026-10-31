@@ -69,7 +69,7 @@
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7.1rc0.dev0" />
-    <meta name="docbuild:last-update" content="Oct 22, 2026"/>
+    <meta name="docbuild:last-update" content="Oct 31, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -539,6 +539,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">isfinite</span><span class="p">,</span> <span class="n">log2</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">networkx.algorithms.community.community_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_cover</span><span class="p">,</span> <span class="n">is_partition</span>
@@ -546,6 +547,7 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"constant_potts_model"</span><span class="p">,</span>
+    <span class="s2">"map_equation"</span><span class="p">,</span>
     <span class="s2">"modularity"</span><span class="p">,</span>
     <span class="s2">"overlapping_modularity"</span><span class="p">,</span>
     <span class="s2">"partition_quality"</span><span class="p">,</span>
@@ -558,6 +560,332 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2"> is not a valid partition of the graph </span><span class="si">{</span><span class="n">G</span><span class="si">}</span><span class="s2">"</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># The map equation</span>
+<span class="c1">#</span>
+<span class="c1"># Infomap pictures a random walker stepping along the (weighted, possibly</span>
+<span class="c1"># directed) edges of the network. The map equation [Rosvall &amp; Bergstrom 2008]</span>
+<span class="c1"># is the average number of bits needed to describe one step of that walk when</span>
+<span class="c1"># the walk is encoded with a *two-level* codebook:</span>
+<span class="c1">#</span>
+<span class="c1">#   * one **index codebook** names the modules and is used whenever the walker</span>
+<span class="c1">#     crosses from one module into another, and</span>
+<span class="c1">#   * one **module codebook** per module names the nodes inside it (plus an</span>
+<span class="c1">#     "exit" symbol) and is used while the walker stays within that module.</span>
+<span class="c1">#</span>
+<span class="c1"># A partition that keeps the walker inside modules for long stretches makes</span>
+<span class="c1"># module switches -- the shared index codebook -- rare, so the description is</span>
+<span class="c1"># short. Minimizing the codelength therefore reveals community structure. Each</span>
+<span class="c1"># codebook is costed at the Shannon limit -- the entropy of its symbol</span>
+<span class="c1"># frequencies, which a real Huffman code approaches within one bit -- so the</span>
+<span class="c1"># whole map equation reduces to sums of ``p * log2(p)`` terms over node and</span>
+<span class="c1"># module visit/exit rates, which is what the helpers below assemble.</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plogp</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``p * log2(p)``, using the convention ``0 * log2(0) = 0``.</span>
+
+<span class="sd">    Shannon entropy is ``H = -sum(_plogp(p_i))``, so every codebook cost in the</span>
+<span class="sd">    map equation is built from these terms.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">p</span> <span class="o">*</span> <span class="n">log2</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_undirected_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Random-walk flow of an undirected graph: ``(visit_rate, link_flows)``.</span>
+
+<span class="sd">    On an undirected graph the walker's stationary distribution is known in</span>
+<span class="sd">    closed form: it visits a node in proportion to the node's (weighted) degree,</span>
+<span class="sd">    :math:`p_\alpha = k_\alpha / 2m`. A self-loop is one transition that keeps</span>
+<span class="sd">    the walker in place, so -- as in Infomap -- it counts *once* toward the</span>
+<span class="sd">    degree and the normalization, giving :math:`2m = 2\sum w - \sum_{self} w`</span>
+<span class="sd">    (NetworkX's ``degree`` counts a self-loop twice, so subtract one copy). The</span>
+<span class="sd">    per-step probability of traversing a particular edge is :math:`w / 2m`;</span>
+<span class="sd">    ``link_flows`` lists each edge in *both* directions with that flow, so that</span>
+<span class="sd">    summing the flow crossing a module's boundary later gives the rate at which</span>
+<span class="sd">    the walker enters or leaves it. A self-loop never crosses a boundary, so it</span>
+<span class="sd">    appears once.</span>
+<span class="sd">    """</span>
+    <span class="n">visit_rate</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">))</span>
+    <span class="c1"># Undo the second count of each self-loop, giving 2m with self-loops</span>
+    <span class="c1"># counted once (Infomap's undirected normalization).</span>
+    <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">selfloop_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">visit_rate</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">-=</span> <span class="n">wt</span>
+    <span class="n">total_strength</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">visit_rate</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">total_strength</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no edges (or only zero-weight edges), no flow</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="p">},</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">visit_rate</span><span class="p">:</span>
+        <span class="n">visit_rate</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">/=</span> <span class="n">total_strength</span>
+
+    <span class="n">link_flows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">flow</span> <span class="o">=</span> <span class="n">wt</span> <span class="o">/</span> <span class="n">total_strength</span>
+        <span class="n">link_flows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">flow</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">link_flows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">flow</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">visit_rate</span><span class="p">,</span> <span class="n">link_flows</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_directed_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-13</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Random-walk flow of a directed graph: ``(visit_rate, link_flows)``.</span>
+
+<span class="sd">    A directed graph has no closed-form stationary distribution, and a plain</span>
+<span class="sd">    walk can get stuck (in sinks or cycles). Infomap uses the PageRank remedy:</span>
+<span class="sd">    with probability ``teleportation_probability`` the walker teleports instead of</span>
+<span class="sd">    following a link, which makes the walk ergodic. The recorded distribution</span>
+<span class="sd">    ``pi`` is exactly :func:`~networkx.algorithms.link_analysis.pagerank_alg.pagerank`</span>
+<span class="sd">    with damping ``1 - teleportation_probability`` and teleportation weighted by</span>
+<span class="sd">    out-degree (so dangling nodes redistribute their flow the same way).</span>
+
+<span class="sd">    Teleportation is a modeling device, not part of the structure we want to</span>
+<span class="sd">    describe, so the rates that get *coded* come from *unrecorded* teleportation:</span>
+<span class="sd">    one further link-following step (with no teleportation) on top of ``pi``</span>
+<span class="sd">    yields the visit rates and link flows the codebooks are built from.</span>
+<span class="sd">    """</span>
+    <span class="n">out_strength</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">))</span>
+    <span class="n">dangling</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">strength</span> <span class="ow">in</span> <span class="n">out_strength</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">strength</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">sum_out</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">out_strength</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">sum_out</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no positive-weight out-links, so there is no flow</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">},</span> <span class="p">[]</span>
+
+    <span class="c1"># Teleport in proportion to out-degree (Infomap's default "to links"); this</span>
+    <span class="c1"># is exactly PageRank's personalization (and dangling) vector.</span>
+    <span class="n">teleport</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="n">strength</span> <span class="o">/</span> <span class="n">sum_out</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">strength</span> <span class="ow">in</span> <span class="n">out_strength</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">pagerank</span><span class="p">(</span>
+        <span class="n">G</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">teleportation_probability</span><span class="p">,</span>
+        <span class="n">personalization</span><span class="o">=</span><span class="n">teleport</span><span class="p">,</span>
+        <span class="n">dangling</span><span class="o">=</span><span class="n">teleport</span><span class="p">,</span>
+        <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+        <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Unrecorded step: spread ``pi`` once more along links only (no teleporting),</span>
+    <span class="c1"># renormalizing away the flow that would have teleported. The result is the</span>
+    <span class="c1"># visit rate and per-link flow the codebooks are built from.</span>
+    <span class="n">sum_node_rank</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">dangling</span><span class="p">)</span>
+    <span class="n">visit_rate</span> <span class="o">=</span> <span class="p">{</span><span class="n">u</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">G</span><span class="p">}</span>
+    <span class="n">link_flows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># A dangling source (zero out-strength) redistributes its flow purely by</span>
+        <span class="c1"># teleportation, already captured in ``pi``; its links carry no recorded</span>
+        <span class="c1"># flow, so skip them -- and avoid dividing by its zero out-strength.</span>
+        <span class="k">if</span> <span class="n">out_strength</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">flow</span> <span class="o">=</span> <span class="n">pi</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="n">wt</span> <span class="o">/</span> <span class="n">out_strength</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">/</span> <span class="n">sum_node_rank</span>
+        <span class="n">visit_rate</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+        <span class="n">link_flows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">flow</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">visit_rate</span><span class="p">,</span> <span class="n">link_flows</span>
+
+
+<div class="viewcode-block" id="map_equation">
+<a class="viewcode-back" href="../../../../reference/algorithms/generated/networkx.algorithms.community.quality.map_equation.html#networkx.algorithms.community.quality.map_equation">[docs]</a>
+<span class="nd">@nx</span><span class="o">.</span><span class="n">_dispatchable</span><span class="p">(</span><span class="n">edge_attrs</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">map_equation</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="o">=</span><span class="mf">0.15</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Return the two-level map equation codelength of a partition of `G`.</span>
+
+<span class="sd">    The map equation [1]_ gives the theoretical lower bound on the average</span>
+<span class="sd">    per-step codelength of a random walk on `G` under a two-level code: one</span>
+<span class="sd">    index codebook over the modules, and one codebook per module over the nodes</span>
+<span class="sd">    inside it plus an exit symbol. For the partition :math:`\mathsf{M}` given by</span>
+<span class="sd">    `communities`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        L(\mathsf{M}) = q_\curvearrowright H(\mathcal{Q})</span>
+<span class="sd">            + \sum_i p^i_\circlearrowright H(\mathcal{P}^i)</span>
+
+<span class="sd">    The index codebook is used at :math:`q_\curvearrowright`, the rate at which</span>
+<span class="sd">    the walk changes module. Its entropy :math:`H(\mathcal{Q})` is calculated</span>
+<span class="sd">    from the module enter rates normalized by :math:`q_\curvearrowright`. Module</span>
+<span class="sd">    :math:`i`'s codebook is used at :math:`p^i_\circlearrowright`, its total</span>
+<span class="sd">    node visit rate plus its exit rate. Its entropy :math:`H(\mathcal{P}^i)` is</span>
+<span class="sd">    calculated from the node visit rates and exit rate normalized by</span>
+<span class="sd">    :math:`p^i_\circlearrowright`. The implementation evaluates the equivalent</span>
+<span class="sd">    closed form as sums of :math:`x \log_2 x`.</span>
+
+<span class="sd">    The visit and transition rates the codebooks are built from, together called</span>
+<span class="sd">    the flow, come from the walk itself. On an undirected graph a node's rate is</span>
+<span class="sd">    proportional to its weighted degree, :math:`p_\alpha = k_\alpha / 2m`. A</span>
+<span class="sd">    directed graph uses Infomap's default unrecorded teleportation-to-links flow</span>
+<span class="sd">    model [2]_. PageRank first supplies stationary node ranks; only a subsequent</span>
+<span class="sd">    link-following step contributes to the recorded node visits and link flows.</span>
+<span class="sd">    Computing directed flow requires SciPy.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Graph, DiGraph, MultiGraph, or MultiDiGraph</span>
+<span class="sd">        An undirected or directed first-order graph. Parallel edges are summed.</span>
+<span class="sd">    communities : list or iterable of set of nodes</span>
+<span class="sd">        A partition of the nodes of `G`.</span>
+<span class="sd">    weight : string or None, optional (default="weight")</span>
+<span class="sd">        The name of an edge attribute holding the numerical weight. Higher</span>
+<span class="sd">        weights represent stronger flow and make an edge more likely to be</span>
+<span class="sd">        traversed; they should not represent distances or costs. Weights must be</span>
+<span class="sd">        finite and non-negative. If None, or if an edge does not have the</span>
+<span class="sd">        attribute, that edge has weight 1.</span>
+<span class="sd">    teleportation_probability : float, optional (default=0.15)</span>
+<span class="sd">        Teleportation probability for the directed-flow random walk. Ignored</span>
+<span class="sd">        for undirected graphs. Values must lie in the interval [0, 1].</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The average codelength in bits per random-walk step. Lower values mean</span>
+<span class="sd">        better compression for partitions of the same graph under the same</span>
+<span class="sd">        `weight` and `teleportation_probability` settings.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NotAPartition</span>
+<span class="sd">        If `communities` is not a partition of the nodes of `G`.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If any edge weight is negative or not finite, if the weights are too</span>
+<span class="sd">        large to sum as floats, or if a directed graph's</span>
+<span class="sd">        `teleportation_probability` is outside the interval [0, 1].</span>
+<span class="sd">    PowerIterationFailedConvergence</span>
+<span class="sd">        If PageRank fails to converge when computing directed flow.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Two triangles joined by a single edge, with one triangle per module:</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.barbell_graph(3, 0)</span>
+<span class="sd">    &gt;&gt;&gt; nx.community.map_equation(G, [{0, 1, 2}, {3, 4, 5}])</span>
+<span class="sd">    2.3207303568337903</span>
+
+<span class="sd">    Coding the same walk with a single module costs more bits:</span>
+
+<span class="sd">    &gt;&gt;&gt; nx.community.map_equation(G, [set(G)])</span>
+<span class="sd">    2.556656707462823</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When evaluating a partition returned by :func:`infomap_communities`, pass</span>
+<span class="sd">    the same `weight` and `teleportation_probability` values that were used for</span>
+<span class="sd">    the search.</span>
+
+<span class="sd">    This function evaluates a flat partition under the two-level map equation.</span>
+<span class="sd">    It does not evaluate the complete hierarchy returned by</span>
+<span class="sd">    :func:`infomap_partitions`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Rosvall, M. &amp; Bergstrom, C.T. Maps of random walks on complex</span>
+<span class="sd">       networks reveal community structure. PNAS 105, 1118-1123 (2008).</span>
+<span class="sd">       https://doi.org/10.1073/pnas.0706851105</span>
+<span class="sd">    .. [2] Lambiotte, R. &amp; Rosvall, M. Ranking and clustering of nodes in</span>
+<span class="sd">       networks with smart teleportation. Phys. Rev. E 85, 056107 (2012).</span>
+<span class="sd">       https://doi.org/10.1103/PhysRevE.85.056107</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :any:`infomap_communities`</span>
+<span class="sd">    :any:`infomap_partitions`</span>
+<span class="sd">    modularity</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">communities</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">communities</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">NotAPartition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">communities</span><span class="p">)</span>
+    <span class="n">module_of</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">c</span><span class="p">}</span>
+    <span class="n">visit_rate</span><span class="p">,</span> <span class="n">link_flows</span> <span class="o">=</span> <span class="n">_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_codelength</span><span class="p">(</span><span class="n">visit_rate</span><span class="p">,</span> <span class="n">link_flows</span><span class="p">,</span> <span class="n">module_of</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"weight"</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="o">=</span><span class="mf">0.15</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(visit_rate, link_flows)`` for `G`, dispatching on direction.</span>
+
+<span class="sd">    The flow depends only on the graph, not on any partition, so it is computed</span>
+<span class="sd">    once and reused across many codelength evaluations. ``link_flows`` is a</span>
+<span class="sd">    materialized list of ``(source, target, flow)`` triples.</span>
+
+<span class="sd">    Note this is plain dict/list flow, not an annotated graph. The quantity is</span>
+<span class="sd">    random-walk *flow* (computed once), not edge weight, and the optimizer's</span>
+<span class="sd">    inner loop wants O(1) dict access -- it builds adjacency dicts from these,</span>
+<span class="sd">    just as ``louvain._one_level`` builds them from ``G``. Carrying flow</span>
+<span class="sd">    alongside ``G`` also keeps aggregation from copying/mutating graphs.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Flow is a probability distribution, so weights must be finite and</span>
+    <span class="c1"># non-negative; reject ill-defined inputs instead of returning a</span>
+    <span class="c1"># clean-looking but meaningless codelength. The same goes for finite</span>
+    <span class="c1"># weights whose total overflows: normalizing by it would zero every flow.</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">isfinite</span><span class="p">(</span><span class="n">wt</span><span class="p">)</span> <span class="ow">or</span> <span class="n">wt</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"edge weights must be finite and non-negative"</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">wt</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">isfinite</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">total</span><span class="p">):</span>  <span class="c1"># undirected flow normalized by 2m</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"edge weights are too large to sum as floats"</span><span class="p">)</span>
+    <span class="n">_check_teleportation_probability</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">_directed_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_undirected_flow</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_teleportation_probability</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">teleportation_probability</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Validate the ``teleportation_probability`` argument shared by the public</span>
+<span class="sd">    functions. Only the directed flow model reads it, so an undirected graph</span>
+<span class="sd">    accepts any value. The comparison also rejects nan and the infinities.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">teleportation_probability</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"teleportation_probability must be between 0 and 1"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_codelength</span><span class="p">(</span><span class="n">visit_rate</span><span class="p">,</span> <span class="n">link_flows</span><span class="p">,</span> <span class="n">module_of</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Assemble the two-level map equation codelength, in bits per step.</span>
+
+<span class="sd">    From the random-walk flow (``visit_rate`` per node and the directed</span>
+<span class="sd">    ``link_flows``) and a ``node -&gt; module`` assignment, sum the three groups of</span>
+<span class="sd">    terms, one for each codebook role:</span>
+
+<span class="sd">    * **node term** -- naming nodes inside their modules costs the entropy of</span>
+<span class="sd">      the node visit rates, :math:`-\sum_\alpha plogp(p_\alpha)`.</span>
+<span class="sd">    * **index term** -- the index codebook is used on every module switch. Its</span>
+<span class="sd">      symbols are the modules, with frequencies equal to the module *enter*</span>
+<span class="sd">      rates :math:`e_i`, and it is used at the total switching rate</span>
+<span class="sd">      :math:`Q = \sum_i e_i`, costing :math:`plogp(Q) - \sum_i plogp(e_i)`.</span>
+<span class="sd">    * **module term** -- each module codebook carries, beyond its nodes, one</span>
+<span class="sd">      "exit" symbol at rate :math:`x_i`; the extra cost of mixing that exit into</span>
+<span class="sd">      module :math:`i` (visit rate :math:`p_i`) is</span>
+<span class="sd">      :math:`plogp(x_i + p_i) - plogp(x_i)`.</span>
+
+<span class="sd">    A module's *exit* flow is the flow on links leaving it; its *enter* flow is</span>
+<span class="sd">    the flow on links entering it. On a directed graph these differ -- the index</span>
+<span class="sd">    codebook is driven by enter flow -- while on an undirected graph</span>
+<span class="sd">    ``link_flows`` carries both directions, so they coincide. Module ids may be</span>
+<span class="sd">    any non-negative integers; empty modules contribute nothing.</span>
+<span class="sd">    """</span>
+    <span class="n">num_modules</span> <span class="o">=</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">module_of</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">module_of</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="c1"># p_i: total visit rate of each module (entropy of node names lives here).</span>
+    <span class="n">module_visit</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_modules</span>
+    <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">visit_rate</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">module_visit</span><span class="p">[</span><span class="n">module_of</span><span class="p">[</span><span class="n">node</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">rate</span>
+
+    <span class="c1"># e_i / x_i: flow entering / leaving each module. Only boundary-crossing</span>
+    <span class="c1"># link flow counts; flow that stays inside a module is never coded by the</span>
+    <span class="c1"># index codebook.</span>
+    <span class="n">module_enter</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_modules</span>
+    <span class="n">module_exit</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_modules</span>
+    <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">flow</span> <span class="ow">in</span> <span class="n">link_flows</span><span class="p">:</span>
+        <span class="n">source_module</span><span class="p">,</span> <span class="n">target_module</span> <span class="o">=</span> <span class="n">module_of</span><span class="p">[</span><span class="n">source</span><span class="p">],</span> <span class="n">module_of</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">source_module</span> <span class="o">!=</span> <span class="n">target_module</span><span class="p">:</span>
+            <span class="n">module_exit</span><span class="p">[</span><span class="n">source_module</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+            <span class="n">module_enter</span><span class="p">[</span><span class="n">target_module</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+
+    <span class="n">total_switching</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">module_enter</span><span class="p">)</span>  <span class="c1"># Q; equals sum(module_exit)</span>
+    <span class="n">index_term</span> <span class="o">=</span> <span class="n">_plogp</span><span class="p">(</span><span class="n">total_switching</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_plogp</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">module_enter</span><span class="p">)</span>
+    <span class="n">node_term</span> <span class="o">=</span> <span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">_plogp</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">visit_rate</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">module_term</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="n">_plogp</span><span class="p">(</span><span class="n">exit_rate</span> <span class="o">+</span> <span class="n">visit</span><span class="p">)</span> <span class="o">-</span> <span class="n">_plogp</span><span class="p">(</span><span class="n">exit_rate</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">exit_rate</span><span class="p">,</span> <span class="n">visit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">module_exit</span><span class="p">,</span> <span class="n">module_visit</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">index_term</span> <span class="o">+</span> <span class="n">node_term</span> <span class="o">+</span> <span class="n">module_term</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_partition</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
