@@ -69,7 +69,7 @@
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7.1rc0.dev0" />
-    <meta name="docbuild:last-update" content="Nov 04, 2026"/>
+    <meta name="docbuild:last-update" content="Nov 10, 2026"/>
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -832,7 +832,10 @@
     <span class="c1"># Determine the maximum edge capacity.</span>
     <span class="n">wmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="o">-</span><span class="n">inf</span><span class="p">],</span> <span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="s2">"capacity"</span><span class="p">]</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">))))</span>
     <span class="k">if</span> <span class="n">wmax</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span><span class="p">:</span>
-        <span class="c1"># Residual network has no edges.</span>
+        <span class="c1"># Residual network has no edges, so no more flow can be routed. The demands</span>
+        <span class="c1"># are infeasible if any node has excess (same check as after the loop below).</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">"excess"</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">R</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnfeasible</span><span class="p">(</span><span class="s2">"no flow satisfies all node demands"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">flow_cost</span><span class="p">,</span> <span class="n">_build_flow_dict</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span>
 
     <span class="n">R_nodes</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">nodes</span>
