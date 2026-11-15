@@ -69,7 +69,7 @@
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7.1rc0.dev0" />
-    <meta name="docbuild:last-update" content="Nov 10, 2026"/>
+    <meta name="docbuild:last-update" content="Nov 15, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -588,12 +588,12 @@
 <span class="sd">    """</span>
     <span class="n">successor_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">successors</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"s_"</span> <span class="o">+</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"s_"</span> <span class="o">+</span> <span class="p">(</span><span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">]))</span>
         <span class="n">successor_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">nbr</span><span class="p">])</span>
 
     <span class="n">predecessor_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">predecessors</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"p_"</span> <span class="o">+</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">nbr</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">])</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"p_"</span> <span class="o">+</span> <span class="p">(</span><span class="s2">""</span> <span class="k">if</span> <span class="n">edge_attr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">nbr</span><span class="p">][</span><span class="n">node</span><span class="p">][</span><span class="n">edge_attr</span><span class="p">]))</span>
         <span class="n">predecessor_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">node_labels</span><span class="p">[</span><span class="n">nbr</span><span class="p">])</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="n">node_labels</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
@@ -618,8 +618,12 @@
 <span class="sd">        one extra iteration of WL occurred than indicated by `iterations`.</span>
 <span class="sd">        For undirected graphs without node or edge labels, the old</span>
 <span class="sd">        hashes can be obtained by increasing the iteration count by one.</span>
+<span class="sd">        Additionally, in version 3.8, a bug was fixed where directed graphs with</span>
+<span class="sd">        ``edge_attr`` silently dropped direction prefixes. Previously stored hashes</span>
+<span class="sd">        for these graphs must be recomputed.</span>
 <span class="sd">        For more details, see `issue #7806</span>
-<span class="sd">        &lt;https://github.com/networkx/networkx/issues/7806&gt;`_.</span>
+<span class="sd">        &lt;https://github.com/networkx/networkx/issues/7806&gt;`_ and `issue #8945</span>
+<span class="sd">        &lt;https://github.com/networkx/networkx/issues/8945&gt;`_.</span>
 
 <span class="sd">    The function iteratively aggregates and hashes neighborhoods of each node.</span>
 <span class="sd">    After each node's neighbors are hashed to obtain updated node labels,</span>
@@ -721,7 +725,8 @@
         <span class="n">_neighborhood_aggregate</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate_directed</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="s2">"The hashes produced for directed graphs changed in version v3.5"</span>
-            <span class="s2">" due to a bugfix to track in and out edges separately (see documentation)."</span><span class="p">,</span>
+            <span class="s2">" to track in and out edges separately, and in version 3.8 to include"</span>
+            <span class="s2">" direction prefixes when edge_attr is used (see documentation)."</span><span class="p">,</span>
             <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
@@ -787,8 +792,12 @@
 <span class="sd">        shifting the other calculated hashes one position to the right. To</span>
 <span class="sd">        obtain the same last subgraph hash, increase the number of iterations</span>
 <span class="sd">        by one.</span>
+<span class="sd">        Additionally, in version 3.8, a bug was fixed where directed graphs with</span>
+<span class="sd">        ``edge_attr`` silently dropped direction prefixes. Previously stored hashes</span>
+<span class="sd">        for these graphs must be recomputed.</span>
 <span class="sd">        For more details, see `issue #7806</span>
-<span class="sd">        &lt;https://github.com/networkx/networkx/issues/7806&gt;`_.</span>
+<span class="sd">        &lt;https://github.com/networkx/networkx/issues/7806&gt;`_ and `issue #8945</span>
+<span class="sd">        &lt;https://github.com/networkx/networkx/issues/8945&gt;`_.</span>
 
 <span class="sd">    Dictionary keys are nodes in `G`, and values are a list of hashes.</span>
 <span class="sd">    Each hash corresponds to a subgraph rooted at a given node u in `G`.</span>
@@ -923,7 +932,8 @@
         <span class="n">_neighborhood_aggregate</span> <span class="o">=</span> <span class="n">_neighborhood_aggregate_directed</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="s2">"The hashes produced for directed graphs changed in v3.5"</span>
-            <span class="s2">" due to a bugfix (see documentation)."</span><span class="p">,</span>
+            <span class="s2">" to track in and out edges separately, and in version 3.8 to include"</span>
+            <span class="s2">" direction prefixes when edge_attr is used (see documentation)."</span><span class="p">,</span>
             <span class="ne">UserWarning</span><span class="p">,</span>
             <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
