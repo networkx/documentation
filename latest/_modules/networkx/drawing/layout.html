@@ -69,7 +69,7 @@
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="3.7.1rc0.dev0" />
-    <meta name="docbuild:last-update" content="Nov 19, 2026"/>
+    <meta name="docbuild:last-update" content="Nov 20, 2026"/>
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -883,7 +883,7 @@
 <span class="sd">    nodes : collection of nodes</span>
 <span class="sd">        Nodes in one node set of the graph. This set will be placed on</span>
 <span class="sd">        left or top. If `None` (the default), a node set is chosen arbitrarily</span>
-<span class="sd">        if the graph if bipartite.</span>
+<span class="sd">        if the graph is bipartite. Nodes not present in G are ignored.</span>
 
 <span class="sd">    align : string (default='vertical')</span>
 <span class="sd">        The alignment of nodes. Vertical or horizontal.</span>
@@ -965,18 +965,20 @@
     <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">top</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="n">top</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bipartite</span><span class="o">.</span><span class="n">sets</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">top</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
-        <span class="n">bottom</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">top</span>
-        <span class="c1"># Preserves backward-compatible node ordering in returned pos dict</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">top</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">bottom</span><span class="p">)</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">(</span><span class="n">nodes</span><span class="p">))</span>  <span class="c1"># remove nodes not in G</span>
 
-    <span class="n">left_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
-    <span class="n">right_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
-    <span class="n">left_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
-    <span class="n">right_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bottom</span><span class="p">))</span>
+    <span class="c1"># Top nodes first, then bottom nodes; each group in G's node order</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">top</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">top</span> <span class="o">|</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="n">n_top</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">top</span><span class="p">)</span>
+    <span class="n">n_bottom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">-</span> <span class="n">n_top</span>
+
+    <span class="n">left_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_top</span><span class="p">)</span>
+    <span class="n">right_xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">n_bottom</span><span class="p">)</span>
+    <span class="n">left_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">n_top</span><span class="p">)</span>
+    <span class="n">right_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">n_bottom</span><span class="p">)</span>
 
     <span class="n">top_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">left_xs</span><span class="p">,</span> <span class="n">left_ys</span><span class="p">])</span> <span class="o">-</span> <span class="n">offset</span>
     <span class="n">bottom_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">right_xs</span><span class="p">,</span> <span class="n">right_ys</span><span class="p">])</span> <span class="o">-</span> <span class="n">offset</span>
